@@ -709,7 +709,7 @@ function renderEditForm() {
       <div class="edit-section-title">Date &amp; Countdown</div>
       <div class="edit-body">
         <div class="edit-grid">
-          <div class="edit-field"><label>Event date</label><input id="ef-date" type="date" value="${escHtml(cd.date||'')}"></div>
+          <div class="edit-field"><label>Event date</label><input id="ef-date" type="date" min="2000-01-01" max="2035-12-31" value="${escHtml(cd.date||'')}"></div>
           <div class="edit-field full"><label>Countdown message</label><textarea id="ef-cdDesc">${escHtml(cd.description||'')}</textarea></div>
         </div>
       </div>

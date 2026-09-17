@@ -220,7 +220,9 @@ if (app.Environment.IsDevelopment())
             {
                 var path = ctx.File.Name;
                 if (path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
-                    path.Equals("config.js", StringComparison.OrdinalIgnoreCase))
+                    path.Equals("config.js", StringComparison.OrdinalIgnoreCase) ||
+                    // the demo invitations behind the landing page Preview links
+                    path.Equals("demo-data.js", StringComparison.OrdinalIgnoreCase))
                 {
                     ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
                     ctx.Context.Response.Headers.Pragma = "no-cache";

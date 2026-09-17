@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f6f1e8">
+<title>Engagement Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Zen Old Mincho: a Mincho-style serif with fine, calligraphic Latin letters. Inter: a neutral
+     sans for the small text. -->
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * INK BLOOM — a modern, artistic engagement invitation.
+   * Washi paper, sumi ink and one vermilion seal. An ink wash blooms behind a black-and-white
+   * photograph with a torn-paper edge; a brush stroke draws itself under the names; sections are
+   * separated by a single ink line and a red dot; the reply is stamped with the couple's seal.
+   */
+  :root {
+    --washi:  #f6f1e8;
+    --washi-2:#ede6d8;
+    --ink:    #1b1b1f;
+    --ink-2:  #3a3a40;
+    --wash:   #b9b5ad;
+    --indigo: #2f3a56;
+    --seal:   #c8321e;
+    --muted:  rgba(27,27,31,.62);
+    --line:   rgba(27,27,31,.16);
+    --serif:  'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif;
+    --sans:   'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --pad: clamp(20px, 6vw, 52px);
+    --torn: polygon(0 3%, 6% 0, 14% 2%, 22% 0, 31% 3%, 40% 1%, 50% 3%, 61% 0, 70% 2%, 80% 0, 90% 3%, 100% 1%, 100% 97%, 94% 100%, 85% 98%, 76% 100%, 66% 97%, 56% 100%, 45% 98%, 34% 100%, 24% 97%, 14% 100%, 5% 98%, 0 100%);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--washi); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.65; -webkit-tap-highlight-color: transparent;
+         background-image: radial-gradient(rgba(27,27,31,.035) 1px, transparent 1px); background-size: 7px 7px; }
+  img, video, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 980px); margin: 0 auto; padding: 0 var(--pad); }
+  .sec { position: relative; padding: clamp(56px, 12vw, 110px) 0; }
+  .label { font-size: .68rem; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+  .h2 { font-family: var(--serif); font-weight: 500; line-height: 1.1; letter-spacing: .01em; font-size: calc(clamp(2rem, 8.5vw, 3.6rem) * var(--fit, 1)); margin-top: 10px; }
+  .h2 em { font-style: normal; color: var(--seal); }
+  .lead { color: var(--muted); max-width: 48ch; margin-top: 12px; font-size: 1.02rem; }
+  /* Section divider: one ink line and a red dot. */
+  .ink-line { position: relative; height: 1px; background: var(--ink); width: min(100%, 980px); margin: 0 auto; }
+  .ink-line::after { content: ''; position: absolute; left: 50%; top: -5px; width: 11px; height: 11px; border-radius: 50%; background: var(--seal); translate: -50% 0; }
+  .seal { display: inline-grid; place-items: center; width: 54px; height: 54px; background: var(--seal); color: var(--washi); font-family: var(--serif); font-weight: 700; font-size: 1.2rem; letter-spacing: .02em; border-radius: 4px; rotate: -6deg; box-shadow: inset 0 0 0 2px var(--seal), inset 0 0 0 3px rgba(246,241,232,.55); }
+
+  .rv { opacity: 0; transform: translateY(20px); transition: opacity 1s ease, transform 1.1s cubic-bezier(.2,.8,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* Ink wash: soft blurred blobs that bloom outward once. */
+  .wash { position: absolute; pointer-events: none; filter: blur(28px); opacity: .28; transform: scale(.55); transition: transform 2.6s cubic-bezier(.2,.8,.2,1), opacity 2s ease; }
+  .is-ready .wash, .wash.in { transform: none; opacity: .28; }
+  .wash ellipse { fill: var(--ink); }
+  .wash.blue ellipse { fill: var(--indigo); }
+  /* Brush stroke that draws itself. */
+  .stroke { width: min(70vw, 300px); }
+  .stroke path { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s cubic-bezier(.6,0,.3,1) .6s; }
+  .is-ready .stroke path { stroke-dashoffset: 0; }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; display: grid; align-items: center; padding: calc(env(safe-area-inset-top) + 30px) 0 50px; }
+  .hero-grid { position: relative; display: grid; gap: 22px; }
+  .torn { position: relative; width: min(78vw, 340px); aspect-ratio: 4 / 5; margin-left: auto; clip-path: var(--torn); background: var(--washi-2); }
+  .torn img, .torn video { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08); }
+  .torn .mono { display: grid; place-items: center; height: 100%; font-family: var(--serif); font-size: 5rem; color: var(--wash); }
+  .hero .wash { width: 120%; left: -30%; top: -10%; }
+  .hero .seal { position: absolute; right: 8%; bottom: -14px; z-index: 2; }
+  .names { font-family: var(--serif); font-weight: 500; line-height: 1; letter-spacing: -.01em; font-size: calc(clamp(2.9rem, 13vw, 6rem) * var(--fit, 1)); }
+  .names span { display: block; }
+  .names .amp { font-weight: 400; font-size: .5em; color: var(--seal); line-height: 1.4; }
+  .headline { font-family: var(--serif); font-size: clamp(1.15rem, 4.6vw, 1.5rem); color: var(--ink-2); margin-top: 10px; }
+  .meta { display: grid; gap: 4px; margin-top: 18px; font-size: .92rem; }
+  .meta b { font-weight: 600; }
+  .meta .label { margin-bottom: 4px; }
+  .hero-in > * { opacity: 0; transform: translateY(12px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .is-ready .hero-in > * { opacity: 1; transform: none; }
+  .hero-in > *:nth-child(2) { transition-delay: .25s; } .hero-in > *:nth-child(3) { transition-delay: .45s; } .hero-in > *:nth-child(n+4) { transition-delay: .65s; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; min-height: 50px; margin-top: 22px; padding: 0 22px; background: var(--ink); color: var(--washi); text-decoration: none; font-weight: 600; font-size: .9rem; transition: background .3s; }
+  .btn:hover { background: var(--seal); }
+  @media (min-width: 860px) { .hero-grid { grid-template-columns: 1.1fr .9fr; gap: 50px; align-items: center; } .torn { margin-left: 0; width: 100%; max-width: 420px; } .hero .art { order: 2; position: relative; } }
+  .hero .art { position: relative; }
+
+  /* ── NOTE (tagline/story/families) ── */
+  .note-block { max-width: 640px; }
+  .note-block .big { font-family: var(--serif); font-size: clamp(1.4rem, 5.6vw, 2.2rem); line-height: 1.35; }
+  .fams { display: grid; gap: 16px; margin-top: 22px; }
+  @media (min-width: 640px) { .fams { grid-template-columns: 1fr 1fr; } }
+  .fam b { display: block; font-family: var(--serif); font-weight: 500; font-size: 1.35rem; margin-top: 2px; overflow-wrap: anywhere; }
+  .custom + .custom { margin-top: 26px; }
+  .custom h3 { font-family: var(--serif); font-weight: 500; font-size: 1.6rem; line-height: 1.15; margin-top: 4px; }
+  .custom p { color: var(--muted); margin-top: 8px; }
+  .custom figure { margin-top: 14px; max-width: 360px; clip-path: var(--torn); }
+  .custom figure img { filter: grayscale(1); }
+
+  /* ── COUNTDOWN ── */
+  .cd { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 30px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .cd-cell { min-width: 0; padding: 22px 4px 18px; text-align: center; }
+  .cd-cell + .cd-cell { border-left: 1px solid var(--line); }
+  .cd-num { display: block; font-family: var(--serif); font-weight: 500; font-size: clamp(1.9rem, 9vw, 4rem); line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .cd-unit { display: block; margin-top: 8px; font-size: clamp(.52rem, 2.2vw, .68rem); font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+  .cd-note { grid-column: 1 / -1; padding: 22px; text-align: center; font-family: var(--serif); font-size: 1.8rem; }
+
+  /* ── PLACE ── */
+  .places { display: grid; gap: 40px; margin-top: 30px; }
+  @media (min-width: 760px) { .places { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+  .place { position: relative; }
+  .place .wash { width: 90%; left: -10%; top: -6%; z-index: 0; opacity: .2; transform: none; }
+  .place figure { position: relative; z-index: 1; aspect-ratio: 4 / 3; overflow: hidden; clip-path: var(--torn); background: var(--washi-2); margin-bottom: 18px; }
+  .place figure img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+  .place h3 { font-family: var(--serif); font-weight: 500; font-size: clamp(1.6rem, 6.5vw, 2.1rem); line-height: 1.1; margin-top: 4px; overflow-wrap: anywhere; }
+  .place p { color: var(--muted); overflow-wrap: anywhere; }
+  .place .time { color: var(--ink); font-weight: 600; margin-top: 4px; }
+  .place .link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--seal); }
+
+  /* ── ORDER: brush dots ── */
+  .order { list-style: none; max-width: 600px; margin-top: 30px; }
+  .order li { display: grid; grid-template-columns: 90px 1fr; gap: 6px 18px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .order .t { font-family: var(--serif); font-weight: 500; font-size: 1.25rem; }
+  .order h3 { font-family: var(--serif); font-weight: 500; font-size: 1.3rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .order p { color: var(--muted); grid-column: 2; }
+  .order a { font-weight: 600; }
+  .order li::before { content: ''; grid-column: 1; grid-row: 1; width: 9px; height: 9px; margin: 9px 0 0 -18px; border-radius: 50%; background: var(--ink); position: absolute; }
+  .order li { position: relative; padding-left: 18px; }
+
+  /* ── COLLAGE ── */
+  .collage { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 4vw, 26px); margin-top: 30px; }
+  @media (min-width: 760px) { .collage { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .collage figure { aspect-ratio: 4 / 5; overflow: hidden; clip-path: var(--torn); background: var(--washi-2); }
+  .collage figure:nth-child(2n) { rotate: 2deg; margin-top: 18px; } .collage figure:nth-child(2n+1) { rotate: -1.5deg; }
+  .collage img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: filter .6s; }
+  .collage figure:hover img { filter: none; }
+
+  /* ── GIFTS ── */
+  .acct { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .acct span { overflow-wrap: anywhere; }
+  .copy { min-height: 40px; padding: 0 14px; border: 1.5px solid var(--ink); background: transparent; font-weight: 600; font-size: .82rem; cursor: pointer; }
+  .copy:hover { background: var(--ink); color: var(--washi); }
+
+  /* ── REPLY ── */
+  .reply { position: relative; max-width: 620px; padding: clamp(24px, 6vw, 40px); background: #fbf8f2; border: 1px solid var(--line); margin-top: 30px; }
+  .reply .seal { position: absolute; right: 18px; top: -22px; }
+  .reply h2 { font-family: var(--serif); font-weight: 500; font-size: clamp(1.8rem, 7.5vw, 2.6rem); line-height: 1.1; max-width: 12ch; }
+  .reply .desc { color: var(--muted); margin-top: 8px; }
+  .reply .notes-line { margin-top: 8px; font-size: .68rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--seal); }
+  .rsvp { display: grid; gap: 16px; margin-top: 24px; }
+  .rsvp-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rsvp-choice { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 54px; padding: 8px 10px; cursor: pointer;
+                 border: 1.5px solid var(--ink); font-family: var(--serif); font-weight: 500; font-size: 1.05rem; line-height: 1.15; transition: background .3s, color .3s; }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice.on { background: var(--ink); color: var(--washi); }
+  .rsvp-choice:nth-child(2).on { background: var(--seal); border-color: var(--seal); }
+  .rsvp-choice:focus-within { outline: 2px solid var(--seal); outline-offset: 3px; }
+  .rsvp-field { display: grid; gap: 4px; }
+  .rsvp-label { font-size: .66rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+  .rsvp-input { width: 100%; min-height: 48px; padding: 8px 0; border: 0; border-bottom: 1.5px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font-size: 16px; }
+  textarea.rsvp-input { resize: none; min-height: 76px; }
+  .rsvp-input::placeholder { color: rgba(27,27,31,.38); }
+  .rsvp-input:focus { outline: none; border-bottom-color: var(--seal); }
+  .rsvp-error { color: var(--seal); font-weight: 600; }
+  .rsvp-submit { min-height: 56px; border: 0; cursor: pointer; background: var(--ink); color: var(--washi); font-weight: 600; font-size: .95rem; letter-spacing: .04em; transition: background .3s; }
+  .rsvp-submit:hover { background: var(--seal); }
+  .rsvp-done { margin-top: 24px; }
+  .rsvp-done-title { font-family: var(--serif); font-size: 2rem; line-height: 1.1; }
+  .rsvp-done-body { color: var(--muted); margin-top: 8px; }
+  .contact { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .contact-intro { font-size: .66rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+  .contact-name { font-family: var(--serif); font-size: 1.3rem; }
+  .contact-phone { color: var(--muted); }
+  .contact-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border: 1.5px solid var(--ink); text-decoration: none; font-weight: 600; font-size: .85rem; }
+  .contact-link:hover { background: var(--ink); color: var(--washi); }
+
+  footer { padding: 40px var(--pad) calc(env(safe-area-inset-bottom) + 70px); display: flex; align-items: center; gap: 16px; }
+  footer p { font-family: var(--serif); font-size: 1.3rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .hero-in > * { opacity: 1; transform: none; transition: none; }
+    .wash { transform: none; transition: none; }
+    .stroke path { stroke-dashoffset: 0; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const A = '/assets/ink-bloom/';
+const DEFAULT_DATA = {
+  template: 'ink-bloom',
+  title: 'Name & Name',
+  cover: {
+    enabled: true, headline: 'are getting engaged', eventLabel: 'Engagement', names: 'Name & Name',
+    tagline: 'Two names. One story. Come and see it begin.', greeting: 'Dear',
+    hostIntro: '', hostOutro: '', hostText: '', image: A + 'veil.jpg', video: '', buttonText: 'Reply'
+  },
+  countdown: { enabled: true, label: 'Until then', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: true, label: 'With our families', title: '', items: [] },
+  locations: { enabled: true, label: 'The place', title: 'Where', image: '', items: [
+    { label: 'Engagement evening', time: '', name: '', addr: '', url: '', img: A + 'venue.jpg' }
+  ] },
+  timeline:  { enabled: true, label: 'The order', title: 'The evening', items: [] },
+  gallery:   { enabled: true, label: 'Fragments', title: 'Us, so far', items: [ { url: A + 'hands.jpg', caption: '' }, { url: A + 'rings.jpg', caption: '' } ] },
+  gifts:     { enabled: false, label: 'Gifts', title: 'Gifts', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'Your reply', title: 'Will you be with us?', description: '',
+    deadline: '', maxPeople: 2, buttonText: 'Send reply', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+const WASH = cls => `<svg class="wash ${cls || ''}" viewBox="0 0 400 400" aria-hidden="true"><ellipse cx="190" cy="200" rx="150" ry="120"/><ellipse cx="250" cy="150" rx="90" ry="70" opacity=".6"/><ellipse cx="140" cy="260" rx="80" ry="60" opacity=".7"/></svg>`;
+// A brush stroke: three overlapping paths of different weights read as one tapered stroke.
+const STROKE = `<svg class="stroke" viewBox="0 0 300 40" aria-hidden="true">
+  <path pathLength="1" stroke-width="9" d="M6 22 C60 8 120 30 170 18 C220 6 260 22 294 14"/>
+  <path pathLength="1" stroke-width="4" d="M10 26 C70 14 130 34 180 22 C230 10 265 26 296 20" opacity=".8"/>
+  <path pathLength="1" stroke-width="2" d="M14 18 C80 4 140 22 190 12 C240 2 270 14 292 8" opacity=".6"/>
+</svg>`;
+const DIV = '<div class="ink-line" aria-hidden="true"></div>';
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const parts = I.splitNames(c.names || data.title || '');
+  const dp = I.dateParts(cd);
+  const place = ((data.locations || {}).items || []).find(x => x && x.name);
+  const guest = I.guestName();
+  const photo = I.media(c.image, c.video, c.names, true);
+  const ini = I.initials(c.names) || '';
+  return `
+  <section class="hero">
+    ${WASH('')}
+    <div class="wrap hero-grid">
+      <div class="art">
+        <div class="torn">${photo || `<div class="mono">${esc(ini)}</div>`}</div>
+        <span class="seal" aria-hidden="true">${esc(ini)}</span>
+      </div>
+      <div class="hero-in">
+        <p class="label">${guest ? esc(`${c.greeting || 'Dear'} ${guest}`) : esc(c.eventLabel || 'Engagement')}</p>
+        <h1 class="names" data-fit=".4"><span>${esc(parts[0] || '')}</span>${parts.length > 1 ? `<span class="amp">&amp;</span><span>${esc(parts.slice(1).join(' & '))}</span>` : ''}</h1>
+        ${STROKE}
+        ${c.headline ? `<p class="headline">${esc(c.headline)}</p>` : ''}
+        <div class="meta">
+          ${dp ? `<p><b>${esc(dp.weekday)}, ${dp.d} ${esc(dp.month)} ${dp.y}</b>${cd.time ? ` · ${esc(I.fmtClock(cd.time))}` : ''}</p>` : ''}
+          ${place ? `<p>${esc(place.name)}${place.addr ? `, ${esc(place.addr.split('\n')[0])}` : ''}</p>` : ''}
+        </div>
+        <div><a class="btn" href="#rsvp">${esc(c.buttonText || 'Reply')} <span aria-hidden="true">→</span></a></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function note(data) {
+  const c = data.cover || {}, f = data.families || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const custom = (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body));
+  if (!c.tagline && !c.hostText && !fams.length && !custom.length) return '';
+  return `${DIV}
+  <section class="sec">
+    <div class="wrap note-block">
+      ${c.tagline ? `<p ${R('big')}>${esc(c.tagline)}</p>` : ''}
+      ${c.hostText ? `<p ${R('lead')}>${I.nl2br(c.hostText)}</p>` : ''}
+      ${fams.length ? `<div ${R()} style="margin-top:26px"><p class="label">${esc(f.label || 'With our families')}</p><div class="fams">${fams.map(x => `<div class="fam"><span class="label" style="letter-spacing:.14em">${esc(x.label || '')}</span><b>${esc(x.names || '')}</b></div>`).join('')}</div></div>` : ''}
+      ${c.hostOutro ? `<p ${R('lead')}>${I.nl2br(c.hostOutro)}</p>` : ''}
+      ${custom.map(s => `<div ${R('custom')} style="margin-top:30px">${s.label ? `<p class="label">${esc(s.label)}</p>` : ''}${s.title ? `<h3>${esc(s.title)}</h3>` : ''}${s.body ? `<p>${I.nl2br(s.body)}</p>` : ''}${s.image ? `<figure>${I.img(s.image, s.title)}</figure>` : ''}</div>`).join('')}
+    </div>
+  </section>`;
+}
+
+function countdown(data) {
+  const cd = data.countdown || {};
+  if (cd.enabled === false) return '';
+  const target = I.eventInstant(cd);
+  const dp = I.dateParts(cd);
+  return `${DIV}
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('label')}>${esc(cd.label || 'Until then')}</p>
+      <h2 ${R('h2')} data-fit>${dp ? `${esc(dp.weekday)}, ${dp.d} ${esc(dp.month)} <em>${dp.y}</em>` : 'A date, <em>soon</em>'}</h2>
+      ${target !== null ? `<div ${R('cd')} data-countdown="${target}" data-past-today="Today." data-past-after="Thank you for being there.">${I.countdownCells()}</div>` : ''}
+      ${cd.time || cd.description ? `<p ${R('lead')}>${[cd.time ? 'From ' + esc(I.fmtClock(cd.time)) : '', esc(cd.description || '')].filter(Boolean).join(' · ')}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function places(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.addr || x.label));
+  if (l.enabled === false || !items.length) return '';
+  return `${DIV}
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('label')}>${esc(l.label || 'The place')}</p>
+      <h2 ${R('h2')} data-fit>${esc(l.title || 'Where')}</h2>
+      <div class="places">
+        ${items.map((x, i) => `
+          <article ${R('place')}>
+            ${WASH(i % 2 ? 'blue in' : 'in')}
+            ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+            <div style="position:relative;z-index:1">
+              ${x.label ? `<p class="label">${esc(x.label)}</p>` : ''}
+              ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+              ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+              ${x.time ? `<p class="time">${esc(x.time)}</p>` : ''}
+              ${x.url ? `<a class="link" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Directions</a>` : ''}
+            </div>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+function order(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled === false || !items.length) return '';
+  return `${DIV}
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('label')}>${esc(t.label || 'The order')}</p>
+      <h2 ${R('h2')} data-fit>${esc(t.title || 'The evening')}</h2>
+      <ol class="order">
+        ${items.map(x => `
+          <li ${R()}>
+            <span class="t">${esc(x.time || '')}</span>
+            <h3>${esc(x.title || '')}</h3>
+            ${x.subtitle || x.url ? `<p>${esc(x.subtitle || '')}${x.url ? ` <a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Map ↗</a>` : ''}</p>` : ''}
+          </li>`).join('')}
+      </ol>
+    </div>
+  </section>`;
+}
+
+function collage(data) {
+  const g = data.gallery || {}, gf = data.gifts || {};
+  const photos = (g.enabled !== false ? (g.items || []) : []).filter(x => x && x.url).slice(0, 6);
+  const accounts = (gf.items || []).filter(x => x && x.account);
+  const gifts = gf.enabled !== false && (accounts.length || gf.description);
+  if (!photos.length && !gifts) return '';
+  return `${DIV}
+  <section class="sec">
+    <div class="wrap">
+      ${photos.length ? `
+        <p ${R('label')}>${esc(g.label || 'Fragments')}</p>
+        ${g.title ? `<h2 ${R('h2')} data-fit>${esc(g.title)}</h2>` : ''}
+        <div class="collage">${photos.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}</figure>`).join('')}</div>` : ''}
+      ${gifts ? `
+        <div ${R('note-block')} style="margin-top:${photos.length ? 60 : 0}px">
+          <p class="label">${esc(gf.label || 'Gifts')}</p>
+          <h2 class="h2" data-fit>${esc(gf.title || 'Gifts')}</h2>
+          ${gf.description ? `<p class="lead">${I.nl2br(gf.description)}</p>` : ''}
+          <div style="margin-top:14px">${accounts.map(x => `<div class="acct"><span><b>${esc(x.bank || 'Account')}</b> · ${esc(x.account)}</span><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}</div>
+        </div>` : ''}
+    </div>
+  </section>`;
+}
+
+function reply(data) {
+  const r = data.rsvp || {}, c = data.cover || {};
+  if (r.enabled === false) return '';
+  return `${DIV}
+  <section class="sec" id="rsvp">
+    <div class="wrap">
+      <p ${R('label')}>${esc(r.label || 'Your reply')}</p>
+      <div ${R('reply')}>
+        <span class="seal" aria-hidden="true">${esc(I.initials(c.names) || '')}</span>
+        <h2>${esc(r.title || 'Will you be with us?')}</h2>
+        ${r.description ? `<p class="desc">${I.nl2br(r.description)}</p>` : ''}
+        ${I.rsvpNotes(r).map(n => `<p class="notes-line">${esc(n)}</p>`).join('')}
+        ${I.rsvpForm(r, {
+          yes: 'Yes', no: 'No',
+          nameLabel: 'Name', namePlaceholder: 'Your full name',
+          countLabel: 'Guests', wishesLabel: 'A few words (optional)',
+          wishesPlaceholder: 'For the two of you…', button: r.buttonText || 'Send reply',
+          doneTitle: 'Received, with thanks.'
+        })}
+        ${I.contactHtml(r, { intro: 'Questions' })}
+      </div>
+    </div>
+  </section>`;
+}
+
+function build(data) {
+  const c = data.cover || {};
+  document.title = (c.names || data.title || 'Engagement') + ' — Engagement Invitation';
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    note(data), countdown(data), places(data), order(data), collage(data), reply(data),
+    `${DIV}<footer><span class="seal" aria-hidden="true">${esc(I.initials(c.names) || '')}</span><p>${esc(c.names || '')}</p></footer>`
+  ].join('');
+}
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

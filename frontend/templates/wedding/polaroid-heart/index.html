@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Gilda Display is the reference's high-contrast display serif — the names, the dates and the
+     letterspaced capitals all use it, so the page loads a single family. -->
+<link href="https://fonts.googleapis.com/css2?family=Gilda+Display&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * POLAROID HEART — a heart made of the couple's photos, an ampersand spread, paper-clipped
+   * polaroids and a closing wedding-day mosaic, on off-white paper.
+   *
+   * Sizes are proportions of --pw (the card width): a phone shows the reference's layout and a
+   * desktop gets the same card, centred, at up to 620px.
+   */
+  :root {
+    --paper: #f4f4f1;
+    --ink:   #232320;
+    --ink-2: #4a4a45;
+    --soft:  #7a7a74;
+    --sage:  #a7ae9f;
+    --taupe: #8f7f77;
+    --card:  #f9f9f7;
+    --row:   #d6d6d3;
+    --clip:  #9a9c98;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+
+  /* Fine paper grain: one stitched noise tile, rendered once and repeated. */
+  body {
+    color: var(--ink);
+    font-family: 'Gilda Display', 'Didot', Georgia, serif;
+    line-height: 1.4;
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.35 0 0 0 0 0.33 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 300px 300px;
+  }
+  img, video { display: block; max-width: 100%; }
+
+  .page {
+    --pw: min(100vw, 620px);
+    width: min(100%, 620px);
+    margin: 0 auto;
+    padding: 0 calc(var(--pw) * .07);
+  }
+  .caps { text-transform: uppercase; letter-spacing: .03em; }
+  .section { padding: calc(var(--pw) * .16) 0 calc(var(--pw) * .04); }
+  /* Headings fill their first line greedily and may run into the page margin, as the reference sets
+     them ("CELEBRATE WITH US / OUR FOREVER") -- balanced wrapping would split them evenly instead. */
+  .title { text-align: center; font-size: clamp(26px, calc(var(--pw) * .075), 50px); line-height: 1.12; margin: 0 calc(var(--pw) * -.04); }
+
+  /* ── COVER: THE HEART ─────────────────────────────────── */
+  .cover {
+    min-height: 100svh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: calc(var(--pw) * .1) 0;
+    text-align: center;
+  }
+  /* The 18 places are measured from the reference and set in percentages of the heart's own box,
+     so the shape holds at every width. */
+  .heart { position: relative; width: calc(var(--pw) * 1.0); max-width: 100vw; aspect-ratio: 100 / 85.5; margin: 0 calc(var(--pw) * -.07); }
+  .tile {
+    position: absolute; overflow: hidden; background: #e7e7e3;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    opacity: 0; transform: scale(.7);
+    transition: opacity .6s ease, transform .6s cubic-bezier(.3,1.3,.5,1);
+    transition-delay: var(--d, 0ms);
+    contain: layout paint;
+  }
+  .heart.in .tile { opacity: 1; transform: none; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; }
+  .names { width: 100%; margin-top: calc(var(--pw) * .07); }
+  .names-text { display: inline-block; white-space: nowrap; font-size: calc(clamp(34px, calc(var(--pw) * .1), 64px) * var(--fit, 1)); line-height: 1.1; }
+  .cover-date {
+    display: flex; align-items: center; justify-content: center; gap: .32em;
+    font-size: clamp(26px, calc(var(--pw) * .078), 50px); line-height: 1.05;
+    font-variant-numeric: lining-nums;
+  }
+  .cover-date svg { width: .42em; height: .42em; color: var(--taupe); transform: translateY(.06em); }
+
+  /* ── THE "&" SPREAD ───────────────────────────────────── */
+  .spread { position: relative; aspect-ratio: 720 / 830; margin-top: calc(var(--pw) * .09); }
+  .spread > * { position: absolute; }
+  .sp-photo { overflow: hidden; background: #e7e7e3; contain: layout paint; }
+  .sp-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .sp-a { left: 46.7%; top: 0;     width: 43.2%; height: 58.6%; }
+  .sp-b { left: 0;     top: 41.6%; width: 43.3%; height: 58.4%; }
+  .sp-tag  { left: 0; top: 17%; width: 44%; font-size: max(12px, calc(var(--pw) * .033)); color: var(--ink-2); }
+  .sp-amp  {
+    left: 50%; top: 41%; transform: translate(-50%, -50%);
+    font-size: clamp(90px, calc(var(--pw) * .3), 190px); line-height: 1;
+    color: var(--sage); z-index: 2; pointer-events: none;
+  }
+  .sp-date {
+    left: 49%; top: 66%; width: 51%; text-align: center;
+    font-size: clamp(24px, calc(var(--pw) * .075), 46px); line-height: 1.22;
+  }
+
+  /* Countdown strip: same display type as the dates. The dates in the spread above stay put when
+     the day has passed — only this strip changes. */
+  .cd { margin-top: calc(var(--pw) * .12); text-align: center; }
+  .cd-label { font-size: max(11px, calc(var(--pw) * .032)); letter-spacing: .24em; color: var(--soft); }
+  .cd-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    margin-top: calc(var(--pw) * .03);
+    border-top: 1px solid rgba(35,35,32,.3); border-bottom: 1px solid rgba(35,35,32,.3);
+  }
+  .cd-cell { padding: calc(var(--pw) * .03) 0; border-left: 1px solid rgba(35,35,32,.18); }
+  .cd-cell:first-child { border-left: none; }
+  .cd-num { display: block; font-size: clamp(26px, calc(var(--pw) * .085), 52px); line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .cd-unit { display: block; font-size: max(10px, calc(var(--pw) * .025)); letter-spacing: .2em; color: var(--soft); margin-top: calc(var(--pw) * .012); }
+  .cd-note { grid-column: 1 / -1; padding: calc(var(--pw) * .035) 0; font-size: max(15px, calc(var(--pw) * .05)); color: var(--ink-2); }
+  .cd-empty { margin-top: calc(var(--pw) * .1); text-align: center; color: var(--soft); font-size: max(14px, calc(var(--pw) * .042)); }
+
+  .families { margin-top: calc(var(--pw) * .05); font-size: max(13px, calc(var(--pw) * .038)); color: var(--ink-2); }
+
+  /* ── POLAROIDS ─────────────────────────────────────────── */
+  .polaroid {
+    position: relative; background: var(--card);
+    padding: 3.5% 3.5% 11%;
+    box-shadow: 0 2px 3px rgba(0,0,0,.08), 0 10px 26px rgba(0,0,0,.10);
+  }
+  .polaroid .ph { position: relative; overflow: hidden; background: #e7e7e3; aspect-ratio: 3 / 2; contain: layout paint; }
+  .polaroid .ph img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .clip { position: absolute; width: 9%; min-width: 18px; top: -5%; z-index: 3; color: var(--clip); }
+  .clip.l { left: -1.5%; transform: rotate(-22deg); }
+  .clip.r { right: -1.5%; transform: rotate(22deg); }
+
+  .place { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: calc(var(--pw) * .05); margin-top: calc(var(--pw) * .1); }
+  .place.flip { grid-template-columns: .85fr 1.15fr; }
+  .place.flip .place-card { order: 2; }
+  .place-when { text-align: center; font-size: clamp(18px, calc(var(--pw) * .055), 34px); line-height: 1.2; }
+  .place-name { display: block; font-size: max(12px, calc(var(--pw) * .033)); color: var(--soft); text-transform: none; letter-spacing: 0; margin-top: .45em; }
+  .place-ico { display: block; font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: min(calc(var(--pw) * .075), 40px); line-height: 1; margin-bottom: .3em; }
+  .note-ico { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; margin-right: .35em; }
+  .place-link {
+    display: inline-block; margin-top: calc(var(--pw) * .05);
+    color: var(--ink); text-decoration: underline; text-underline-offset: .22em; text-decoration-thickness: 1px;
+    font-size: max(12px, calc(var(--pw) * .038));
+  }
+  .place.flip .place-foot { text-align: left; }
+  /* Last in source order too: grid order would otherwise put this full-width row ahead of a flipped
+     card, dropping the polaroid below the link. */
+  .place-foot { grid-column: 1 / -1; order: 3; }
+  .place.flip .place-foot { text-align: right; }
+
+  /* ── RSVP CARD ─────────────────────────────────────────── */
+  .rsvp-title { position: relative; z-index: 2; text-align: center; font-size: clamp(26px, calc(var(--pw) * .076), 50px); line-height: 1.08; margin: 0 calc(var(--pw) * -.04); }
+  .rsvp-card {
+    background: var(--card); border-radius: 14px;
+    padding: calc(var(--pw) * .1) calc(var(--pw) * .06) calc(var(--pw) * .05);
+    margin-top: calc(var(--pw) * -.07);
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .rsvp-greet { text-align: center; color: var(--ink-2); font-size: max(14px, calc(var(--pw) * .042)); margin-bottom: calc(var(--pw) * .03); }
+  .opt {
+    display: flex; align-items: center; gap: .7em; cursor: pointer;
+    background: var(--row); border-radius: 8px;
+    padding: .7em .9em; margin-top: calc(var(--pw) * .02);
+    font-size: max(14px, calc(var(--pw) * .04)); transition: background .2s ease;
+  }
+  .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .opt .box { width: 1.05em; height: 1.05em; border: 1.4px solid var(--ink); border-radius: 3px; background: #fff; flex: none; display: grid; place-items: center; }
+  .opt .box::after { content: ''; width: .5em; height: .28em; border: solid var(--ink); border-width: 0 0 1.6px 1.6px; transform: rotate(-45deg) translateY(-.05em); opacity: 0; }
+  .opt.on { background: #c9c9c5; }
+  .opt.on .box::after { opacity: 1; }
+  .opt:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .field { margin-top: calc(var(--pw) * .03); }
+  .field label { display: block; font-size: max(11px, calc(var(--pw) * .03)); letter-spacing: .14em; color: var(--soft); text-transform: uppercase; margin-bottom: .35em; }
+  .field input, .field select, .field textarea {
+    width: 100%; border: none; border-radius: 8px; background: #ececea;
+    padding: .7em .9em; color: var(--ink);
+    font: max(16px, calc(var(--pw) * .04)) 'Gilda Display', Georgia, serif;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--ink); }
+  .field input[readonly] { background: transparent; border: 1px dashed #b9b9b5; }
+  .field textarea { resize: none; }
+  .rsvp-btn {
+    display: block; width: 100%; margin-top: calc(var(--pw) * .035);
+    background: #fdfdfb; border: none; border-radius: 14px;
+    padding: .85em 1em; cursor: pointer; color: var(--ink);
+    font: max(15px, calc(var(--pw) * .045)) 'Gilda Display', Georgia, serif; letter-spacing: .06em;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    transition: background .2s ease;
+  }
+  .rsvp-btn:hover { background: #fff; }
+  .rsvp-btn:disabled { opacity: .55; cursor: default; }
+  .rsvp-note { text-align: center; color: var(--soft); font-size: max(11px, calc(var(--pw) * .027)); margin-top: calc(var(--pw) * .025); }
+  .thanks { display: none; text-align: center; font-size: max(16px, calc(var(--pw) * .05)); padding: calc(var(--pw) * .04) 0 calc(var(--pw) * .02); }
+
+  /* ── GIFT ──────────────────────────────────────────────── */
+  .gift-title { font-size: clamp(21px, calc(var(--pw) * .061), 40px); line-height: 1.12; }
+  .gift-line  { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4em; font-size: max(14px, calc(var(--pw) * .045)); color: var(--ink-2); margin-top: calc(var(--pw) * .01); }
+  .gift-desc  { font-size: max(14px, calc(var(--pw) * .04)); color: var(--ink-2); margin-top: calc(var(--pw) * .015); }
+  .copy {
+    border: 1px solid var(--ink-2); background: transparent; border-radius: 999px; color: var(--ink);
+    font: max(11px, calc(var(--pw) * .028)) 'Gilda Display', Georgia, serif; letter-spacing: .12em; text-transform: uppercase;
+    padding: .22em .9em; cursor: pointer;
+  }
+  .gift-pics { position: relative; margin-top: calc(var(--pw) * .12); padding-bottom: calc(var(--pw) * .16); }
+  .gift-pics .p1 { width: 60%; }
+  .gift-pics .p2 { position: absolute; width: 47%; right: 0; top: 30%; }
+  .gift-pics .p1 .ph { aspect-ratio: 5 / 4; }
+  .gift-pics .p2 .ph { aspect-ratio: 1 / 1; }
+  .gift-pics.single .p1 { width: 78%; margin: 0 auto; }
+
+  /* ── CLOSING MOSAIC (full bleed across the card) ───────── */
+  .mosaic {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    margin: calc(var(--pw) * .16) calc(var(--pw) * -.07) 0;
+  }
+  .mosaic .m { overflow: hidden; aspect-ratio: 9 / 16; background: #e7e7e3; contain: layout paint; }
+  .mosaic .m img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.08); transition: transform 2.4s ease-out; }
+  .mosaic .m.in img { transform: scale(1); }
+
+  .note-block { text-align: center; }
+  .note-body  { font-size: max(15px, calc(var(--pw) * .045)); color: var(--ink-2); margin-top: calc(var(--pw) * .03); }
+  .note-label { font-size: max(11px, calc(var(--pw) * .03)); letter-spacing: .2em; color: var(--soft); margin-top: calc(var(--pw) * .03); }
+  .btn-link {
+    display: inline-block; margin-top: calc(var(--pw) * .05); padding: .8em 1.8em;
+    background: #fdfdfb; border-radius: 14px; color: var(--ink); text-decoration: none;
+    font-size: max(14px, calc(var(--pw) * .04)); box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .foot { text-align: center; color: var(--soft); font-size: max(13px, calc(var(--pw) * .04)); padding: calc(var(--pw) * .12) 0 calc(var(--pw) * .14); }
+
+  /* ── REVEALS ──────────────────────────────────────────────
+     Opacity and transform only, each running once per element, so scrolling stays on the
+     compositor. */
+  .rv { opacity: 0; transform: translateY(16px); transition: opacity .9s ease, transform .9s ease; }
+  .rv.in { opacity: 1; transform: none; }
+  .rv-l { opacity: 0; transform: translateX(-26px) rotate(-2deg); transition: opacity .9s ease, transform 1s cubic-bezier(.3,.7,.3,1); }
+  .rv-r { opacity: 0; transform: translateX(26px) rotate(2deg);  transition: opacity .9s ease, transform 1s cubic-bezier(.3,.7,.3,1); }
+  .rv-l.in, .rv-r.in { opacity: 1; transform: none; }
+  .rv-amp { opacity: 0; transition: opacity 1.4s ease .3s; }
+  .rv-amp.in { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .rv-l, .rv-r, .rv-amp, .tile, .mosaic .m img { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+
+<div class="page"><main id="main"></main></div>
+
+<script>
+// ── API CONFIG ─────────────────────────────────────────
+const API_BASE = (typeof window !== 'undefined' && window.API_BASE)
+  ? window.API_BASE.replace(/\/$/, '')
+  : '';
+
+let CURRENT_SLUG = null;
+// Set when opened through a personal guest-list link (?g=<token>)
+let CURRENT_GUEST = null;
+
+// ── DEFAULT DATA ───────────────────────────────────────
+const HEART_DEFAULTS = Array.from({ length: 18 }, (_, i) =>
+  ({ url: `/assets/polaroid-heart/heart-${String(i + 1).padStart(2, '0')}.jpg`, caption: '' }));
+const DEFAULT_DATA = {
+  template: 'polaroid-heart',
+  title: 'Name 1 & Name 2',
+  cover: {
+    enabled: true, headline: 'Celebrate with us our forever', tagline: 'Finally, forever.', eventLabel: '',
+    names: 'Name 1 & Name 2', greeting: 'Dear',
+    image: '/assets/polaroid-heart/celebrate-couple.jpg', video: '', buttonText: '',
+    collage: HEART_DEFAULTS
+  },
+  countdown: { enabled: true, label: 'Counting down', date: '', time: '', tzOffset: null, description: '', image: '/assets/polaroid-heart/celebrate-hands.jpg' },
+  families:  { enabled: false, label: '', title: '', items: [] },
+  locations: { enabled: true, label: '', title: 'When and Where', image: '', items: [] },
+  timeline:  { enabled: false, label: '', title: '', items: [] },
+  gallery:   { enabled: true, label: '', title: '', video: '', items: [] },
+  gifts:     { enabled: true, label: '', title: 'Send the Newlyweds a Whish', description: '', image: '/assets/polaroid-heart/gift-1.jpg', image2: '/assets/polaroid-heart/gift-2.jpg', items: [] },
+  rsvp:      { enabled: true, label: '', title: 'Will you be there for the “I do”?', description: '', question: '', deadline: '', maxPeople: 10, buttonText: 'RSVP', allowWishes: true, image: '' },
+  memories:  { enabled: false, title: 'Share Your Memories', description: '', url: '', buttonText: 'Share Memories' },
+  music:     { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+// ── HELPERS ────────────────────────────────────────────
+function decodeData(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(s))));
+}
+function mergeDefaults(data) {
+  const out = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  for (const k of Object.keys(data || {})) {
+    if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && out[k]) {
+      out[k] = Object.assign({}, out[k], data[k]);
+    } else {
+      out[k] = data[k];
+    }
+  }
+  return out;
+}
+function parseQuery() {
+  const raw = window.location.search.replace(/^\?/, '').replace(/\?/g, '&');
+  return new URLSearchParams(raw);
+}
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+const mediaSrc = u => u && /^\/api\//.test(u) ? (API_BASE || '') + u : (u || '');
+function fmtDate(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+  if (!m) return s || '';
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+/** Invitations whose countdown carries no date still have the event date at the top level. */
+function withEventDate(data, eventDate) {
+  data.countdown = data.countdown || {};
+  if (!data.countdown.date && eventDate) data.countdown.date = String(eventDate).slice(0, 10);
+  return data;
+}
+
+// ── DATA LOADING ───────────────────────────────────────
+async function loadData() {
+  const params = parseQuery();
+  if (window.getDemoData) {
+    const demo = window.getDemoData(window.location.search);
+    if (demo) return mergeDefaults(demo);
+  }
+  const enc = params.get('d');
+  if (enc) {
+    try { return mergeDefaults(decodeData(enc)); }
+    catch (e) { console.warn('Bad ?d payload:', e); }
+  }
+  const token = params.get('g');
+  if (token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/public/guest/${encodeURIComponent(token)}`, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const body = await res.json();
+        CURRENT_SLUG  = body.slug;
+        CURRENT_GUEST = Object.assign({ token }, body.guest || {});
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('Guest API returned', res.status);
+    } catch (e) { console.warn('Guest API fetch failed:', e); }
+  }
+  const id = params.get('id');
+  if (id) {
+    CURRENT_SLUG = id;
+    try {
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(id)}`, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const body = await res.json();
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('API returned', res.status);
+    } catch (e) { console.warn('API fetch failed:', e); }
+    try {
+      const all = JSON.parse(localStorage.getItem('ic_people') || '{}');
+      if (all[id]) return mergeDefaults(all[id].data);
+    } catch { /* ignore */ }
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function getGuestName() {
+  if (CURRENT_GUEST && CURRENT_GUEST.name) return CURRENT_GUEST.name;
+  const p = parseQuery();
+  const gn = p.get('gn');
+  if (gn && gn.trim()) return gn.trim();
+  const name = (p.get('name') || '').trim();
+  const spouse = (p.get('spouse') || '').trim();
+  if (!name) return null;
+  return spouse && spouse !== 'null' ? `${name} & ${spouse}` : name;
+}
+function getMaxOverride() {
+  if (CURRENT_GUEST && CURRENT_GUEST.maxAttendees) return CURRENT_GUEST.maxAttendees;
+  const v = parseInt(parseQuery().get('np') || parseQuery().get('max'));
+  return v > 0 ? v : null;
+}
+
+// ── WEDDING DATE ───────────────────────────────────────
+function weddingDay(cd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((cd && cd.date) || '');
+  if (!m) return null;
+  const [y, mo, d] = [+m[1], +m[2], +m[3]];
+  return y >= 2000 ? { y, mo, d } : null;   // 0001-01-01 etc. is an unset DateTime, not a date
+}
+function weddingInstant(cd) {
+  const day = weddingDay(cd);
+  if (!day) return null;
+  const [hh, mi] = /^\d{1,2}:\d{2}/.test(cd.time || '') ? cd.time.split(':').map(Number) : [0, 0];
+  const t = typeof cd.tzOffset === 'number'
+    ? Date.UTC(day.y, day.mo - 1, day.d, hh, mi) + cd.tzOffset * 60000
+    : new Date(day.y, day.mo - 1, day.d, hh, mi).getTime();
+  return isNaN(t) ? null : t;
+}
+/** "11:00" → "11 a.m.", "17:30" → "5:30 p.m." — the reference's own style. */
+function clockDots(t) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t || '');
+  if (!m) return '';
+  const h = +m[1];
+  return `${h % 12 || 12}${m[2] === '00' ? '' : ':' + m[2]} ${h >= 12 ? 'p.m.' : 'a.m.'}`;
+}
+
+/**
+ * The emoji for a step: the one the admin picked, otherwise one read from what the step is — groom,
+ * bride, church or venue — so a plain "Bride's House" still gets its icon. The admin editor's
+ * placeholder "✦" counts as not chosen.
+ */
+function stepIcon(x) {
+  const own = String((x && x.icon) || '').trim();
+  if (own && own !== '✦') return own;
+  const t = `${x.title || x.label || ''} ${x.subtitle || x.name || ''}`.toLowerCase();
+  if (/groom/.test(t)) return '🤵';
+  if (/bride/.test(t)) return '👰';
+  if (/mosque/.test(t)) return '🕌';
+  if (/church|chapel|cathedral|ceremony|mass/.test(t)) return '⛪';
+  if (/venue|reception|party|dinner|celebration|hall|cocktail/.test(t)) return '🥂';
+  return '';
+}
+/** A map link: a real URL as-is; anything else typed into the field is searched on Google Maps. */
+function mapHref(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  return /^https?:\/\//i.test(u) ? u : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(u);
+}
+
+// ── RENDERERS ──────────────────────────────────────────
+const HEART_ICON = '<svg viewBox="0 0 24 22" aria-hidden="true"><path fill="currentColor" d="M12 21.4 10.6 20C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.6 11.5L12 21.4Z"/></svg>';
+const CLIP = '<svg viewBox="0 0 22 62" aria-hidden="true"><path d="M7 16v28a5 5 0 0 0 10 0V9a8 8 0 0 0-16 0v39" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><path d="M9.2 17v26" stroke="#fff" stroke-opacity=".55" stroke-width=".9" stroke-linecap="round"/></svg>';
+
+// The heart's 18 places, measured from the reference: [left, top, width, height] as percentages of
+// a 100 × 85.5 box. Place 1 is the large centre photo.
+const HEART = [
+  [30.7, 17.9, 38.7, 50.1], [0, 12.5, 30.1, 24.5], [69.9, 12.5, 30.1, 24.5], [11.2, 37.8, 19, 16.9],
+  [69.9, 37.8, 19, 17.2], [15.1, 0, 14.9, 11.9], [30.7, 7.9, 14.8, 9.1], [53.7, 7.9, 14.8, 9.1],
+  [69.9, 0, 15.1, 11.9], [43.4, 69.3, 13.3, 16.3], [33.3, 69.3, 9.7, 9.7], [57.3, 69.3, 9.9, 9.7],
+  [20.1, 55.7, 10, 9.1], [69.9, 55.7, 9.7, 9.1], [5.8, 4.3, 8.5, 7.6], [85.5, 4.3, 8.5, 7.6],
+  [1.9, 37.8, 8.7, 7.5], [89.6, 37.8, 8.5, 7.5]
+];
+
+function renderHeart(data) {
+  const own = ((data.cover || {}).collage || []).filter(x => x && x.url).map(x => x.url);
+  // No collage of their own yet: the gallery photos stand in, so the cover is never empty.
+  const photos = own.length ? own : ((data.gallery || {}).items || []).filter(x => x && x.url).map(x => x.url);
+  if (!photos.length) return '';
+  const H = 85.5;
+  return `<div class="heart">${HEART.map(([x, y, w, h], i) => `
+    <div class="tile" style="left:${x}%;top:${(y / H * 100).toFixed(2)}%;width:${w}%;height:${(h / H * 100).toFixed(2)}%;--d:${(i * 7 % 18) * 55}ms">
+      <img src="${esc(mediaSrc(photos[i % photos.length]))}" alt="" ${i ? 'loading="lazy"' : ''} decoding="async">
+    </div>`).join('')}</div>`;
+}
+
+function renderCover(data) {
+  const c = data.cover || {};
+  const day = weddingDay(data.countdown || {});
+  const pad = n => String(n).padStart(2, '0');
+  const f = data.families || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  return `
+  <section class="cover">
+    ${renderHeart(data)}
+    <div class="names rv"><span class="names-text">${esc(c.names || data.title || '')}</span></div>
+    ${day ? `<div class="cover-date rv"><span>${pad(day.d)}</span>${HEART_ICON}<span>${pad(day.mo)}</span>${HEART_ICON}<span>${day.y}</span></div>` : ''}
+    ${fams.length ? `<p class="families rv">${f.label ? esc(f.label) + '<br>' : ''}${fams.map(x => `${esc(x.label || '')} ${esc(x.names || '')}`).join('<br>')}</p>` : ''}
+  </section>`;
+}
+
+function renderCountdown(cd) {
+  if (!cd || cd.enabled === false) return '';
+  const target = weddingInstant(cd);
+  if (target === null) return `<p class="cd-empty rv">The date is being set — we will share it here soon</p>`;
+  const cell = (k, u) => `<div class="cd-cell"><span class="cd-num" data-cd="${k}">–</span><span class="cd-unit caps">${u}</span></div>`;
+  return `
+    <div class="cd rv">
+      ${cd.label ? `<div class="cd-label caps">${esc(cd.label)}</div>` : ''}
+      <div class="cd-row" data-countdown="${target}">${cell('d', 'Days')}${cell('h', 'Hours')}${cell('m', 'Mins')}${cell('s', 'Secs')}</div>
+    </div>`;
+}
+
+function renderSpread(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const day = weddingDay(cd);
+  const a = mediaSrc(cd.image || ''), b = mediaSrc(c.image || '');
+  if (!c.headline && !a && !b && !day) return renderCountdown(cd) ? `<section class="section">${renderCountdown(cd)}</section>` : '';
+  const month = day ? new Date(day.y, day.mo - 1, day.d).toLocaleDateString('en-US', { month: 'long' }) : '';
+  const clock = clockDots(cd.time);
+  return `
+  <section class="section">
+    ${c.headline ? `<h2 class="title caps rv">${esc(c.headline)}</h2>` : ''}
+    <div class="spread">
+      ${a ? `<div class="sp-photo sp-a rv-r"><img src="${esc(a)}" alt="" loading="lazy" decoding="async"></div>` : ''}
+      ${c.tagline ? `<p class="sp-tag rv">${esc(c.tagline)}</p>` : ''}
+      ${b ? `<div class="sp-photo sp-b rv-l"><img src="${esc(b)}" alt="" loading="lazy" decoding="async"></div>` : ''}
+      <div class="sp-amp rv-amp" aria-hidden="true">&amp;</div>
+      ${day ? `<div class="sp-date rv">${esc(month)} ${day.d},<br>${day.y}${clock ? `<br>${esc(clock)}` : ''}</div>` : ''}
+    </div>
+    ${renderCountdown(cd)}
+  </section>`;
+}
+
+function polaroid(url, clipSide, cls) {
+  return `<div class="polaroid ${cls || ''}">
+    <span class="clip ${clipSide}">${CLIP}</span>
+    <div class="ph" data-fit="0.7:1.7"><img src="${esc(mediaSrc(url))}" alt="" loading="lazy" decoding="async"></div>
+  </div>`;
+}
+
+function renderPlaces(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.label || x.name || x.addr || x.img));
+  if (l.enabled === false || !items.length) return '';
+  const rows = items.map((x, i) => {
+    const flip = i % 2 === 1;
+    const link = x.addr || x.name || (x.url ? 'View on map' : '');
+    const linkHtml = link
+      ? (x.url ? `<a class="place-link caps" href="${esc(mapHref(x.url))}" target="_blank" rel="noopener">${esc(link)}</a>`
+               : `<span class="place-link caps" style="text-decoration:none">${esc(link)}</span>`)
+      : '';
+    const icon = stepIcon(x);
+    const when = `<div class="place-when caps rv">${icon ? `<span class="place-ico" aria-hidden="true">${esc(icon)}</span>` : ''}${x.label ? esc(x.label) : ''}${x.label && x.time ? '<br>' : ''}${x.time ? esc(x.time) : ''}${x.name && x.addr ? `<span class="place-name">${esc(x.name)}</span>` : ''}</div>`;
+    return `
+    <div class="place ${flip ? 'flip' : ''}">
+      <div class="place-card ${flip ? 'rv-r' : 'rv-l'}">${x.img ? polaroid(x.img, flip ? 'r' : 'l') : ''}</div>
+      ${when}
+      ${linkHtml ? `<div class="place-foot rv">${linkHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+  return `
+  <section class="section">
+    ${l.title ? `<h2 class="title rv">${esc(l.title)}</h2>` : ''}
+    ${rows}
+  </section>`;
+}
+
+function renderRsvp(r, maxPeople, guestName, greeting) {
+  const opts = ['<option value="" disabled selected>How many of you?</option>'];
+  for (let i = 1; i <= maxPeople; i++) opts.push(`<option value="${i}">${i}</option>`);
+  return `
+  <section class="section">
+    ${r.title ? `<h2 class="rsvp-title caps rv">${esc(r.title)}</h2>` : ''}
+    <div class="rsvp-card rv">
+      ${guestName ? `<p class="rsvp-greet">${esc((greeting || 'Dear') + ' ' + guestName)}</p>` : ''}
+      <form data-rsvp>
+        <label class="opt" data-opt><input type="radio" name="attending" value="yes"><span class="box"></span><span>Joyfully accepts</span></label>
+        <label class="opt" data-opt><input type="radio" name="attending" value="no"><span class="box"></span><span>Regretfully declines</span></label>
+        <div data-more hidden>
+          <div class="field">
+            <label>${guestName ? 'Invitation for' : 'Your name(s)'}</label>
+            ${guestName
+              ? `<input type="text" data-guest-name value="${esc(guestName)}" readonly aria-readonly="true" tabindex="-1">`
+              : `<input type="text" data-guest-name placeholder="Your name">`}
+          </div>
+          <div class="field" data-count-field hidden>
+            <label>How many of you${guestName ? ` (up to ${maxPeople})` : ''}</label>
+            <select data-guest-count>${opts.join('')}</select>
+          </div>
+          ${r.allowWishes !== false ? `
+          <div class="field">
+            <label>A note for the couple (optional)</label>
+            <textarea data-wishes rows="3" maxlength="200" placeholder="Your wishes…"></textarea>
+          </div>` : ''}
+        </div>
+        <button type="submit" class="rsvp-btn">${esc(r.buttonText || 'RSVP')}</button>
+      </form>
+      <p class="thanks" data-rsvp-success
+         data-accept="${esc(r.acceptMessage || "Thank you! We can't wait to celebrate with you.")}"
+         data-decline="${esc(r.declineMessage || 'Thank you for letting us know. You will be missed.')}"></p>
+      ${r.deadline ? `<p class="rsvp-note">Kindly reply by ${esc(fmtDate(r.deadline))}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function renderGift(data) {
+  const g = data.gifts || {};
+  const accounts = (g.items || []).filter(x => x && x.account);
+  const pics = [g.image, g.image2].filter(Boolean);
+  if (g.enabled === false || !(g.title || g.description || accounts.length || pics.length)) return '';
+  return `
+  <section class="section">
+    ${g.title ? `<h2 class="gift-title rv">${esc(g.title)}</h2>` : ''}
+    ${g.description ? `<p class="gift-desc rv">${nl2br(g.description)}</p>` : ''}
+    ${accounts.map(x => `
+      <div class="gift-line rv"><span>${esc(x.bank ? x.bank + ':' : 'Account:')}</span><span>${esc(x.account)}</span>
+        <button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}
+    ${pics.length ? `<div class="gift-pics ${pics.length === 1 ? 'single' : ''}">
+      <div class="rv-l">${polaroid(pics[0], 'l', 'p1')}</div>
+      ${pics[1] ? `<div class="p2 rv-r">${polaroid(pics[1], 'r')}</div>` : ''}
+    </div>` : ''}
+  </section>`;
+}
+
+function renderMosaic(data) {
+  const g = data.gallery || {};
+  const photos = (g.items || []).filter(x => x && x.url);
+  if (g.enabled === false || !photos.length) return '';
+  return `
+  ${g.title ? `<section class="section" style="padding-bottom:0"><h2 class="title rv">${esc(g.title)}</h2></section>` : ''}
+  <div class="mosaic">${photos.map(x => `
+    <div class="m rv"><img src="${esc(mediaSrc(x.url))}" alt="${esc(x.caption || 'Photograph')}" loading="lazy" decoding="async"></div>`).join('')}
+  </div>`;
+}
+
+function renderNotes(data) {
+  const out = [];
+  const t = data.timeline || {};
+  const steps = (t.items || []).filter(x => x && (x.title || x.time));
+  if (t.enabled !== false && steps.length) {
+    out.push(`
+    <section class="section note-block">
+      ${t.title ? `<h2 class="title rv">${esc(t.title)}</h2>` : ''}
+      ${steps.map(x => `<p class="note-body rv"><span class="caps">${esc(x.time || '')}</span> &nbsp; ${stepIcon(x) ? `<span class="note-ico" aria-hidden="true">${esc(stepIcon(x))}</span>` : ''}${esc(x.title || '')}${x.subtitle ? ` — ${esc(x.subtitle)}` : ''}</p>`).join('')}
+    </section>`);
+  }
+  (data.customSections || []).forEach(s => {
+    if (!s || s.enabled === false || !(s.title || s.body)) return;
+    out.push(`
+    <section class="section note-block">
+      ${s.title ? `<h2 class="title rv">${esc(s.title)}</h2>` : ''}
+      ${s.body ? `<p class="note-body rv">${nl2br(s.body)}</p>` : ''}
+      ${s.label ? `<p class="note-label caps rv">${esc(s.label)}</p>` : ''}
+    </section>`);
+  });
+  const m = data.memories;
+  if (m && m.enabled !== false && m.url) {
+    out.push(`
+    <section class="section note-block">
+      ${m.title ? `<h2 class="title rv">${esc(m.title)}</h2>` : ''}
+      ${m.description ? `<p class="note-body rv">${nl2br(m.description)}</p>` : ''}
+      <a class="btn-link rv" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.buttonText || 'Share Memories')}</a>
+    </section>`);
+  }
+  return out.join('');
+}
+
+// ── BUILD ──────────────────────────────────────────────
+function build(data) {
+  const guestName = getGuestName();
+  const maxPeople = getMaxOverride() || (data.rsvp && data.rsvp.maxPeople) || 10;
+
+  const parts = [];
+  if (data.cover && data.cover.enabled !== false) parts.push(renderCover(data));
+  parts.push(renderSpread(data));
+  parts.push(renderPlaces(data));
+  parts.push(renderNotes(data));
+  if (data.rsvp && data.rsvp.enabled !== false) parts.push(renderRsvp(data.rsvp, maxPeople, guestName, (data.cover || {}).greeting));
+  parts.push(renderGift(data));
+  parts.push(renderMosaic(data));
+  parts.push(`<footer class="foot">${esc((data.cover || {}).names || data.title || '')}</footer>`);
+
+  document.getElementById('main').innerHTML = parts.join('');
+  document.title = (data.title || (data.cover && data.cover.names) || 'Invitation') + ' — Wedding Invitation';
+
+  fitNames();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNames).catch(() => {});
+  fitFrames();
+  setupReveal();
+  startCountdown();
+  if (window.InvitationMusic) InvitationMusic.init(data.music, API_BASE);
+}
+
+// ── FITTING ────────────────────────────────────────────
+// Names span ~78% of the card in the reference; measure once and scale (width is linear in size).
+function fitNames() {
+  document.querySelectorAll('.names').forEach(row => {
+    const t = row.querySelector('.names-text');
+    if (!t) return;
+    t.style.setProperty('--fit', '1');
+    const w = t.getBoundingClientRect().width, avail = row.clientWidth;
+    if (w && avail) t.style.setProperty('--fit', Math.max(.45, Math.min(1.6, (avail * .8) / w)).toFixed(3));
+  });
+}
+// Polaroids take the shape of the photo put in them (clamped to data-fit), so an uploaded portrait
+// or landscape is never guillotined; object-fit:cover handles whatever the clamp leaves.
+function fitFrames() {
+  document.querySelectorAll('[data-fit]').forEach(frame => {
+    const img = frame.querySelector('img');
+    if (!img) return;
+    const apply = () => {
+      if (!img.naturalWidth || !img.naturalHeight) return;
+      const [min, max] = frame.dataset.fit.split(':').map(Number);
+      frame.style.aspectRatio = String(Math.min(max, Math.max(min, img.naturalWidth / img.naturalHeight)));
+    };
+    // `complete` alone isn't enough: a deferred lazy image reports complete with naturalWidth 0.
+    if (img.complete && img.naturalWidth) apply(); else img.addEventListener('load', apply, { once: true });
+  });
+}
+let reflowTimer = null;
+window.addEventListener('resize', () => { clearTimeout(reflowTimer); reflowTimer = setTimeout(fitNames, 150); }, { passive: true });
+
+// ── COUNTDOWN ──────────────────────────────────────────
+let countdownTimer = null;
+function startCountdown() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  const node = document.querySelector('[data-countdown]');
+  if (!node) return;
+  const target = Number(node.dataset.countdown);
+  if (!Number.isFinite(target)) return;
+  const cells = node.querySelectorAll('[data-cd]');
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      clearInterval(countdownTimer); countdownTimer = null;
+      node.innerHTML = `<p class="cd-note">${diff > -86400000 ? 'Today is the day' : 'Thank you for celebrating with us'}</p>`;
+      return;
+    }
+    const v = {
+      d: String(Math.floor(diff / 86400000)),
+      h: pad(Math.floor(diff / 3600000) % 24),
+      m: pad(Math.floor(diff / 60000) % 60),
+      s: pad(Math.floor(diff / 1000) % 60)
+    };
+    cells.forEach(e => { if (e.textContent !== v[e.dataset.cd]) e.textContent = v[e.dataset.cd]; });
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) startCountdown(); });
+
+// ── REVEAL ─────────────────────────────────────────────
+const REVEAL = ['.rv', '.rv-l', '.rv-r', '.rv-amp', '.heart'];
+function revealInView() {
+  const pending = document.querySelectorAll(REVEAL.map(s => s + ':not(.in)').join(', '));
+  if (!pending.length) return;
+  const h = window.innerHeight;
+  pending.forEach(el => { const r = el.getBoundingClientRect(); if (r.top < h && r.bottom > 0) el.classList.add('in'); });
+}
+function setupReveal() {
+  const els = document.querySelectorAll(REVEAL.join(', '));
+  if (!('IntersectionObserver' in window)) { els.forEach(el => el.classList.add('in')); return; }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+  els.forEach(el => io.observe(el));
+  revealInView();
+}
+let idleSweep = null;
+window.addEventListener('scroll', () => { clearTimeout(idleSweep); idleSweep = setTimeout(revealInView, 160); }, { passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) revealInView(); });
+
+// ── EVENTS ─────────────────────────────────────────────
+document.addEventListener('click', e => {
+  const copy = e.target.closest('[data-copy]');
+  if (!copy) return;
+  navigator.clipboard?.writeText(copy.dataset.copy).then(() => {
+    const orig = copy.textContent;
+    copy.textContent = 'Copied';
+    setTimeout(() => { copy.textContent = orig; }, 2000);
+  });
+});
+
+// The two rows behave as radio buttons drawn as the reference's checkboxes. Choosing one opens the
+// rest of the card; the party size is asked for only when the answer is yes.
+document.addEventListener('change', e => {
+  if (!e.target.matches('input[name="attending"]')) return;
+  const form = e.target.closest('[data-rsvp]');
+  form.querySelectorAll('[data-opt]').forEach(o => o.classList.toggle('on', o.contains(e.target)));
+  form.querySelector('[data-more]').hidden = false;
+  form.querySelector('[data-count-field]').hidden = e.target.value !== 'yes';
+});
+
+document.addEventListener('submit', async e => {
+  const form = e.target.closest('[data-rsvp]');
+  if (!form) return;
+  e.preventDefault();
+
+  const att       = form.querySelector('input[name="attending"]:checked');
+  const countEl   = form.querySelector('[data-guest-count]');
+  const nameInput = form.querySelector('[data-guest-name]');
+  const wishes    = form.querySelector('[data-wishes]');
+  const name      = getGuestName() || (nameInput ? nameInput.value.trim() : '');
+
+  if (!att) return alert('Please choose whether you can come.');
+  const attending = att.value === 'yes';
+  const count = countEl ? countEl.value : '';
+  if (!name) return alert('Please enter your name.');
+  if (attending && !count) return alert('Please choose how many of you are coming.');
+
+  const btn = form.querySelector('.rsvp-btn');
+  const original = btn.textContent;
+
+  if (CURRENT_SLUG) {
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      const guestNames = attending ? name.split(/\s*(?:&|,| and )\s*/i).map(s => s.trim()).filter(Boolean) : [];
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(CURRENT_SLUG)}/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          response: attending ? 'yes' : 'no',
+          partySize: attending ? parseInt(count) : 0,
+          contactName: name,
+          message: wishes ? (wishes.value.trim() || null) : null,
+          guests: guestNames.map(n => ({ fullName: n })),
+          guestToken: CURRENT_GUEST ? CURRENT_GUEST.token : null
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        btn.disabled = false; btn.textContent = original;
+        return alert(err.error || `Submission failed (${res.status}). Please try again.`);
+      }
+    } catch {
+      btn.disabled = false; btn.textContent = original;
+      return alert('Network error. Please check your connection and try again.');
+    }
+  }
+
+  form.style.display = 'none';
+  const note = form.parentElement.querySelector('[data-rsvp-success]');
+  note.innerHTML = nl2br(attending ? note.dataset.accept : note.dataset.decline);
+  note.style.display = 'block';
+});
+
+// ── INIT ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    build(await loadData());
+  } catch (e) {
+    console.error('Failed to load invitation data:', e);
+    build(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  }
+});
+</script>
+</body>
+</html>

@@ -40,13 +40,36 @@ public class CoverData
     // Elegant Noir envelope screen: "Dear {guest}" prefix + wax-seal image
     public string? Greeting { get; set; }
     public string? SealImage { get; set; }
+
+    // Wedding Daily (newspaper) front page. All optional -- the template falls back to sensible
+    // defaults when they are blank, so invitations created before these fields existed still render.
+    /// <summary>Newspaper masthead, e.g. "The Wedding Daily".</summary>
+    public string? MastheadTitle { get; set; }
+    /// <summary>Small text either side of the month in the masthead bar, e.g. "Special Edition".</summary>
+    public string? EditionLabel { get; set; }
+    /// <summary>Front-page headline, e.g. "Top Story of the Year".</summary>
+    public string? Headline { get; set; }
+
+    /// <summary>Polaroid Heart: the photos arranged into the heart on the cover, in display order.</summary>
+    public List<GalleryImage>? Collage { get; set; }
 }
 
 public class CountdownData
 {
     public bool Enabled { get; set; } = true;
     public string? Label { get; set; }
+    /// <summary>Wedding day, ISO yyyy-MM-dd. Mirrors <see cref="Invitation.EventDate"/>.</summary>
     public string? Date { get; set; }
+    /// <summary>Ceremony start, 24-hour HH:mm. Empty means midnight at the start of the day.</summary>
+    public string? Time { get; set; }
+    /// <summary>
+    /// Minutes to add to the wedding's local time to reach UTC, captured from the admin's browser
+    /// for that specific date (so it already accounts for daylight saving). It is what lets a guest
+    /// abroad count down to the ceremony's real instant rather than to the same wall-clock time in
+    /// their own zone. Null on invitations saved before this existed — those fall back to being
+    /// read in the viewer's local time, which is the old behaviour.
+    /// </summary>
+    public int? TzOffset { get; set; }
     public string? Description { get; set; }
     public string? Image { get; set; }
 }
@@ -76,6 +99,8 @@ public class GiftsData
     public string? Label { get; set; }
     public string? Title { get; set; }
     public string? Image { get; set; }
+    /// <summary>Second photo, for templates that set two beside the gift details (Polaroid Heart).</summary>
+    public string? Image2 { get; set; }
     public string? Description { get; set; }
     public List<GiftItem> Items { get; set; } = [];
 }
@@ -101,6 +126,21 @@ public class RsvpData
     public string? AcceptMessage { get; set; }
     /// <summary>Shown after a guest declines.</summary>
     public string? DeclineMessage { get; set; }
+
+    // Wedding Daily (newspaper) RSVP page -- optional, blank falls back to the template default.
+    /// <summary>Short message shown above the accept/decline choice.</summary>
+    public string? Description { get; set; }
+    /// <summary>Script question above the accept/decline buttons, e.g. "Coming?".</summary>
+    public string? Question { get; set; }
+
+    // Host contact shown with the reply (birthday, engagement, baby shower and graduation
+    // templates). All optional; the RSVP config is stored whole, so no mapper change is needed.
+    /// <summary>Who guests can ask about the event, e.g. "Rana (Emma's mum)".</summary>
+    public string? ContactName { get; set; }
+    /// <summary>Phone number; templates offer Call and WhatsApp links from it.</summary>
+    public string? ContactPhone { get; set; }
+    /// <summary>Optional social or messaging link — a URL, or an @handle read as Instagram.</summary>
+    public string? ContactLink { get; set; }
 }
 
 public class CustomSection
@@ -117,6 +157,8 @@ public class GalleryData
     public bool Enabled { get; set; } = true;
     public string? Label { get; set; }
     public string? Title { get; set; }
+    /// <summary>Optional feature video shown with the photos (the large centre plate in Marble Waltz).</summary>
+    public string? Video { get; set; }
     public List<GalleryImage> Items { get; set; } = [];
 }
 
@@ -149,6 +191,8 @@ public class FamiliesData
     public bool Enabled { get; set; } = true;
     public string? Label { get; set; }
     public string? Title { get; set; }
+    /// <summary>Background photograph of the invitation page (Editorial Love Story).</summary>
+    public string? Image { get; set; }
     public List<FamilyItem> Items { get; set; } = [];
 }
 

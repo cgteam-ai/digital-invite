@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f2efe8">
+<title>Engagement Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Hanken Grotesk: a clean contemporary sans for the structure. Newsreader: a literary serif whose
+     italic carries the warmth. -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * VENN UNION — a modern, art-directed engagement invitation.
+   * Two circles — one terracotta, one holding the couple's photograph — slide in from either side
+   * and overlap: two lives, one shared space. A numbered editorial grid, black-and-white
+   * photography, oversized italic numerals and a pair of overlapping yes/no circles to reply.
+   */
+  :root {
+    --paper: #f2efe8;
+    --sand:  #e4dacb;
+    --ink:   #1d1c1a;
+    --muted: #6f6a61;
+    --line:  rgba(29,28,26,.16);
+    --terra: #c8643b;
+    --sage:  #8fa38a;
+    --sans:  'Hanken Grotesk', 'Helvetica Neue', Arial, sans-serif;
+    --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+    --pad: clamp(20px, 6vw, 56px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-tap-highlight-color: transparent; }
+  img, video { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 1180px); margin: 0 auto; padding: 0 var(--pad); }
+  .it { font-family: var(--serif); font-style: italic; font-weight: 300; }
+  .label { font-size: .72rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+
+  .rv { opacity: 0; transform: translateY(24px); transition: opacity 1s ease, transform 1.1s cubic-bezier(.2,.7,.1,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; padding-top: calc(env(safe-area-inset-top) + 18px); }
+  .bar { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .hero-grid { flex: 1; display: grid; gap: 22px; align-content: center; padding: 26px 0 40px; }
+  .venn { position: relative; width: min(88vw, 520px); aspect-ratio: 1.55; margin: 0 auto; }
+  .circle { position: absolute; top: 0; width: 64.5%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; transition: transform 1.8s cubic-bezier(.7,0,.2,1) .15s; }
+  .circle.a { left: 0; background: var(--terra); z-index: 2; mix-blend-mode: multiply; transform: translateX(-38%); }
+  .circle.b { right: 0; background: var(--sage); transform: translateX(38%); }
+  .circle.b img, .circle.b video { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.05); }
+  .is-ready .circle.a, .is-ready .circle.b { transform: none; }
+  .initial { position: absolute; top: 50%; z-index: 3; translate: 0 -50%; font-family: var(--serif); font-weight: 300; font-size: clamp(3rem, 14vw, 5.6rem); line-height: 1; color: var(--paper);
+             opacity: 0; transition: opacity 1s ease 1.6s; pointer-events: none; }
+  .initial.a { left: 15%; } .initial.b { right: 15%; }
+  .has-photo .initial.b { text-shadow: 0 2px 20px rgba(0,0,0,.35); }
+  .is-ready .initial { opacity: 1; }
+  .names { font-family: var(--sans); font-weight: 300; letter-spacing: -.045em; line-height: .92; font-size: calc(clamp(3.6rem, 17vw, 8.6rem) * var(--fit, 1)); }
+  .names > span { display: block; }
+  .names .plus { font-family: var(--serif); font-style: italic; font-weight: 300; color: var(--terra); letter-spacing: 0; }
+  .headline { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(1.4rem, 5.6vw, 2.2rem); line-height: 1.2; margin-top: 12px; }
+  .hero-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .hero-meta b { display: block; font-weight: 500; overflow-wrap: anywhere; }
+  .hero-tag { color: var(--muted); max-width: 36ch; }
+  .cta { display: inline-flex; align-items: center; justify-content: space-between; gap: 30px; min-height: 56px; padding: 0 22px; background: var(--ink); color: var(--paper);
+         text-decoration: none; font-weight: 500; letter-spacing: .04em; transition: background .3s; }
+  .cta:hover { background: var(--terra); }
+  @media (min-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr 1fr; gap: 40px 60px; align-items: center; }
+    .venn { grid-column: 2; grid-row: 1 / span 3; width: 100%; }
+    .names-block { grid-column: 1; }
+  }
+
+  /* ── NUMBERED EDITORIAL SECTIONS ── */
+  .chapter { display: grid; gap: 18px; padding: clamp(56px, 12vw, 120px) 0; border-top: 1px solid var(--line); }
+  .ch-head { display: flex; align-items: baseline; gap: 14px; }
+  .ch-n { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(2.2rem, 9vw, 3.6rem); line-height: 1; color: var(--terra); }
+  .ch-title { font-weight: 300; letter-spacing: -.03em; line-height: 1; font-size: calc(clamp(2rem, 8.5vw, 3.6rem) * var(--fit, 1)); }
+  @media (min-width: 900px) {
+    .chapter { grid-template-columns: minmax(220px, 1fr) 2.4fr; gap: 60px; }
+    .ch-head { flex-direction: column; gap: 10px; position: sticky; top: 30px; align-self: start; }
+  }
+
+  /* Countdown as oversized italic numerals separated by slashes. */
+  .cd { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 0; }
+  .cd-cell { display: grid; min-width: 0; }
+  .cd-cell + .cd-cell::before { content: '/'; grid-row: 1; grid-column: 1; position: absolute; }
+  .cd-cell { position: relative; padding: 0 clamp(12px, 3.6vw, 34px); }
+  .cd-cell:first-child { padding-left: 0; }
+  .cd-cell + .cd-cell::before { left: -.05em; top: 0; font-family: var(--serif); font-weight: 300; font-size: clamp(3rem, 13vw, 7rem); line-height: 1; color: var(--line); color: rgba(29,28,26,.2); translate: -50% 0; }
+  .cd-num { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(3rem, 13vw, 7rem); line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .cd-unit { font-size: .7rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .cd-note { font-family: var(--serif); font-style: italic; font-size: clamp(2rem, 8vw, 3.4rem); }
+  /* Below tablet width the four figures would wrap onto a second line behind a stray slash, so
+     they sit in a ruled 2 × 2 grid instead. */
+  @media (max-width: 680px) {
+    .cd { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 0; }
+    .cd-cell, .cd-cell:first-child { padding: 0 0 0 14px; border-left: 1px solid var(--line); }
+    .cd-cell + .cd-cell::before { display: none; }
+    .cd-num { font-size: clamp(2.8rem, 16vw, 4rem); }
+  }
+  .date-full { font-family: var(--serif); font-size: clamp(1.3rem, 5vw, 1.8rem); font-weight: 300; margin-top: 18px; }
+
+  /* Places: black-and-white photograph with a terracotta offset block. */
+  .place { display: grid; gap: 22px; }
+  .place + .place { margin-top: 50px; }
+  @media (min-width: 760px) { .place { grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; } }
+  .place figure { position: relative; aspect-ratio: 4 / 5; }
+  .place figure::before { content: ''; position: absolute; inset: 18px -18px -18px 18px; background: var(--terra); z-index: 0; }
+  .place figure img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+  @media (max-width: 759px) { .place figure { width: calc(100% - 18px); aspect-ratio: 4 / 3; } }
+  .place h3 { font-weight: 300; letter-spacing: -.02em; font-size: clamp(1.9rem, 7.5vw, 2.8rem); line-height: 1.05; margin-top: 8px; overflow-wrap: anywhere; }
+  .place p { color: var(--muted); overflow-wrap: anywhere; }
+  .place .time { font-family: var(--serif); font-style: italic; font-size: 1.35rem; color: var(--ink); margin-top: 10px; }
+  .arrow { display: inline-flex; align-items: center; gap: 12px; min-height: 48px; margin-top: 14px; font-weight: 500; text-decoration: none; border-bottom: 1px solid var(--ink); }
+  .arrow::after { content: '→'; transition: translate .3s; }
+  .arrow:hover::after { translate: 6px 0; }
+
+  /* Programme as a ruled table. */
+  .rows { border-top: 1px solid var(--ink); }
+  .row { display: grid; grid-template-columns: 90px 1fr; gap: 6px 18px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .row .t { font-family: var(--serif); font-style: italic; font-size: 1.3rem; line-height: 1.3; }
+  .row h3 { font-weight: 500; font-size: 1.1rem; overflow-wrap: anywhere; }
+  .row p { grid-column: 2; color: var(--muted); }
+  .row a { color: var(--terra); }
+  @media (min-width: 760px) { .row { grid-template-columns: 140px 1fr 1fr; } .row p { grid-column: 3; } }
+
+  /* Families, story, gifts. */
+  .fam-grid { display: grid; gap: 22px; }
+  @media (min-width: 700px) { .fam-grid { grid-template-columns: 1fr auto 1fr; align-items: center; } }
+  .fam-grid .plus { font-family: var(--serif); font-style: italic; font-size: 3rem; color: var(--terra); line-height: 1; }
+  .fam-grid b { display: block; font-weight: 400; font-size: 1.35rem; margin-top: 4px; overflow-wrap: anywhere; }
+  .quote { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(1.6rem, 6.5vw, 2.8rem); line-height: 1.25; }
+  .quote-figure { margin-top: 26px; max-width: 420px; aspect-ratio: 3 / 2; overflow: hidden; }
+  .quote-figure img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+  .acct { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .acct span { overflow-wrap: anywhere; }
+  .copy { min-height: 40px; padding: 0 16px; border: 1px solid var(--ink); background: transparent; font-weight: 500; cursor: pointer; }
+  .copy:hover { background: var(--ink); color: var(--paper); }
+
+  /* Gallery: asymmetric, black-and-white until touched. */
+  .pics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .pics figure { overflow: hidden; background: var(--sand); grid-column: span 3; aspect-ratio: 1; }
+  .pics figure:nth-child(3n+1) { grid-column: span 6; aspect-ratio: 16 / 10; }
+  @media (min-width: 760px) { .pics figure, .pics figure:nth-child(3n+1) { grid-column: span 2; aspect-ratio: 3 / 4; } .pics figure:nth-child(3n+1) { grid-column: span 4; aspect-ratio: auto; } }
+  .pics img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: filter .6s; }
+  .pics figure:hover img { filter: none; }
+
+  /* ── RSVP: two overlapping circles for yes / no ── */
+  .rsvp-intro { font-family: var(--serif); font-weight: 300; font-size: clamp(1.25rem, 5vw, 1.6rem); line-height: 1.4; max-width: 40ch; }
+  .rsvp-notes { color: var(--muted); margin-top: 8px; }
+  .rsvp { display: grid; gap: 18px; margin-top: 30px; max-width: 560px; }
+  .rsvp-choices { display: flex; justify-content: flex-start; padding: 6px 0; }
+  .rsvp-choice { position: relative; width: clamp(118px, 36vw, 156px); aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--ink); display: grid; place-items: center; text-align: center;
+                 padding: 16px; cursor: pointer; font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 4.4vw, 1.3rem); line-height: 1.1; transition: background .4s, color .4s; }
+  .rsvp-choice + .rsvp-choice { margin-left: -22px; }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice.on { background: var(--terra); border-color: var(--terra); color: var(--paper); z-index: 1; }
+  .rsvp-choice:nth-child(2).on { background: var(--ink); border-color: var(--ink); }
+  .rsvp-choice:focus-within { outline: 2px solid var(--terra); outline-offset: 3px; }
+  .rsvp-field { display: grid; gap: 4px; }
+  .rsvp-label { font-size: .7rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .rsvp-input { width: 100%; min-height: 50px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font-size: 17px; }
+  textarea.rsvp-input { resize: none; min-height: 80px; }
+  .rsvp-input::placeholder { color: rgba(29,28,26,.4); }
+  .rsvp-input:focus { outline: none; border-bottom: 2px solid var(--terra); }
+  .rsvp-error { color: #a33b17; }
+  .rsvp-submit { display: flex; justify-content: space-between; align-items: center; min-height: 60px; padding: 0 22px; border: 0; cursor: pointer; background: var(--ink); color: var(--paper); font-weight: 500; font-size: 1.02rem; letter-spacing: .03em; transition: background .3s; }
+  .rsvp-submit::after { content: '→'; }
+  .rsvp-submit:hover { background: var(--terra); }
+  .rsvp-done { margin-top: 30px; }
+  .rsvp-done-title { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(2.4rem, 10vw, 4rem); line-height: 1; }
+  .rsvp-done.is-yes .rsvp-done-title { color: var(--terra); }
+  .rsvp-done-body { color: var(--muted); margin-top: 10px; }
+  .contact { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .contact-intro { font-size: .7rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .contact-name { font-size: 1.3rem; margin-top: 2px; }
+  .contact-phone { color: var(--muted); }
+  .contact-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--ink); text-decoration: none; font-weight: 500; }
+  .contact-link:hover { background: var(--ink); color: var(--paper); }
+
+  footer { padding: 50px 0 calc(env(safe-area-inset-bottom) + 70px); border-top: 1px solid var(--line); }
+  .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+  .mini { position: relative; width: 70px; height: 44px; }
+  .mini i { position: absolute; top: 0; width: 44px; height: 44px; border-radius: 50%; }
+  .mini i:first-child { left: 0; background: var(--terra); mix-blend-mode: multiply; z-index: 1; }
+  .mini i:last-child { right: 0; background: var(--sage); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv { opacity: 1; transform: none; transition: none; }
+    .circle.a, .circle.b { transform: none; transition: none; }
+    .initial { opacity: 1; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const A = '/assets/venn-union/';
+const DEFAULT_DATA = {
+  template: 'venn-union',
+  title: 'Name & Name',
+  cover: {
+    enabled: true, headline: 'are getting engaged', eventLabel: 'Engagement', names: 'Name & Name',
+    tagline: 'Two stories. One shared chapter.', greeting: 'Dear', hostIntro: '', hostOutro: '', hostText: '',
+    image: A + 'cover.jpg', video: '', buttonText: 'Reply to the invitation'
+  },
+  countdown: { enabled: true, label: 'The date', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: true, label: 'Families', title: 'With our families', items: [] },
+  locations: { enabled: true, label: 'The place', title: 'The place', image: '', items: [
+    { label: 'Engagement celebration', time: '', name: '', addr: '', url: '', img: A + 'venue.jpg' }
+  ] },
+  timeline:  { enabled: true, label: 'The evening', title: 'The evening', items: [] },
+  gallery:   { enabled: true, label: 'Us', title: 'Us', items: [ { url: A + 'hands.jpg', caption: '' } ] },
+  gifts:     { enabled: false, label: 'Gifts', title: 'Gifts', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'RSVP', title: 'Will you join us?', description: '',
+    deadline: '', maxPeople: 2, buttonText: 'Send reply', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const parts = I.splitNames(c.names || data.title || '');
+  const dp = I.dateParts(cd);
+  const place = ((data.locations || {}).items || []).find(x => x && x.name);
+  const guest = I.guestName();
+  const photo = I.media(c.image, c.video, c.names, true);
+  const ini = parts.map(p => p.charAt(0).toUpperCase());
+  return `
+  <section class="hero">
+    <div class="wrap" style="flex:1;display:flex;flex-direction:column">
+      <div class="bar">
+        <span class="label">${guest ? `${esc(c.greeting || 'Dear')} ${esc(guest)}` : esc(c.eventLabel || 'Engagement')}</span>
+        <span class="label">${dp ? `${I.pad2(dp.d)}.${I.pad2(dp.mo)}.${String(dp.y).slice(2)}` : ''}</span>
+      </div>
+      <div class="hero-grid">
+        <div class="venn${photo ? ' has-photo' : ''}" aria-hidden="true">
+          <div class="circle b">${photo}</div>
+          <div class="circle a"></div>
+          ${ini[0] ? `<span class="initial a">${esc(ini[0])}</span>` : ''}
+          ${ini[1] ? `<span class="initial b">${esc(ini[1])}</span>` : ''}
+        </div>
+        <div class="names-block">
+          <h1 class="names" data-fit=".4">
+            <span>${esc(parts[0] || '')}</span>
+            ${parts.length > 1 ? `<span><span class="plus">+</span> ${esc(parts.slice(1).join(' & '))}</span>` : ''}
+          </h1>
+          ${c.headline ? `<p class="headline">${esc(c.headline)}</p>` : ''}
+        </div>
+        <div class="names-block">
+          <div class="hero-meta">
+            <div><span class="label">When</span><b>${dp ? `${esc(dp.weekday)}, ${dp.d} ${esc(dp.month)} ${dp.y}` : 'To be announced'}${cd.time ? ` · ${esc(I.fmtClock(cd.time))}` : ''}</b></div>
+            <div><span class="label">Where</span><b>${esc((place && place.name) || cd.description || 'To be announced')}</b></div>
+          </div>
+          ${c.tagline ? `<p class="hero-tag" style="margin-top:16px">${esc(c.tagline)}</p>` : ''}
+          <a class="cta" href="#rsvp" style="margin-top:20px">${esc(c.buttonText || 'Reply to the invitation')} <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+/** One numbered chapter: a sticky number + title, then its content. */
+const chapter = (n, title, body, id) => `
+  <section class="chapter"${id ? ` id="${id}"` : ''}>
+    <div class="ch-head rv"><span class="ch-n">${I.pad2(n)}</span><h2 class="ch-title" data-fit>${esc(title)}</h2></div>
+    <div>${body}</div>
+  </section>`;
+
+function build(data) {
+  const c = data.cover || {}, cd = data.countdown || {}, l = data.locations || {}, t = data.timeline || {};
+  const f = data.families || {}, g = data.gallery || {}, gf = data.gifts || {}, r = data.rsvp || {};
+  document.title = (c.names || data.title || 'Engagement') + ' — Engagement Invitation';
+  const chapters = [];
+
+  (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body)).forEach(s => chapters.push([s.label || s.title || 'A note', `
+    ${s.title && s.label ? `<p ${R('label')}>${esc(s.title)}</p>` : ''}
+    ${s.body ? `<p ${R('quote')}>${I.nl2br(s.body)}</p>` : ''}
+    ${s.image ? `<figure ${R('quote-figure')}>${I.img(s.image, s.title)}</figure>` : ''}`]));
+
+  if (cd.enabled !== false) {
+    const target = I.eventInstant(cd), dp = I.dateParts(cd);
+    chapters.push([cd.label || 'The date', `
+      ${target !== null ? `<div ${R('cd')} data-countdown="${target}" data-past-today="Tonight." data-past-after="Thank you for being there.">${I.countdownCells()}</div>` : ''}
+      <p ${R('date-full')}>${dp ? `${esc(dp.long)}${cd.time ? `, <span class="it">from ${esc(I.fmtClock(cd.time))}</span>` : ''}` : 'The date will be announced soon.'}</p>
+      ${cd.description ? `<p ${R('label')} style="margin-top:10px">${esc(cd.description)}</p>` : ''}`]);
+  }
+
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  if (fams.length || c.hostText) chapters.push([f.title || f.label || 'With our families', `
+    ${c.hostText ? `<p ${R('rsvp-intro')}>${I.nl2br(c.hostText)}</p>` : ''}
+    ${fams.length ? `<div ${R('fam-grid')}>${fams.map((x, i) => `${i > 0 ? '<span class="plus" aria-hidden="true">+</span>' : ''}<div><span class="label">${esc(x.label || '')}</span><b>${esc(x.names || '')}</b></div>`).join('')}</div>` : ''}`]);
+
+  const places = (l.items || []).filter(x => x && (x.name || x.addr || x.label));
+  if (l.enabled !== false && places.length) chapters.push([l.title || l.label || 'The place', places.map(x => `
+    <article ${R('place')}>
+      ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+      <div>
+        ${x.label ? `<p class="label">${esc(x.label)}</p>` : ''}
+        ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+        ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+        ${x.time ? `<p class="time">${esc(x.time)}</p>` : ''}
+        ${x.url ? `<a class="arrow" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Directions</a>` : ''}
+      </div>
+    </article>`).join('')]);
+
+  const steps = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled !== false && steps.length) chapters.push([t.title || t.label || 'The evening', `
+    <div class="rows">${steps.map(x => `
+      <div ${R('row')}>
+        <span class="t">${esc(x.time || '')}</span>
+        <h3>${esc(x.title || '')}</h3>
+        ${x.subtitle || x.url ? `<p>${esc(x.subtitle || '')}${x.url ? ` <a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Map ↗</a>` : ''}</p>` : ''}
+      </div>`).join('')}</div>`]);
+
+  const pics = (g.enabled !== false ? (g.items || []) : []).filter(x => x && x.url).slice(0, 7);
+  if (pics.length) chapters.push([g.title || g.label || 'Us', `<div class="pics">${pics.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}</figure>`).join('')}</div>`]);
+
+  const accounts = (gf.items || []).filter(x => x && x.account);
+  if (gf.enabled !== false && (accounts.length || gf.description)) chapters.push([gf.title || 'Gifts', `
+    ${gf.description ? `<p ${R('rsvp-intro')}>${I.nl2br(gf.description)}</p>` : ''}
+    <div ${R()} style="margin-top:20px">${accounts.map(x => `<div class="acct"><span><b>${esc(x.bank || 'Account')}</b> · ${esc(x.account)}</span><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}</div>`]);
+
+  if (r.enabled !== false) chapters.push([r.title || 'Will you join us?', `
+    ${r.description ? `<p ${R('rsvp-intro')}>${I.nl2br(r.description)}</p>` : ''}
+    ${I.rsvpNotes(r).map(n => `<p ${R('rsvp-notes')}>${esc(n)}</p>`).join('')}
+    <div ${R()}>
+      ${I.rsvpForm(r, {
+        yes: 'Yes, with joy', no: 'Sadly, no',
+        nameLabel: 'Name', namePlaceholder: 'Your full name',
+        countLabel: 'Guests', wishesLabel: 'A few words (optional)',
+        wishesPlaceholder: 'For the two of you…', button: r.buttonText || 'Send reply',
+        doneTitle: 'Thank you.'
+      })}
+    </div>
+    ${I.contactHtml(r, { intro: 'Questions' })}`, 'rsvp']);
+
+  const parts = I.splitNames(c.names || data.title || '');
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    `<div class="wrap">${chapters.map(([title, body, id], i) => chapter(i + 1, title, body, id)).join('')}</div>`,
+    `<footer><div class="wrap foot"><span class="mini" aria-hidden="true"><i></i><i></i></span><span class="it" style="font-size:1.4rem">${parts.map(esc).join(' + ')}</span></div></footer>`
+  ].join('');
+}
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

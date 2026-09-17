@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2346ff">
+<title>Graduation Party</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Bricolage Grotesque: a characterful, variable-width grotesque that goes from tight and loud to
+     relaxed. DM Mono: little technical labels. -->
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * CAP TOSS — a modern, high-energy graduation party.
+   * Electric cobalt and sunshine yellow, a huge "CLASS OF" year, mortarboards flying up with a
+   * confetti burst, a spinning "congrats" badge around the graduate's photo, bold striped programme
+   * rows and a chunky reply card that throws confetti again when someone says yes.
+   */
+  :root {
+    --cobalt: #2346ff;
+    --cobalt-2: #1a35cc;
+    --sun:    #ffd23a;
+    --pink:   #ff6fb5;
+    --mint:   #3fe0a8;
+    --white:  #fafaf7;
+    --ink:    #0f1226;
+    --soft:   rgba(15,18,38,.66);
+    --sans: 'Bricolage Grotesque', 'Arial Black', system-ui, sans-serif;
+    --mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    --pad: clamp(18px, 5.5vw, 48px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--white); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+  img, video, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 1120px); margin: 0 auto; padding: 0 var(--pad); }
+  .sec { position: relative; padding: clamp(56px, 12vw, 110px) 0; }
+  .mono { font-family: var(--mono); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+  .big { font-weight: 800; font-stretch: 78%; letter-spacing: -.02em; line-height: .92; text-transform: uppercase; font-size: calc(clamp(2.6rem, 12vw, 5.6rem) * var(--fit, 1)); margin-top: 8px; }
+  .hl { background: var(--sun); padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+  .rv { opacity: 0; transform: translateY(30px) scale(.97); transition: opacity .6s ease, transform .8s cubic-bezier(.2,1.5,.4,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; background: var(--cobalt); color: var(--white);
+          display: flex; flex-direction: column; padding: calc(env(safe-area-inset-top) + 18px) 0 40px; }
+  .top { display: flex; justify-content: space-between; gap: 10px; }
+  .top span { padding: 6px 12px; border-radius: 999px; border: 1.5px solid rgba(250,250,247,.5); }
+  .hero-grid { position: relative; z-index: 2; flex: 1; display: grid; gap: 18px; align-content: center; padding-top: 18px; }
+  .class-of { font-weight: 800; font-stretch: 75%; text-transform: uppercase; line-height: .8; letter-spacing: -.03em; }
+  /* Solid, not outlined: this variable font's letters are built from overlapping shapes, and a
+     text stroke would draw every internal overlap. */
+  .class-of .lbl { display: block; font-size: calc(clamp(3rem, 17vw, 8rem) * var(--fit, 1)); color: var(--white); }
+  .class-of .yr { display: block; font-size: calc(clamp(5.4rem, 36vw, 17rem) * var(--fit, 1)); color: var(--sun); }
+  .who { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .sticker { display: inline-block; padding: 10px 16px; background: var(--pink); color: var(--ink); font-weight: 800; font-size: clamp(1.2rem, 5.2vw, 1.8rem); line-height: 1.1; rotate: -4deg; border-radius: 12px;
+             box-shadow: 4px 4px 0 var(--ink); scale: .3; opacity: 0; transition: scale .6s cubic-bezier(.2,1.8,.4,1) .9s, opacity .3s ease .9s; max-width: 100%; }
+  .is-ready .sticker { scale: 1; opacity: 1; }
+  .name { font-weight: 800; font-stretch: 90%; letter-spacing: -.02em; line-height: 1; font-size: calc(clamp(2rem, 9vw, 3.6rem) * var(--fit, 1)); }
+  .degree { font-weight: 500; font-size: clamp(1.05rem, 4.2vw, 1.3rem); color: rgba(250,250,247,.86); max-width: 38ch; }
+  .hero-tag { font-weight: 500; max-width: 34ch; color: rgba(250,250,247,.8); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips span { display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 999px; background: rgba(250,250,247,.14); font-weight: 600; max-width: 100%; }
+  .cta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 58px; padding: 0 26px; border-radius: 999px; background: var(--sun); color: var(--ink);
+         font-weight: 800; font-size: 1.1rem; text-decoration: none; box-shadow: 0 6px 0 var(--ink); transition: transform .15s, box-shadow .15s; justify-self: start; }
+  .cta:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+
+  /* Spinning badge with the graduate's photo (or a big cap) in the middle. */
+  .badge { position: relative; width: min(52vw, 250px); aspect-ratio: 1; justify-self: end; margin-top: -10px; }
+  .badge .ring { position: absolute; inset: 0; animation: spin 18s linear infinite; }
+  .badge .ring text { font-family: var(--mono); font-size: 11.5px; letter-spacing: 2.4px; fill: var(--white); text-transform: uppercase; }
+  .badge .core { position: absolute; inset: 17%; border-radius: 50%; overflow: hidden; background: var(--sun); display: grid; place-items: center; border: 3px solid var(--white); }
+  .badge .core img, .badge .core video { width: 100%; height: 100%; object-fit: cover; }
+  .badge .core svg { width: 62%; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (min-width: 900px) {
+    .hero-grid { grid-template-columns: 1.2fr .8fr; column-gap: 50px; }
+    .hero-grid > .left { grid-column: 1; }
+    .badge { grid-column: 2; grid-row: 1 / span 2; align-self: center; justify-self: center; width: min(100%, 380px); }
+  }
+
+  /* Flying caps and a one-shot confetti burst (transform and opacity only). */
+  .caps-fly { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .capf { position: absolute; bottom: -80px; width: var(--w); opacity: 0; }
+  .is-ready .capf { animation: toss 2.2s cubic-bezier(.2,.8,.3,1) var(--d) forwards, hover 5s ease-in-out calc(var(--d) + 2.2s) infinite; }
+  @keyframes toss { 0% { opacity: 0; transform: translate(0, 0) rotate(0); } 15% { opacity: 1; } 100% { opacity: .95; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); } }
+  @keyframes hover { 0%, 100% { transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); } 50% { transform: translate(var(--tx), calc(var(--ty) - 12px)) rotate(calc(var(--rot) + 6deg)); } }
+  .burst { position: absolute; left: 50%; top: 45%; width: 0; height: 0; z-index: 3; pointer-events: none; }
+  .burst i { position: absolute; width: 9px; height: 14px; border-radius: 2px; background: var(--c); opacity: 0; }
+  .fire .burst i, .burst.fire i { animation: boom 1.7s cubic-bezier(.1,.7,.3,1) var(--dl) forwards; }
+  @keyframes boom { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); } }
+
+  /* ── COUNTDOWN ── */
+  .cd-wrap { background: var(--sun); }
+  .cd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 26px; }
+  @media (min-width: 700px) { .cd { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .cd-cell { background: var(--white); border: 3px solid var(--ink); border-radius: 22px; padding: 16px 18px 14px; box-shadow: 6px 6px 0 var(--ink); min-width: 0; transition: transform .3s; }
+  .cd-cell:nth-child(2n) { rotate: 1.5deg; } .cd-cell:nth-child(2n+1) { rotate: -1.5deg; }
+  .cd-cell:hover { transform: translateY(-4px); }
+  .cd-num { display: block; font-weight: 800; font-stretch: 80%; font-size: clamp(3rem, 16vw, 5.4rem); line-height: .95; letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: var(--cobalt); }
+  .cd-unit { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 999px; background: var(--ink); color: var(--white); font-family: var(--mono); font-size: .72rem; text-transform: uppercase; }
+  .cd-note { grid-column: 1 / -1; font-weight: 800; font-size: clamp(2rem, 9vw, 3.4rem); line-height: 1; }
+  .cd-meta { margin-top: 22px; font-weight: 600; font-size: 1.1rem; }
+
+  /* ── PLACES ── */
+  .places { display: grid; gap: 18px; margin-top: 30px; }
+  @media (min-width: 760px) { .places { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+  .place { border: 3px solid var(--ink); border-radius: 24px; overflow: hidden; background: var(--white); box-shadow: 6px 6px 0 var(--ink); }
+  .place-head { padding: 14px 20px; background: var(--pink); font-weight: 800; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .place:nth-child(2n) .place-head { background: var(--mint); }
+  .place figure { aspect-ratio: 16 / 9; overflow: hidden; border-bottom: 3px solid var(--ink); }
+  .place figure img { width: 100%; height: 100%; object-fit: cover; }
+  .place-body { padding: 18px 20px 22px; }
+  .place h3 { font-weight: 800; font-stretch: 85%; font-size: clamp(1.7rem, 7vw, 2.3rem); line-height: 1; letter-spacing: -.01em; overflow-wrap: anywhere; }
+  .place p { color: var(--soft); margin-top: 6px; overflow-wrap: anywhere; }
+  .go { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; margin-top: 14px; padding: 0 18px; border-radius: 999px; background: var(--cobalt); color: var(--white); font-weight: 700; text-decoration: none; }
+
+  /* ── THE PLAN: striped rows ── */
+  .stripes { list-style: none; margin-top: 30px; border-radius: 24px; overflow: hidden; border: 3px solid var(--ink); }
+  .stripes li { display: grid; grid-template-columns: minmax(84px, 30%) 1fr; gap: 14px; align-items: center; padding: 18px 18px; }
+  .stripes li:nth-child(4n+1) { background: var(--sun); } .stripes li:nth-child(4n+2) { background: var(--white); }
+  .stripes li:nth-child(4n+3) { background: var(--pink); } .stripes li:nth-child(4n) { background: var(--mint); }
+  .stripes li + li { border-top: 3px solid var(--ink); }
+  .stripes .t { font-weight: 800; font-stretch: 78%; font-size: clamp(1.7rem, 7.5vw, 3rem); line-height: 1; letter-spacing: -.02em; }
+  .stripes h3 { font-weight: 800; font-size: clamp(1.1rem, 4.6vw, 1.5rem); line-height: 1.1; overflow-wrap: anywhere; }
+  .stripes h3 .ic { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; margin-right: 6px; }
+  .stripes p { color: var(--soft); font-weight: 500; }
+  .stripes a { font-weight: 700; }
+
+  /* ── SHOUT-OUTS (hosts, custom), YEARBOOK (gallery), GIFTS ── */
+  .shouts { display: grid; gap: 18px; margin-top: 30px; }
+  @media (min-width: 760px) { .shouts { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .shout { padding: 22px; border-radius: 24px; background: var(--cobalt); color: var(--white); }
+  .shout:nth-child(2n) { background: var(--ink); }
+  .shout h3 { font-weight: 800; font-stretch: 85%; font-size: clamp(1.6rem, 6.5vw, 2.1rem); line-height: 1.05; margin-top: 6px; overflow-wrap: anywhere; }
+  .shout p { color: rgba(250,250,247,.85); margin-top: 6px; }
+  .shout figure { margin: 12px 0; border-radius: 16px; overflow: hidden; }
+  .acct { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(250,250,247,.25); }
+  .acct span { overflow-wrap: anywhere; }
+  .copy { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--sun); color: var(--ink); font-weight: 700; cursor: pointer; }
+  .yearbook { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 3vw, 22px); margin-top: 30px; }
+  @media (min-width: 760px) { .yearbook { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .yearbook figure { background: var(--white); padding: 8px 8px 30px; border: 2px solid var(--ink); position: relative; }
+  .yearbook figure:nth-child(2n) { rotate: 2deg; } .yearbook figure:nth-child(2n+1) { rotate: -2deg; }
+  .yearbook img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .yearbook figcaption { position: absolute; left: 10px; right: 10px; bottom: 6px; font-family: var(--mono); font-size: .7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── RSVP ── */
+  .rsvp-sec { background: var(--cobalt); color: var(--white); overflow: hidden; }
+  .card { position: relative; max-width: 620px; margin: 30px auto 0; padding: clamp(22px, 6vw, 38px); background: var(--white); color: var(--ink); border: 4px solid var(--ink); border-radius: 28px; box-shadow: 10px 10px 0 var(--sun); }
+  .card h2 { font-weight: 800; font-stretch: 80%; text-transform: uppercase; font-size: clamp(2.2rem, 10vw, 3.6rem); line-height: .92; letter-spacing: -.02em; }
+  .card .desc { color: var(--soft); margin-top: 10px; font-weight: 500; }
+  .card .notes-line { margin-top: 8px; font-family: var(--mono); font-size: .76rem; text-transform: uppercase; color: var(--cobalt); }
+  .rsvp { display: grid; gap: 14px; margin-top: 22px; }
+  .rsvp-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rsvp-choice { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 62px; padding: 8px; border-radius: 18px; cursor: pointer;
+                 border: 3px solid var(--ink); font-weight: 800; font-size: 1.05rem; line-height: 1.1; transition: background .2s, transform .2s cubic-bezier(.2,1.6,.4,1); }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice.on { background: var(--sun); transform: rotate(-2deg) scale(1.03); }
+  .rsvp-choice:nth-child(2).on { background: var(--pink); transform: rotate(2deg) scale(1.03); }
+  .rsvp-choice:focus-within { outline: 3px solid var(--cobalt); outline-offset: 3px; }
+  .rsvp-field { display: grid; gap: 6px; }
+  .rsvp-label { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; color: var(--soft); }
+  .rsvp-input { width: 100%; min-height: 54px; padding: 12px 16px; border: 3px solid var(--ink); border-radius: 16px; background: var(--white); color: var(--ink); font-size: 16px; font-weight: 600; }
+  textarea.rsvp-input { resize: none; min-height: 90px; }
+  .rsvp-input::placeholder { color: rgba(15,18,38,.4); font-weight: 500; }
+  .rsvp-input:focus { outline: none; box-shadow: 4px 4px 0 var(--cobalt); }
+  .rsvp-error { color: #d6204f; font-weight: 700; }
+  .rsvp-submit { min-height: 62px; border: 3px solid var(--ink); border-radius: 999px; cursor: pointer; background: var(--cobalt); color: var(--white); font-weight: 800; font-size: 1.2rem;
+                 box-shadow: 0 6px 0 var(--ink); transition: transform .15s, box-shadow .15s; }
+  .rsvp-submit:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
+  .rsvp-done { margin-top: 20px; }
+  .rsvp-done-title { font-weight: 800; font-stretch: 80%; text-transform: uppercase; font-size: clamp(2.2rem, 10vw, 3.4rem); line-height: .95; color: var(--cobalt); }
+  .rsvp-done-body { margin-top: 8px; font-weight: 500; }
+  .contact { margin-top: 24px; padding-top: 18px; border-top: 3px dashed rgba(15,18,38,.2); }
+  .contact-intro { font-family: var(--mono); font-size: .74rem; text-transform: uppercase; color: var(--soft); }
+  .contact-name { font-weight: 800; font-size: 1.5rem; line-height: 1.1; }
+  .contact-phone { color: var(--soft); }
+  .contact-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 3px solid var(--ink); font-weight: 700; text-decoration: none; }
+  .contact-link:hover { background: var(--sun); }
+
+  footer { background: var(--ink); color: var(--white); padding: 40px var(--pad) calc(env(safe-area-inset-bottom) + 70px); overflow: hidden; }
+  footer p { font-weight: 800; font-stretch: 75%; text-transform: uppercase; line-height: .9; font-size: calc(clamp(3rem, 15vw, 8rem) * var(--fit, 1)); }
+  footer p span { color: var(--sun); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .rv, .sticker { opacity: 1; transform: none; scale: 1; transition: none; }
+    .capf { opacity: .95; transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const DEFAULT_DATA = {
+  template: 'cap-toss',
+  title: 'Graduation Party',
+  cover: {
+    enabled: true, headline: 'Congrats, grad!', eventLabel: 'Class of 2026', names: 'Name',
+    tagline: 'Come celebrate the big finish — and the next big start.', greeting: 'Hey',
+    hostIntro: '', hostOutro: '', hostText: '', image: '', video: '', buttonText: "I'm coming"
+  },
+  countdown: { enabled: true, label: 'Party starts in', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: false, label: 'Big thanks to', title: '', items: [] },
+  locations: { enabled: true, label: 'Where', title: 'Where to celebrate', image: '', items: [
+    { label: 'Grad party', time: '', name: '', addr: '', url: '', img: '' }
+  ] },
+  timeline:  { enabled: true, label: 'The plan', title: 'How it goes', items: [] },
+  gallery:   { enabled: false, label: 'Yearbook', title: 'The highlights', items: [] },
+  gifts:     { enabled: false, label: 'Gifts', title: 'Grad fund', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'RSVP', title: 'You coming?', description: '',
+    deadline: '', maxPeople: 4, buttonText: 'Send it', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+
+const CAP = (fill, tassel) => `<svg viewBox="0 0 120 90" aria-hidden="true"><path d="M60 6 L116 32 L60 58 L4 32 Z" fill="${fill}" stroke="#0f1226" stroke-width="3" stroke-linejoin="round"/><path d="M26 44 V64 C26 72 44 80 60 80 C76 80 94 72 94 64 V44 L60 58 Z" fill="${fill}" stroke="#0f1226" stroke-width="3" stroke-linejoin="round"/><path d="M104 37 V64" stroke="${tassel}" stroke-width="4"/><circle cx="104" cy="68" r="6" fill="${tassel}"/></svg>`;
+
+/** Mortarboards thrown up from the bottom of the hero, each landing somewhere different. */
+function flyingCaps() {
+  const caps = [
+    { l: '6%',  w: 64, tx: '10px',  ty: '-62vh', rot: '-24deg', d: '.1s', f: '#0f1226', t: '#ffd23a' },
+    { l: '28%', w: 46, tx: '-20px', ty: '-78vh', rot: '32deg',  d: '.25s', f: '#ffd23a', t: '#ff6fb5' },
+    { l: '56%', w: 72, tx: '30px',  ty: '-70vh', rot: '-14deg', d: '.05s', f: '#fafaf7', t: '#2346ff' },
+    { l: '78%', w: 52, tx: '-10px', ty: '-84vh', rot: '40deg',  d: '.35s', f: '#ff6fb5', t: '#ffd23a' },
+    { l: '90%', w: 40, tx: '-40px', ty: '-40vh', rot: '-38deg', d: '.45s', f: '#3fe0a8', t: '#0f1226' }
+  ];
+  return `<div class="caps-fly" aria-hidden="true">${caps.map(c =>
+    `<span class="capf" style="left:${c.l};--w:${c.w}px;--tx:${c.tx};--ty:${c.ty};--rot:${c.rot};--d:${c.d}">${CAP(c.f, c.t)}</span>`).join('')}</div>`;
+}
+/** A one-shot confetti burst: 30 pieces flying out from the centre. */
+function burst() {
+  const colors = ['#ffd23a', '#ff6fb5', '#3fe0a8', '#fafaf7', '#0f1226'];
+  let s = '';
+  for (let i = 0; i < 30; i++) {
+    const a = (i / 30) * Math.PI * 2 + (i % 3) * .2, dist = 120 + (i * 37) % 180;
+    s += `<i style="--c:${colors[i % colors.length]};--x:${Math.round(Math.cos(a) * dist)}px;--y:${Math.round(Math.sin(a) * dist + 140)}px;--r:${(i * 97) % 720 - 360}deg;--dl:${((i % 5) * .04).toFixed(2)}s"></i>`;
+  }
+  return `<div class="burst" aria-hidden="true">${s}</div>`;
+}
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const name = c.names || data.title || '';
+  const dp = I.dateParts(cd);
+  const year = I.numberIn(c.eventLabel) || (dp ? String(dp.y) : '');
+  const label = String(c.eventLabel || '').replace(/\d+/g, '').trim() || 'Class of';
+  const place = ((data.locations || {}).items || []).find(x => x && x.name);
+  const guest = I.guestName();
+  const photo = I.media(c.image, c.video, name, true);
+  // The badge text runs exactly once around the circle (circumference ≈ 528 units): repeated only
+  // while it still fits, then stretched or squeezed to close the loop without an overlap.
+  const phrase = `${c.headline || 'Congrats, grad!'} • ${name} • `.toUpperCase();
+  const ringText = phrase.repeat(Math.max(1, Math.floor(54 / phrase.length)));
+  return `
+  <section class="hero" id="hero">
+    ${flyingCaps()}
+    <div class="wrap" style="flex:1;display:flex;flex-direction:column;position:relative;z-index:2">
+      <div class="top mono"><span>${guest ? `${esc(c.greeting || 'Hey')} ${esc(guest)}` : "You're invited"}</span><span>${dp ? `${I.pad2(dp.d)}.${I.pad2(dp.mo)}.${dp.y}` : 'Save the date'}</span></div>
+      <div class="hero-grid">
+        <div class="left">
+          <h1 class="class-of"><span class="lbl" data-fit=".4">${esc(label)}</span>${year ? `<span class="yr" data-fit=".4">${esc(year)}</span>` : ''}</h1>
+        </div>
+        <div class="badge" aria-hidden="true">
+          <svg class="ring" viewBox="0 0 200 200"><defs><path id="circ" d="M100 100 m-84 0 a84 84 0 1 1 168 0 a84 84 0 1 1 -168 0"/></defs>
+            <text><textPath href="#circ" textLength="522" lengthAdjust="${ringText.length > 54 ? 'spacingAndGlyphs' : 'spacing'}">${esc(ringText)}</textPath></text></svg>
+          <div class="core">${photo || CAP('#0f1226', '#ff6fb5')}</div>
+        </div>
+        <div class="left" style="display:grid;gap:14px">
+          <div class="who">
+            <span class="sticker">${esc(c.headline || 'Congrats, grad!')}</span>
+            <span class="name" data-fit=".5">${esc(name)}</span>
+          </div>
+          ${c.hostIntro || c.hostText ? `<p class="degree">${esc(c.hostIntro || '')} ${I.nl2br(c.hostText || '')}</p>` : ''}
+          ${c.tagline ? `<p class="hero-tag">${esc(c.tagline)}</p>` : ''}
+          <div class="chips">
+            ${dp ? `<span>📅 ${esc(dp.weekdayShort)} ${dp.d} ${esc(dp.monthShort)}</span>` : ''}
+            ${cd.time ? `<span>⏰ ${esc(I.fmtClock(cd.time))}</span>` : ''}
+            ${place ? `<span>📍 ${esc(place.name)}</span>` : ''}
+          </div>
+          <a class="cta" href="#rsvp">${esc(c.buttonText || "I'm coming")} <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+    ${burst()}
+  </section>`;
+}
+
+function countdown(data) {
+  const cd = data.countdown || {};
+  if (cd.enabled === false) return '';
+  const target = I.eventInstant(cd);
+  const dp = I.dateParts(cd);
+  return `
+  <section class="sec cd-wrap">
+    <div class="wrap">
+      <p ${R('mono')}>${esc(cd.label || 'Party starts in')}</p>
+      <h2 ${R('big')} data-fit>${dp ? `${esc(dp.weekday)} <span style="color:var(--cobalt)">${dp.d} ${esc(dp.monthShort)}</span>` : 'Date coming soon'}</h2>
+      ${target !== null ? `<div ${R('cd')} data-countdown="${target}" data-past-today="It's party day!" data-past-after="What a night. Thanks for coming!">${I.countdownCells()}</div>` : ''}
+      ${cd.time || cd.description ? `<p ${R('cd-meta')}>${[cd.time ? 'Doors at ' + esc(I.fmtClock(cd.time)) : '', esc(cd.description || '')].filter(Boolean).join(' · ')}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function places(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.addr || x.label));
+  if (l.enabled === false || !items.length) return '';
+  return `
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('mono')}>${esc(l.label || 'Where')}</p>
+      <h2 ${R('big')} data-fit><span class="hl">${esc(l.title || 'Where to celebrate')}</span></h2>
+      <div class="places">
+        ${items.map(x => `
+          <article ${R('place')}>
+            <div class="place-head"><span>${esc(x.label || 'Party')}</span>${x.time ? `<span>${esc(x.time)}</span>` : ''}</div>
+            ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+            <div class="place-body">
+              ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+              ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+              ${x.url ? `<a class="go" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Get directions →</a>` : ''}
+            </div>
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+function plan(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled === false || !items.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <p ${R('mono')}>${esc(t.label || 'The plan')}</p>
+      <h2 ${R('big')} data-fit>${esc(t.title || 'How it goes')}</h2>
+      <ol ${R('stripes')}>
+        ${items.map(x => `
+          <li>
+            <span class="t">${esc(x.time || '')}</span>
+            <div>
+              <h3>${I.stepIcon(x) ? `<span class="ic" aria-hidden="true">${esc(I.stepIcon(x))}</span>` : ''}${esc(x.title || '')}</h3>
+              ${x.subtitle ? `<p>${esc(x.subtitle)}</p>` : ''}
+              ${x.url ? `<p><a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Map ↗</a></p>` : ''}
+            </div>
+          </li>`).join('')}
+      </ol>
+    </div>
+  </section>`;
+}
+
+function extras(data) {
+  const c = data.cover || {}, f = data.families || {}, g = data.gifts || {}, gl = data.gallery || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const cards = [];
+  (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body)).forEach(s => cards.push(`
+    <div ${R('shout')}>
+      ${s.label ? `<p class="mono">${esc(s.label)}</p>` : ''}
+      ${s.title ? `<h3>${esc(s.title)}</h3>` : ''}
+      ${s.image ? `<figure>${I.img(s.image, s.title)}</figure>` : ''}
+      ${s.body ? `<p>${I.nl2br(s.body)}</p>` : ''}
+    </div>`));
+  if (fams.length || c.hostOutro) cards.push(`
+    <div ${R('shout')}>
+      <p class="mono">${esc(f.label || 'Big thanks to')}</p>
+      ${fams.map(x => `<h3>${esc(x.names || '')}</h3>${x.label ? `<p>${esc(x.label)}</p>` : ''}`).join('')}
+      ${c.hostOutro ? `<p>${I.nl2br(c.hostOutro)}</p>` : ''}
+    </div>`);
+  const accounts = (g.items || []).filter(x => x && x.account);
+  if (g.enabled !== false && (accounts.length || g.description)) cards.push(`
+    <div ${R('shout')}>
+      <p class="mono">${esc(g.label || 'Gifts')}</p>
+      <h3>${esc(g.title || 'Grad fund')}</h3>
+      ${g.description ? `<p>${I.nl2br(g.description)}</p>` : ''}
+      ${accounts.map(x => `<div class="acct"><span><b>${esc(x.bank || 'Account')}</b> · ${esc(x.account)}</span><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}
+    </div>`);
+  const photos = (gl.enabled !== false ? (gl.items || []) : []).filter(x => x && x.url).slice(0, 8);
+  if (!cards.length && !photos.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      ${cards.length ? `<p ${R('mono')}>Good to know</p><div class="shouts">${cards.join('')}</div>` : ''}
+      ${photos.length ? `
+        <div style="margin-top:${cards.length ? 70 : 0}px"><p ${R('mono')}>${esc(gl.label || 'Yearbook')}</p>
+        ${gl.title ? `<h2 ${R('big')} data-fit>${esc(gl.title)}</h2>` : ''}</div>
+        <div class="yearbook">${photos.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : ''}
+    </div>
+  </section>`;
+}
+
+function rsvp(data) {
+  const r = data.rsvp || {};
+  if (r.enabled === false) return '';
+  return `
+  <section class="sec rsvp-sec" id="rsvp">
+    ${burst()}
+    <div class="wrap">
+      <p ${R('mono')}>${esc(r.label || 'RSVP')}</p>
+      <div ${R('card')}>
+        <h2>${esc(r.title || 'You coming?')}</h2>
+        ${r.description ? `<p class="desc">${I.nl2br(r.description)}</p>` : ''}
+        ${I.rsvpNotes(r).map(n => `<p class="notes-line">${esc(n)}</p>`).join('')}
+        ${I.rsvpForm(r, {
+          yes: "I'll be there 🎉", no: "Can't make it",
+          nameLabel: 'Your name', namePlaceholder: 'First and last name',
+          countLabel: 'How many of you', wishesLabel: 'Congrats message (optional)',
+          wishesPlaceholder: 'So proud of you!', button: r.buttonText || 'Send it',
+          doneTitle: "You're on the list!"
+        })}
+        ${I.contactHtml(r, { intro: 'Questions? Ask' })}
+      </div>
+    </div>
+  </section>`;
+}
+
+function build(data) {
+  const c = data.cover || {};
+  const name = c.names || data.title || '';
+  const year = I.numberIn(c.eventLabel);
+  document.title = `${c.headline || name} — Graduation Party`;
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    countdown(data), places(data), plan(data), extras(data), rsvp(data),
+    `<footer><p data-fit>See you there${year ? `, <span>class of ${esc(year)}</span>` : ''}</p></footer>`
+  ].join('');
+  // The confetti fires once when the page opens, and again when a guest says yes.
+  setTimeout(() => { const h = document.getElementById('hero'); if (h) h.classList.add('fire'); }, 700);
+}
+
+document.addEventListener('rsvp:sent', e => {
+  if (!e.detail || !e.detail.attending) return;
+  const b = document.querySelector('.rsvp-sec .burst');
+  if (b) { b.classList.remove('fire'); void b.offsetWidth; b.classList.add('fire'); }
+});
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

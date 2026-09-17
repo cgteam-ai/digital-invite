@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0f">
+<title>Birthday Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Anton: a tall condensed poster face for the loud type. Space Grotesk: technical, clean text. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * HYPE NIGHT — a teen birthday styled like a streetwear drop / gig poster.
+   * Black, acid lime and electric violet. Huge condensed type, scrolling ticker bands on a slant,
+   * sticker labels, a scoreboard countdown, a "lineup" for the programme and a guest list to join.
+   * No cartoons: all of the energy comes from type, colour, angles and motion.
+   */
+  :root {
+    --black: #0b0b0f;
+    --char:  #16161d;
+    --line:  rgba(244,244,240,.14);
+    --lime:  #c6ff3d;
+    --violet:#7b5cff;
+    --white: #f4f4f0;
+    --gray:  #9a9aa6;
+    --display: 'Anton', 'Impact', 'Arial Narrow', sans-serif;
+    --body: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --pad: clamp(18px, 5vw, 48px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--black); color: var(--white); font-family: var(--body); font-size: 16px; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+  /* Fine grid + grain behind everything. */
+  body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      linear-gradient(rgba(244,244,240,.035) 1px, transparent 1px) 0 0 / 44px 44px,
+      linear-gradient(90deg, rgba(244,244,240,.035) 1px, transparent 1px) 0 0 / 44px 44px,
+      radial-gradient(60% 50% at 90% 10%, rgba(123,92,255,.22), transparent 70%),
+      radial-gradient(50% 40% at 0% 80%, rgba(198,255,61,.08), transparent 70%); }
+  img, video { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 1120px); margin: 0 auto; padding: 0 var(--pad); }
+  .sec { position: relative; padding: clamp(56px, 12vw, 110px) 0; }
+
+  .tagline-mono { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--lime); }
+  .tagline-mono::before { content: ''; width: 10px; height: 10px; background: var(--lime); }
+  .big {
+    font-family: var(--display); text-transform: uppercase; line-height: .9; letter-spacing: .005em;
+    font-size: calc(clamp(2.9rem, 15vw, 7rem) * var(--fit, 1)); margin-top: 10px;
+  }
+  .big em { font-style: normal; color: var(--black); background: var(--lime); padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+  /* Reveal: slides up out of a mask, fast and sharp. */
+  .rv { opacity: 0; transform: translateY(40px); transition: opacity .5s ease, transform .7s cubic-bezier(.16,1,.3,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden;
+          padding-top: calc(env(safe-area-inset-top) + 20px); }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 700; font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gray); }
+  .topbar b { color: var(--white); }
+  .hero-body { flex: 1; display: grid; align-content: center; gap: 22px; padding: 30px 0 40px; position: relative; }
+  .ghost-age {
+    position: absolute; right: -4vw; top: 50%; translate: 0 -52%; z-index: 0; pointer-events: none;
+    font-family: var(--display); font-size: clamp(16rem, 70vw, 40rem); line-height: .8; color: transparent;
+    -webkit-text-stroke: 2px rgba(198,255,61,.22); user-select: none;
+  }
+  .hero-text { position: relative; z-index: 2; }
+  .invite-line { font-weight: 700; font-size: .95rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); }
+  .name {
+    font-family: var(--display); text-transform: uppercase; line-height: .84;
+    font-size: calc(clamp(4.6rem, 27vw, 13rem) * var(--fit, 1)); margin-top: 8px;
+  }
+  .name span { display: block; }
+  .name .line { display: block; overflow: hidden; }
+  .name .line > span { display: block; transform: translateY(105%); transition: transform .9s cubic-bezier(.16,1,.3,1) .1s; }
+  .is-ready .name .line > span { transform: none; }
+  .sticker {
+    position: relative; z-index: 3; justify-self: start; display: inline-flex; align-items: baseline; gap: 10px;
+    padding: 10px 18px 8px; background: var(--violet); color: var(--white); rotate: -6deg; scale: .4; opacity: 0;
+    font-family: var(--display); text-transform: uppercase; font-size: clamp(1.6rem, 8vw, 2.6rem); line-height: 1;
+    box-shadow: 6px 6px 0 var(--lime); transition: scale .6s cubic-bezier(.2,1.8,.4,1) .5s, opacity .3s ease .5s;
+  }
+  .is-ready .sticker { scale: 1; opacity: 1; }
+  .sticker small { font-family: var(--body); font-weight: 700; font-size: .8rem; letter-spacing: .14em; }
+  .hero-tag { position: relative; z-index: 2; max-width: 36ch; font-size: 1.15rem; color: #d8d8dd; }
+  .hero-cta { position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 22px; border: 2px solid var(--lime);
+         font-weight: 700; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; font-size: .9rem; transition: background .2s, color .2s, transform .2s; }
+  .btn.solid { background: var(--lime); color: var(--black); }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--violet); }
+  .shot { position: relative; z-index: 1; width: min(70%, 380px); justify-self: end; aspect-ratio: 4 / 5; rotate: 3deg;
+          border: 3px solid var(--lime); box-shadow: -10px 10px 0 var(--violet); overflow: hidden; background: var(--char); }
+  .shot img, .shot video { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.15); }
+  @media (min-width: 900px) {
+    .hero-body.has-photo { grid-template-columns: 1.3fr .7fr; align-items: center; }
+    .hero-body.has-photo .shot { grid-row: 1 / span 4; grid-column: 2; }
+  }
+
+  /* ── TICKER BANDS ── */
+  .band { position: relative; z-index: 3; overflow: hidden; background: var(--lime); color: var(--black); rotate: -2deg; margin: 0 -4vw; border-block: 2px solid var(--black); }
+  .band.violet { background: var(--violet); color: var(--white); rotate: 2deg; }
+  .band-track { display: flex; width: max-content; animation: tick 26s linear infinite; }
+  .band.violet .band-track { animation-direction: reverse; animation-duration: 32s; }
+  .band-track span { display: flex; align-items: center; gap: 26px; padding: 12px 13px; font-family: var(--display); text-transform: uppercase; font-size: clamp(1.4rem, 5vw, 2rem); line-height: 1; white-space: nowrap; }
+  .band-track span::after { content: '✺'; font-family: var(--body); font-size: .8em; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  /* ── SCOREBOARD ── */
+  .score { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 30px; border: 2px solid var(--line); background: var(--char); }
+  .score .cd-cell { position: relative; padding: clamp(14px, 4vw, 30px) 4px clamp(10px, 3vw, 22px); text-align: center; min-width: 0; }
+  .score .cd-cell + .cd-cell { border-left: 2px solid var(--line); }
+  .score .cd-num { display: block; font-family: var(--display); font-size: clamp(2.3rem, 12vw, 6rem); line-height: 1; color: var(--lime); font-variant-numeric: tabular-nums; }
+  .score .cd-unit { display: block; margin-top: 8px; font-weight: 700; font-size: clamp(.6rem, 2.4vw, .8rem); letter-spacing: .16em; text-transform: uppercase; color: var(--gray); }
+  .cd-note { grid-column: 1 / -1; padding: 26px 10px; text-align: center; font-family: var(--display); text-transform: uppercase; font-size: clamp(2rem, 9vw, 3.4rem); color: var(--lime); }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 2px solid var(--line); border-top: 0; }
+  .facts div { padding: 14px 16px; min-width: 0; }
+  .facts div + div { border-left: 2px solid var(--line); }
+  .facts small { display: block; font-weight: 700; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gray); }
+  .facts b { display: block; font-size: 1.1rem; overflow-wrap: anywhere; }
+  @media (max-width: 520px) { .facts div + div { border-left: 0; border-top: 2px solid var(--line); } }
+
+  /* ── THE SPOT (locations) ── */
+  .spots { margin-top: 30px; display: grid; gap: 0; border-top: 2px solid var(--line); }
+  .spot { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; padding: 24px 0; border-bottom: 2px solid var(--line); align-items: start; }
+  .spot-n { font-family: var(--display); font-size: clamp(2.6rem, 12vw, 4.4rem); line-height: .9; color: transparent; -webkit-text-stroke: 1.5px var(--lime); }
+  .spot figure { grid-column: 1 / -1; aspect-ratio: 16 / 9; overflow: hidden; border: 2px solid var(--line); }
+  .spot figure img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(.4); }
+  .spot .k { font-weight: 700; font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--lime); }
+  .spot h3 { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.8rem, 8vw, 3rem); line-height: .95; margin-top: 4px; overflow-wrap: anywhere; }
+  .spot p { color: #c9c9d0; overflow-wrap: anywhere; margin-top: 4px; }
+  .spot .btn { margin-top: 14px; min-height: 48px; }
+  @media (min-width: 900px) {
+    .spot { grid-template-columns: 110px 1fr 1.1fr; gap: 30px; align-items: center; }
+    .spot figure { grid-column: 3; grid-row: 1; margin: 0; }
+  }
+
+  /* ── THE LINEUP (timeline) ── */
+  .lineup { list-style: none; margin-top: 30px; border-top: 2px solid var(--line); counter-reset: n; }
+  .lineup li { display: grid; grid-template-columns: minmax(96px, 30%) 1fr; gap: 14px; padding: 18px 0; border-bottom: 2px solid var(--line); align-items: baseline; }
+  .lineup .t { font-family: var(--display); font-size: clamp(1.6rem, 7vw, 2.8rem); line-height: 1; color: var(--white); }
+  .lineup h3 { font-weight: 700; font-size: clamp(1.05rem, 4.2vw, 1.4rem); letter-spacing: .02em; text-transform: uppercase; overflow-wrap: anywhere; }
+  .lineup h3 .ic { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; margin-right: 8px; }
+  .lineup p { color: var(--gray); }
+  .lineup a { color: var(--lime); font-weight: 700; }
+  .lineup li:hover .t { color: var(--lime); }
+
+  /* ── STICKER NOTES (hosts, dress code, custom) ── */
+  .stickers { display: grid; gap: 22px; margin-top: 30px; }
+  @media (min-width: 760px) { .stickers { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .stk { padding: 22px; background: var(--white); color: var(--black); rotate: -1.5deg; box-shadow: 8px 8px 0 var(--violet); }
+  .stk:nth-child(2n) { rotate: 1.5deg; background: var(--lime); box-shadow: 8px 8px 0 var(--white); }
+  .stk small { display: block; font-weight: 700; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; opacity: .7; }
+  .stk h3 { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: .95; margin-top: 4px; overflow-wrap: anywhere; }
+  .stk p { margin-top: 6px; font-weight: 500; }
+  .stk figure { margin: 10px 0; }
+  .stk .copy { margin-top: 8px; min-height: 40px; padding: 0 14px; border: 2px solid var(--black); background: transparent; font-weight: 700; cursor: pointer; }
+  .stk .acct { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
+
+  /* ── GALLERY ── */
+  .grid-ph { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 30px; }
+  @media (min-width: 760px) { .grid-ph { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .grid-ph figure { aspect-ratio: 1; overflow: hidden; background: var(--char); }
+  .grid-ph figure:first-child { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
+  .grid-ph img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.1); transition: filter .4s; }
+  .grid-ph figure:hover img { filter: none; }
+
+  /* ── GUEST LIST (RSVP) ── */
+  .list-card { margin-top: 30px; display: grid; gap: 30px; }
+  @media (min-width: 900px) { .list-card { grid-template-columns: .9fr 1.1fr; gap: 60px; align-items: start; } }
+  .list-card .desc { color: #c9c9d0; font-size: 1.1rem; max-width: 40ch; }
+  .list-card .notes { margin-top: 12px; font-weight: 700; color: var(--lime); letter-spacing: .04em; }
+  .rsvp { display: grid; gap: 16px; padding: clamp(18px, 5vw, 32px); background: var(--char); border: 2px solid var(--line); }
+  .rsvp-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 2px solid var(--line); }
+  .rsvp-choice { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 64px; padding: 6px; cursor: pointer;
+                 font-family: var(--display); text-transform: uppercase; font-size: clamp(1.15rem, 5vw, 1.5rem); line-height: 1; transition: background .2s, color .2s; }
+  .rsvp-choice + .rsvp-choice { border-left: 2px solid var(--line); }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice.on { background: var(--lime); color: var(--black); }
+  .rsvp-choice:focus-within { outline: 2px solid var(--violet); outline-offset: 2px; }
+  .rsvp-field { display: grid; gap: 6px; }
+  .rsvp-label { font-weight: 700; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gray); }
+  .rsvp-input { width: 100%; min-height: 54px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 0; background: var(--black); color: var(--white); font-size: 16px; font-weight: 500; }
+  textarea.rsvp-input { resize: none; min-height: 90px; }
+  .rsvp-input::placeholder { color: #6d6d78; }
+  .rsvp-input:focus { outline: none; border-color: var(--lime); }
+  .rsvp-input[readonly] { color: var(--lime); }
+  .rsvp-error { color: #ff6b6b; font-weight: 700; }
+  .rsvp-submit { min-height: 62px; border: 0; cursor: pointer; background: var(--lime); color: var(--black); font-family: var(--display); text-transform: uppercase; font-size: 1.6rem; letter-spacing: .02em;
+                 transition: transform .2s, box-shadow .2s; }
+  .rsvp-submit:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--violet); }
+  .rsvp-submit::after { content: ' →'; }
+  .rsvp-done { padding: clamp(24px, 6vw, 40px); background: var(--lime); color: var(--black); rotate: -1deg; }
+  .rsvp-done.is-no { background: var(--white); }
+  .rsvp-done-title { font-family: var(--display); text-transform: uppercase; font-size: clamp(2.4rem, 11vw, 4rem); line-height: .9; }
+  .rsvp-done-body { margin-top: 8px; font-weight: 700; }
+
+  .contact { margin-top: 26px; padding-top: 18px; border-top: 2px solid var(--line); }
+  .contact-intro { font-weight: 700; font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gray); }
+  .contact-name { font-family: var(--display); text-transform: uppercase; font-size: 1.8rem; line-height: 1.05; }
+  .contact-phone { color: #c9c9d0; }
+  .contact-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 2px solid var(--white); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: .82rem; text-decoration: none; }
+  .contact-link:hover { background: var(--white); color: var(--black); }
+
+  footer { padding: 40px var(--pad) calc(env(safe-area-inset-bottom) + 70px); overflow: hidden; }
+  footer p { font-family: var(--display); text-transform: uppercase; font-size: calc(clamp(3.2rem, 18vw, 10rem) * var(--fit, 1)); line-height: .9; color: transparent; -webkit-text-stroke: 1.5px var(--white); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .rv, .name .line > span, .sticker { opacity: 1; transform: none; scale: 1; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const DEFAULT_DATA = {
+  template: 'hype-night',
+  title: 'Name',
+  cover: {
+    enabled: true, headline: '', eventLabel: '16', names: 'Name',
+    tagline: 'One night. Loud music. Zero excuses.', greeting: 'Yo',
+    hostIntro: '', hostOutro: '', hostText: '', image: '', video: '', buttonText: 'Get on the list'
+  },
+  countdown: { enabled: true, label: 'Kick-off in', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: false, label: 'Hosted by', title: '', items: [] },
+  locations: { enabled: true, label: 'The spot', title: 'Where it goes down', image: '', items: [
+    { label: 'Party', time: '', name: '', addr: '', url: '', img: '' }
+  ] },
+  timeline:  { enabled: true, label: 'The lineup', title: 'How the night runs', items: [] },
+  gallery:   { enabled: false, label: 'Throwbacks', title: 'Highlights', items: [] },
+  gifts:     { enabled: false, label: 'Gifts', title: 'If you want to', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'Guest list', title: 'Get on the list', description: '',
+    deadline: '', maxPeople: 4, buttonText: 'Lock it in', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+
+/** A scrolling ticker band. The words are doubled so the loop is seamless. */
+function band(words, violet) {
+  const items = words.filter(Boolean);
+  if (!items.length) return '';
+  const run = [...items, ...items, ...items].map(w => `<span>${esc(w)}</span>`).join('');
+  return `<div class="band${violet ? ' violet' : ''}" aria-hidden="true"><div class="band-track">${run}${run}</div></div>`;
+}
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const name = c.names || data.title || '';
+  const age = I.numberIn(c.eventLabel);
+  const dp = I.dateParts(cd);
+  const guest = I.guestName();
+  const photo = I.media(c.image, c.video, name, true);
+  const words = name.trim().split(/\s+/);
+  return `
+  <section class="hero">
+    <div class="wrap" style="flex:1;display:flex;flex-direction:column">
+      <div class="topbar">
+        <span><b>${esc(c.headline || (age ? `${name} turns ${age}` : `${name}'s birthday`))}</b></span>
+        <span>${dp ? `${esc(dp.monthShort)} ${I.pad2(dp.d)} / ${dp.y}` : ''}</span>
+      </div>
+      <div class="hero-body${photo ? ' has-photo' : ''}">
+        ${age ? `<span class="ghost-age" aria-hidden="true">${esc(age)}</span>` : ''}
+        <div class="hero-text">
+          <p class="invite-line">${guest ? `${esc(c.greeting || 'Yo')} ${esc(guest)} — you're invited` : "You're invited"}</p>
+          <h1 class="name" data-fit=".3">${words.map(w => `<span class="line"><span>${esc(w)}</span></span>`).join('')}</h1>
+        </div>
+        ${age ? `<span class="sticker">Turns ${esc(age)} <small>${dp ? esc(dp.weekdayShort) : ''}</small></span>` : ''}
+        ${photo ? `<div class="shot">${photo}</div>` : ''}
+        ${c.tagline ? `<p class="hero-tag">${esc(c.tagline)}</p>` : ''}
+        <div class="hero-cta">
+          <a class="btn solid" href="#rsvp">${esc(c.buttonText || 'Get on the list')} →</a>
+          <a class="btn" href="#details">The details</a>
+        </div>
+      </div>
+    </div>
+    ${band([name, age ? `Turns ${age}` : 'Birthday', dp ? `${dp.weekdayShort} ${dp.d} ${dp.monthShort}` : '', cd.time ? I.fmtClock(cd.time) : ''])}
+  </section>`;
+}
+
+function scoreboard(data) {
+  const cd = data.countdown || {};
+  if (cd.enabled === false) return '';
+  const target = I.eventInstant(cd);
+  const dp = I.dateParts(cd);
+  const place = ((data.locations || {}).items || []).find(x => x && x.name);
+  const facts = [
+    dp ? ['Date', `${dp.weekday}, ${dp.d} ${dp.month}`] : null,
+    cd.time ? ['Doors', I.fmtClock(cd.time)] : null,
+    place ? ['Spot', place.name] : null,
+    cd.description ? ['Note', cd.description] : null
+  ].filter(Boolean);
+  return `
+  <section class="sec" id="details">
+    <div class="wrap">
+      <p ${R('tagline-mono')}>${esc(cd.label || 'Kick-off in')}</p>
+      <h2 ${R('big')} data-fit>The <em>countdown</em></h2>
+      ${target !== null ? `<div ${R('score')} data-countdown="${target}" data-past-today="It's tonight." data-past-after="That was legendary.">${I.countdownCells({ d: 'Days', h: 'Hrs', m: 'Min', s: 'Sec' })}</div>` : ''}
+      ${facts.length ? `<div ${R('facts')}>${facts.map(([k, v]) => `<div><small>${k}</small><b>${esc(v)}</b></div>`).join('')}</div>` : ''}
+    </div>
+  </section>`;
+}
+
+function spots(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.addr || x.label));
+  if (l.enabled === false || !items.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <p ${R('tagline-mono')}>${esc(l.label || 'The spot')}</p>
+      <h2 ${R('big')} data-fit>${esc(l.title || 'Where it goes down')}</h2>
+      <div class="spots">
+        ${items.map((x, i) => `
+          <article ${R('spot')}>
+            <span class="spot-n" aria-hidden="true">${I.pad2(i + 1)}</span>
+            <div>
+              ${x.label ? `<p class="k">${esc(x.label)}${x.time ? ' · ' + esc(x.time) : ''}</p>` : (x.time ? `<p class="k">${esc(x.time)}</p>` : '')}
+              ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+              ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+              ${x.url ? `<a class="btn" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Open map ↗</a>` : ''}
+            </div>
+            ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+function lineup(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled === false || !items.length) return '';
+  const c = data.cover || {};
+  return `
+  ${band([t.label || 'The lineup', c.names || '', 'Tonight', t.label || 'The lineup'], true)}
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('tagline-mono')}>${esc(t.label || 'The lineup')}</p>
+      <h2 ${R('big')} data-fit>${esc(t.title || 'How the night runs')}</h2>
+      <ol class="lineup">
+        ${items.map(x => `
+          <li ${R()}>
+            <span class="t">${esc(x.time || '—')}</span>
+            <div>
+              <h3>${I.stepIcon(x) ? `<span class="ic" aria-hidden="true">${esc(I.stepIcon(x))}</span>` : ''}${esc(x.title || '')}</h3>
+              ${x.subtitle ? `<p>${esc(x.subtitle)}</p>` : ''}
+              ${x.url ? `<p><a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Map ↗</a></p>` : ''}
+            </div>
+          </li>`).join('')}
+      </ol>
+    </div>
+  </section>`;
+}
+
+function stickers(data) {
+  const c = data.cover || {}, f = data.families || {}, g = data.gifts || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const cards = [];
+  (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body)).forEach(s => cards.push(`
+    <div ${R('stk')}>
+      ${s.label ? `<small>${esc(s.label)}</small>` : ''}
+      ${s.title ? `<h3>${esc(s.title)}</h3>` : ''}
+      ${s.image ? `<figure>${I.img(s.image, s.title)}</figure>` : ''}
+      ${s.body ? `<p>${I.nl2br(s.body)}</p>` : ''}
+    </div>`));
+  if (c.hostText || fams.length || c.hostOutro) cards.push(`
+    <div ${R('stk')}>
+      <small>${esc(f.label || 'Hosted by')}</small>
+      ${c.hostText ? `<h3>${I.nl2br(c.hostText)}</h3>` : ''}
+      ${fams.map(x => `<p>${x.label ? esc(x.label) + ': ' : ''}<b>${esc(x.names || '')}</b></p>`).join('')}
+      ${c.hostOutro ? `<p>${I.nl2br(c.hostOutro)}</p>` : ''}
+    </div>`);
+  const accounts = (g.items || []).filter(x => x && x.account);
+  if (g.enabled !== false && (accounts.length || g.description)) cards.push(`
+    <div ${R('stk')}>
+      <small>${esc(g.label || 'Gifts')}</small>
+      <h3>${esc(g.title || 'If you want to')}</h3>
+      ${g.description ? `<p>${I.nl2br(g.description)}</p>` : ''}
+      ${accounts.map(x => `<div class="acct"><p><b>${esc(x.bank || 'Account')}</b><br>${esc(x.account)}</p><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}
+    </div>`);
+  const gl = data.gallery || {};
+  const photos = (gl.enabled !== false ? (gl.items || []) : []).filter(x => x && x.url).slice(0, 7);
+  if (!cards.length && !photos.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      ${cards.length ? `<p ${R('tagline-mono')}>Need to know</p><div class="stickers">${cards.join('')}</div>` : ''}
+      ${photos.length ? `
+        <p ${R('tagline-mono')} style="margin-top:${cards.length ? 60 : 0}px">${esc(gl.label || 'Throwbacks')}</p>
+        ${gl.title ? `<h2 ${R('big')} data-fit>${esc(gl.title)}</h2>` : ''}
+        <div class="grid-ph">${photos.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}</figure>`).join('')}</div>` : ''}
+    </div>
+  </section>`;
+}
+
+function guestList(data) {
+  const r = data.rsvp || {};
+  if (r.enabled === false) return '';
+  return `
+  <section class="sec" id="rsvp">
+    <div class="wrap">
+      <p ${R('tagline-mono')}>${esc(r.label || 'Guest list')}</p>
+      <h2 ${R('big')} data-fit>${esc(r.title || 'Get on the list')}</h2>
+      <div class="list-card">
+        <div ${R()}>
+          ${r.description ? `<p class="desc">${I.nl2br(r.description)}</p>` : ''}
+          ${I.rsvpNotes(r).map(n => `<p class="notes">→ ${esc(n)}</p>`).join('')}
+          ${I.contactHtml(r, { intro: 'Questions? Hit up' })}
+        </div>
+        <div ${R()}>
+          ${I.rsvpForm(r, {
+            yes: "I'm in", no: "Can't make it",
+            nameLabel: 'Your name', namePlaceholder: 'First and last name',
+            countLabel: 'How many of you', wishesLabel: 'Birthday message (optional)',
+            wishesPlaceholder: 'Say something…', button: r.buttonText || 'Lock it in',
+            doneTitle: "You're on the list"
+          })}
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function build(data) {
+  const c = data.cover || {};
+  const name = c.names || data.title || '';
+  document.title = (c.headline || `${name}'s Birthday`) + ' — Invitation';
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    scoreboard(data), spots(data), lineup(data), stickers(data), guestList(data),
+    `<footer><p data-fit>See you there.</p></footer>`
+  ].join('');
+}
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

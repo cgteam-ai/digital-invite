@@ -1,4 +1,5 @@
 using InvitationPlatform.Api.Auth;
+using InvitationPlatform.Api.Dtos;
 using InvitationPlatform.Api.Services.Seeding;
 using InvitationPlatform.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,31 @@ public class DatabaseSeederTests
 
         await Seeder(db).SeedAsync();   // re-run must not duplicate
         Assert.Equal(count, await db.Templates.CountAsync(t => t.IsBuiltin));
+    }
+
+    /// <summary>
+    /// Every built-in template's default data is served to the admin editor by deserializing it
+    /// into <see cref="InvitationData"/>. A typo there would not fail seeding — the template would
+    /// simply come back empty — so the catalogue is parsed here instead.
+    /// </summary>
+    [Fact]
+    public void Builtin_template_data_deserializes_into_the_invitation_shape()
+    {
+        var json = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        };
+
+        foreach (var t in BuiltinTemplates.All)
+        {
+            var data = System.Text.Json.JsonSerializer.Deserialize<InvitationData>(t.Data, json);
+            Assert.NotNull(data);
+            Assert.False(string.IsNullOrWhiteSpace(data!.Title), $"{t.Name}: title missing");
+            Assert.NotNull(data.Cover);
+            Assert.NotNull(data.Rsvp);
+            Assert.False(string.IsNullOrWhiteSpace(data.Cover!.Names), $"{t.Name}: cover names missing");
+            Assert.True(data.Rsvp!.MaxPeople > 0, $"{t.Name}: rsvp maxPeople must be positive");
+        }
     }
 
     [Fact]

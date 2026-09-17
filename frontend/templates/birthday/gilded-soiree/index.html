@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f141d">
+<title>Birthday Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Cormorant Garamond for the engraved, refined figures and names; Josefin Sans for the
+     geometric art-deco capitals. -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * GILDED SOIREE — an adult birthday as a black-tie evening (30th, 40th, 50th and beyond).
+   * Midnight ink and champagne gold, art-deco frames that draw themselves in, a large engraved
+   * age numeral, a menu-card programme with dotted leaders and an ivory response card.
+   * Works for anyone: no pink or blue, no cartoons — just proportion, type and gold hairlines.
+   */
+  :root {
+    --ink:   #0f141d;
+    --ink-2: #151c29;
+    --gold:  #c9a86a;
+    --gold-2:#e8d3a2;
+    --gold-3:#9c7f47;
+    --ivory: #f4eee2;
+    --paper: #f7f2e8;
+    --text:  rgba(244,238,226,.86);
+    --muted: rgba(244,238,226,.58);
+    --serif: 'Cormorant Garamond', 'Didot', Georgia, serif;
+    --caps:  'Josefin Sans', 'Futura', 'Century Gothic', sans-serif;
+    --pad: clamp(20px, 6vw, 48px);
+    --foil: linear-gradient(170deg, #f1dfb2 0%, #c9a86a 42%, #9c7f47 58%, #e8d3a2 100%);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--ink); color: var(--text); font-family: var(--serif); font-size: 18px; line-height: 1.55; -webkit-tap-highlight-color: transparent; }
+  img, video, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 980px); margin: 0 auto; padding: 0 var(--pad); }
+  .sec { position: relative; padding: clamp(60px, 13vw, 120px) 0; text-align: center; }
+  .caps { font-family: var(--caps); font-weight: 400; text-transform: uppercase; letter-spacing: .32em; font-size: .72rem; color: var(--gold); }
+  .title { font-family: var(--serif); font-weight: 400; color: var(--ivory); line-height: 1.05; letter-spacing: .01em;
+           font-size: calc(clamp(2.3rem, 9vw, 3.8rem) * var(--fit, 1)); margin-top: 12px; }
+  .title i { color: var(--gold-2); }
+  .foil { background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* Deco divider: line · diamond · line. */
+  .divider { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 22px auto; width: min(100%, 280px); color: var(--gold); }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, currentColor); }
+  .divider::after { background: linear-gradient(270deg, transparent, currentColor); }
+  .divider i { width: 8px; height: 8px; rotate: 45deg; border: 1px solid currentColor; }
+
+  .rv { opacity: 0; transform: translateY(18px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; overflow: hidden;
+          padding: calc(env(safe-area-inset-top) + 28px) var(--pad) calc(env(safe-area-inset-bottom) + 28px); text-align: center; isolation: isolate; }
+  .hero-bg { position: absolute; inset: 0; z-index: -2; }
+  .hero-bg img, .hero-bg video { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.05) brightness(.8); }
+  /* Gold duotone + vignette over the photograph. */
+  .hero-bg::after { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 45%, rgba(15,20,29,.55), rgba(15,20,29,.92) 72%), linear-gradient(rgba(201,168,106,.28), rgba(201,168,106,.28)); mix-blend-mode: normal; }
+  .hero-bg::before { content: ''; position: absolute; inset: 0; z-index: 1; background: rgba(156,127,71,.35); mix-blend-mode: color; }
+  .frame { position: relative; width: min(100%, 560px); margin-top: 34px; padding: clamp(46px, min(13vw, 8vh), 84px) clamp(22px, 7vw, 58px) clamp(34px, min(10vw, 6vh), 64px); }
+  .frame > svg.deco { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .deco path, .deco line, .deco rect, .deco polyline { stroke: var(--gold); fill: none; vector-effect: non-scaling-stroke; }
+  /* The frame fades in rather than drawing itself: its lines keep a constant 1px width as the frame
+     stretches (non-scaling-stroke), and a dash-based draw-in does not survive that. */
+  .frame > svg.deco { opacity: 0; transition: opacity 2s ease .2s; }
+  .is-ready .frame > svg.deco { opacity: 1; }
+  .fan { opacity: 0; transform: translateY(8px); transition: opacity 1.4s ease .6s, transform 1.4s ease .6s; }
+  .is-ready .fan { opacity: 1; transform: none; }
+  .fan { position: absolute; left: 50%; top: 0; width: 120px; translate: -50% -58%; }
+  .fan line { stroke: var(--gold); stroke-width: 1; }
+  .fan circle { fill: var(--ink); stroke: var(--gold); }
+  .hero .caps { display: block; }
+  .intro { font-style: italic; color: var(--muted); font-size: clamp(1.1rem, 4.4vw, 1.35rem); margin-top: 16px; }
+  /* Sized by the shorter of width and height, so the whole frame fits a laptop screen too. */
+  .age { font-family: var(--serif); font-weight: 300; line-height: .8; font-size: clamp(6.5rem, min(44vw, 27vh), 15rem); letter-spacing: -.04em; margin: 10px 0 0; }
+  .age sup { font-size: .22em; letter-spacing: 0; vertical-align: top; position: relative; top: 1.5em; margin-left: .06em; }
+  .name { font-family: var(--caps); font-weight: 300; text-transform: uppercase; color: var(--ivory);
+          font-size: calc(clamp(1.5rem, 7vw, 2.5rem) * var(--fit, 1)); letter-spacing: .24em; line-height: 1.25; margin-top: 12px; padding-left: .24em; }
+  .headline { font-style: italic; color: var(--gold-2); font-size: clamp(1.2rem, 5vw, 1.6rem); margin-top: 6px; }
+  .when { font-family: var(--caps); font-weight: 400; letter-spacing: .22em; text-transform: uppercase; font-size: clamp(.68rem, 2.8vw, .82rem); color: var(--ivory); line-height: 2; }
+  .tag { color: var(--muted); font-style: italic; margin-top: 10px; font-size: 1.1rem; }
+  .hero-in > * { opacity: 0; transform: translateY(12px); transition: opacity 1.4s ease, transform 1.4s cubic-bezier(.2,.7,.2,1); }
+  .is-ready .hero-in > * { opacity: 1; transform: none; }
+  .hero-in > *:nth-child(2) { transition-delay: .25s; } .hero-in > *:nth-child(3) { transition-delay: .45s; }
+  .hero-in > *:nth-child(4) { transition-delay: .6s; } .hero-in > *:nth-child(n+5) { transition-delay: .8s; }
+  .btn-gold { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; margin-top: 26px; padding: 0 30px; border: 1px solid var(--gold); color: var(--gold-2);
+              font-family: var(--caps); letter-spacing: .28em; text-transform: uppercase; font-size: .74rem; text-decoration: none; transition: background .4s, color .4s; }
+  .btn-gold:hover { background: var(--gold); color: var(--ink); }
+
+  /* ── COUNTDOWN ── */
+  .cd { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 720px; margin: 34px auto 0; }
+  .cd-cell { position: relative; padding: 6px 2px; min-width: 0; }
+  .cd-cell + .cd-cell::before { content: ''; position: absolute; left: 0; top: 10%; bottom: 10%; width: 1px; background: linear-gradient(transparent, var(--gold), transparent); }
+  .cd-num { display: block; font-weight: 400; line-height: 1; color: var(--ivory); font-size: clamp(2.3rem, 11vw, 4.6rem); font-variant-numeric: lining-nums tabular-nums; }
+  .cd-unit { display: block; margin-top: 10px; font-family: var(--caps); letter-spacing: .24em; text-transform: uppercase; font-size: clamp(.52rem, 2.2vw, .68rem); color: var(--gold); padding-left: .24em; }
+  .cd-note { grid-column: 1 / -1; font-style: italic; font-size: 2rem; color: var(--gold-2); }
+  .date-line { margin-top: 26px; font-style: italic; font-size: 1.25rem; color: var(--muted); }
+
+  /* ── THE EVENING (venues) ── */
+  .banner { position: relative; max-width: 860px; margin: 34px auto 0; aspect-ratio: 16 / 7; overflow: hidden;
+            clip-path: polygon(24px 0, calc(100% - 24px) 0, 100% 24px, 100% calc(100% - 24px), calc(100% - 24px) 100%, 24px 100%, 0 calc(100% - 24px), 0 24px); }
+  .banner img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.8) brightness(.8); }
+  @media (max-width: 560px) { .banner { aspect-ratio: 4 / 3; } }
+  .venues { display: grid; gap: 34px; margin-top: 40px; }
+  @media (min-width: 760px) { .venues { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0; }
+                              .venue + .venue { border-left: 1px solid rgba(201,168,106,.3); } }
+  .venue { padding: 0 20px; }
+  .venue figure { max-width: 340px; margin: 0 auto 18px; aspect-ratio: 4 / 3; overflow: hidden; }
+  .venue figure img { width: 100%; height: 100%; object-fit: cover; }
+  .venue h3 { font-weight: 500; font-size: clamp(1.7rem, 7vw, 2.2rem); line-height: 1.1; color: var(--ivory); margin-top: 10px; overflow-wrap: anywhere; }
+  .venue p { color: var(--muted); overflow-wrap: anywhere; }
+  .venue .time { font-style: italic; color: var(--gold-2); font-size: 1.2rem; }
+  .link-gold { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; font-family: var(--caps); letter-spacing: .24em; text-transform: uppercase; font-size: .7rem;
+               color: var(--gold); text-decoration: none; border-bottom: 1px solid rgba(201,168,106,.5); }
+
+  /* ── ORDER OF THE EVENING: a menu card with dotted leaders ── */
+  .menu { position: relative; max-width: 640px; margin: 36px auto 0; padding: clamp(30px, 8vw, 54px) clamp(18px, 6vw, 44px); border: 1px solid rgba(201,168,106,.45); }
+  .menu::before { content: ''; position: absolute; inset: 6px; border: 1px solid rgba(201,168,106,.2); pointer-events: none; }
+  .menu ol { list-style: none; display: grid; gap: 18px; }
+  .menu li { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; text-align: left; }
+  .menu .t { font-style: italic; color: var(--gold-2); font-size: 1.2rem; white-space: nowrap; }
+  .menu .what { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .menu .what::before { content: ''; order: 0; flex: 1 1 auto; min-width: 16px; border-bottom: 1px dotted rgba(201,168,106,.55); translate: 0 -5px; }
+  .menu h3 { order: 1; font-family: var(--caps); font-weight: 400; text-transform: uppercase; letter-spacing: .16em; font-size: clamp(.78rem, 3.2vw, .95rem); color: var(--ivory); text-align: right; overflow-wrap: anywhere; max-width: 70%; }
+  .menu p { grid-column: 2; text-align: right; color: var(--muted); font-style: italic; font-size: 1.02rem; }
+  .menu a { color: var(--gold); }
+
+  /* ── NOTES (dress code, hosts, custom), GIFTS, GALLERY ── */
+  .notes { display: grid; gap: 40px; margin-top: 36px; }
+  @media (min-width: 760px) { .notes { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); } }
+  .note h3 { font-weight: 400; font-size: clamp(1.8rem, 7vw, 2.4rem); color: var(--ivory); line-height: 1.1; margin-top: 10px; overflow-wrap: anywhere; }
+  .note p { color: var(--muted); margin-top: 6px; }
+  .note figure { margin: 14px auto; max-width: 320px; }
+  .acct { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin-top: 12px; }
+  .acct span { color: var(--ivory); letter-spacing: .04em; overflow-wrap: anywhere; }
+  .copy { min-height: 38px; padding: 0 14px; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; font-size: .64rem; cursor: pointer; }
+  .gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 2vw, 16px); margin-top: 36px; }
+  .gallery figure { aspect-ratio: 3 / 4; overflow: hidden;
+                    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%, 0 14px); }
+  .gallery figure:nth-child(3n+2) { translate: 0 22px; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(.3); }
+  @media (max-width: 480px) { .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } .gallery figure:nth-child(3n+2) { translate: none; } }
+
+  /* ── RESPONSE CARD (RSVP) ── */
+  .card { position: relative; max-width: 560px; margin: 36px auto 0; background: var(--paper); color: #2a2418; padding: clamp(34px, 9vw, 60px) clamp(20px, 7vw, 54px); text-align: center;
+          box-shadow: 0 40px 80px rgba(0,0,0,.45); }
+  .card::before, .card::after { content: ''; position: absolute; pointer-events: none; }
+  .card::before { inset: 10px; border: 1px solid var(--gold-3); }
+  .card::after  { inset: 15px; border: 1px solid rgba(156,127,71,.35); }
+  .card .caps { color: var(--gold-3); }
+  .card h2 { font-weight: 400; font-size: clamp(2.2rem, 9vw, 3.1rem); line-height: 1.05; margin-top: 10px; color: #1e1a12; }
+  .card .desc { color: #5f5646; font-style: italic; margin-top: 8px; }
+  .card .notes-line { color: var(--gold-3); font-family: var(--caps); letter-spacing: .14em; text-transform: uppercase; font-size: .68rem; margin-top: 10px; }
+  .rsvp { position: relative; z-index: 1; display: grid; gap: 18px; margin-top: 28px; text-align: left; }
+  .rsvp-choices { display: grid; gap: 10px; }
+  .rsvp-choice { position: relative; display: flex; align-items: center; gap: 14px; min-height: 48px; cursor: pointer; font-size: 1.25rem; font-style: italic; color: #2a2418; }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice::before { content: ''; flex: none; width: 16px; height: 16px; rotate: 45deg; border: 1px solid var(--gold-3); transition: background .3s, box-shadow .3s; }
+  .rsvp-choice.on::before { background: var(--gold); box-shadow: 0 0 0 3px var(--paper), 0 0 0 4px var(--gold-3); }
+  .rsvp-choice:focus-within { outline: 1px dashed var(--gold-3); outline-offset: 4px; }
+  .rsvp-field { display: grid; gap: 2px; }
+  .rsvp-label { font-family: var(--caps); letter-spacing: .22em; text-transform: uppercase; font-size: .64rem; color: var(--gold-3); }
+  .rsvp-input { width: 100%; min-height: 48px; padding: 8px 0; border: 0; border-bottom: 1px solid rgba(42,36,24,.35); border-radius: 0; background: transparent; color: #1e1a12; font-family: var(--serif); font-size: 1.2rem; }
+  textarea.rsvp-input { resize: none; min-height: 70px; }
+  .rsvp-input::placeholder { color: rgba(42,36,24,.4); font-style: italic; }
+  .rsvp-input:focus { outline: none; border-bottom-color: var(--gold-3); }
+  .rsvp-error { color: #8c2d1c; font-style: italic; }
+  .rsvp-submit { min-height: 56px; margin-top: 6px; border: 0; cursor: pointer; background: #1e1a12; color: var(--gold-2); font-family: var(--caps); letter-spacing: .3em; text-transform: uppercase; font-size: .76rem; transition: background .4s, color .4s; }
+  .rsvp-submit:hover { background: var(--gold-3); color: var(--paper); }
+  .rsvp-done { position: relative; z-index: 1; margin-top: 26px; }
+  .rsvp-done-title { font-style: italic; font-size: 2rem; color: #1e1a12; }
+  .rsvp-done-body { color: #5f5646; margin-top: 6px; }
+  .contact { position: relative; z-index: 1; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(156,127,71,.35); }
+  .contact-intro { font-family: var(--caps); letter-spacing: .22em; text-transform: uppercase; font-size: .62rem; color: var(--gold-3); }
+  .contact-name { font-size: 1.4rem; color: #1e1a12; }
+  .contact-phone { color: #5f5646; }
+  .contact-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border: 1px solid var(--gold-3); color: #2a2418; font-family: var(--caps); letter-spacing: .18em; text-transform: uppercase; font-size: .64rem; text-decoration: none; }
+
+  footer { text-align: center; padding: 20px var(--pad) calc(env(safe-area-inset-bottom) + 70px); }
+  .mono { display: inline-grid; place-items: center; width: 74px; height: 74px; rotate: 45deg; border: 1px solid var(--gold); }
+  .mono span { rotate: -45deg; font-size: 1.5rem; color: var(--gold-2); letter-spacing: .04em; }
+  footer p { margin-top: 26px; font-style: italic; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .hero-in > * { opacity: 1; transform: none; transition: none; }
+    .frame > svg.deco, .fan { opacity: 1; transform: none; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const A = '/assets/gilded-soiree/';
+const DEFAULT_DATA = {
+  template: 'gilded-soiree',
+  title: 'Name',
+  cover: {
+    enabled: true, headline: '', eventLabel: '40', names: 'Name',
+    tagline: 'Join us for an unforgettable celebration', greeting: 'Dear',
+    hostIntro: 'You are cordially invited to celebrate', hostOutro: '', hostText: '',
+    image: A + 'toast.jpg', video: '', buttonText: 'Kindly respond'
+  },
+  countdown: { enabled: true, label: 'Until the evening', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: false, label: 'Hosted by', title: '', items: [] },
+  locations: { enabled: true, label: 'The evening', title: 'An evening to remember', image: A + 'evening.jpg', items: [
+    { label: 'Celebration', time: '', name: '', addr: '', url: '', img: '' }
+  ] },
+  timeline:  { enabled: true, label: 'Programme', title: 'Order of the evening', items: [] },
+  gallery:   { enabled: false, label: 'Through the years', title: 'Moments', items: [] },
+  gifts:     { enabled: false, label: 'With gratitude', title: 'Gifts', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'Kindly respond', title: 'The favour of a reply', description: '',
+    deadline: '', maxPeople: 2, buttonText: 'Send reply', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+
+// Art-deco frame: stepped corners, double rules. Paths are normalised (pathLength=1) so they draw in.
+const FRAME = `
+<svg class="deco" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+  <path stroke-width="1" d="M8 2 H92 V6 H98 V134 H92 V138 H8 V134 H2 V6 H8 Z"/>
+  <path stroke-width="1" d="M11 5 H89 V9 H95 V131 H89 V135 H11 V131 H5 V9 H11 Z" stroke-opacity=".45"/>
+</svg>`;
+const FAN = (() => {
+  let lines = '';
+  for (let i = 0; i <= 12; i++) {
+    const a = Math.PI * (i / 12);
+    lines += `<line x1="60" y1="60" x2="${(60 - Math.cos(a) * 56).toFixed(1)}" y2="${(60 - Math.sin(a) * 56).toFixed(1)}"/>`;
+  }
+  return `<svg class="fan" viewBox="0 0 120 64" aria-hidden="true">${lines}<circle cx="60" cy="60" r="9" stroke-width="1"/></svg>`;
+})();
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const name = c.names || data.title || '';
+  const age = I.numberIn(c.eventLabel);
+  const dp = I.dateParts(cd);
+  const guest = I.guestName();
+  const bg = I.media(c.image, c.video, '', true);
+  const suffix = age ? I.ordinal(age).slice(age.length) : '';
+  const when = [dp ? `${dp.weekday} · ${I.ordinal(dp.d)} ${dp.month} ${dp.y}` : '', cd.time ? I.fmtClock(cd.time) : ''].filter(Boolean);
+  return `
+  <section class="hero">
+    ${bg ? `<div class="hero-bg">${bg}</div>` : ''}
+    <div class="frame">
+      ${FRAME}${FAN}
+      <div class="hero-in">
+        <span class="caps">${guest ? `${esc(c.greeting || 'Dear')} ${esc(guest)}` : esc(c.eventLabel && !age ? c.eventLabel : 'A birthday celebration')}</span>
+        <p class="intro">${esc(c.hostIntro || 'You are cordially invited to celebrate')}</p>
+        ${age ? `<p class="age foil" aria-label="${esc(I.ordinal(age))} birthday">${esc(age)}<sup>${esc(suffix)}</sup></p>` : ''}
+        <h1 class="name" data-fit=".45">${esc(name)}</h1>
+        ${c.headline ? `<p class="headline">${esc(c.headline)}</p>` : ''}
+        <div class="divider" aria-hidden="true"><i></i></div>
+        ${when.length ? `<p class="when">${when.map(esc).join('<br>')}</p>` : ''}
+        ${c.tagline ? `<p class="tag">${esc(c.tagline)}</p>` : ''}
+        <a class="btn-gold" href="#rsvp">${esc(c.buttonText || 'Kindly respond')}</a>
+      </div>
+    </div>
+  </section>`;
+}
+
+function countdown(data) {
+  const cd = data.countdown || {};
+  if (cd.enabled === false) return '';
+  const target = I.eventInstant(cd);
+  const dp = I.dateParts(cd);
+  return `
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('caps')}>${esc(cd.label || 'Until the evening')}</p>
+      <h2 ${R('title')} data-fit>${dp ? `${esc(dp.weekday)}, <i>the ${esc(I.ordinal(dp.d))} of ${esc(dp.month)}</i>` : 'Date to be announced'}</h2>
+      ${target !== null ? `<div ${R('cd')} data-countdown="${target}" data-past-today="This evening, at last" data-past-after="Thank you for a wonderful evening">${I.countdownCells()}</div>` : ''}
+      ${cd.time || cd.description ? `<p ${R('date-line')}>${[cd.time ? 'from ' + esc(I.fmtClock(cd.time)) : '', esc(cd.description || '')].filter(Boolean).join(' · ')}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function evening(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.addr || x.label));
+  if (l.enabled === false || !items.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="divider" aria-hidden="true"><i></i></div>
+      <p ${R('caps')}>${esc(l.label || 'The evening')}</p>
+      <h2 ${R('title')} data-fit>${esc(l.title || 'An evening to remember')}</h2>
+      ${l.image ? `<figure ${R('banner')}>${I.img(l.image, l.title || '')}</figure>` : ''}
+      <div class="venues">
+        ${items.map(x => `
+          <article ${R('venue')}>
+            ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+            ${x.label ? `<p class="caps">${esc(x.label)}</p>` : ''}
+            ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+            ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+            ${x.time ? `<p class="time">${esc(x.time)}</p>` : ''}
+            ${x.url ? `<a class="link-gold" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">View map</a>` : ''}
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+function programme(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled === false || !items.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <p ${R('caps')}>${esc(t.label || 'Programme')}</p>
+      <h2 ${R('title')} data-fit>${esc(t.title || 'Order of the evening')}</h2>
+      <div ${R('menu')}>
+        <ol>
+          ${items.map(x => `
+            <li>
+              <span class="t">${esc(x.time || '')}</span>
+              <span class="what"><h3>${esc(x.title || '')}</h3></span>
+              ${x.subtitle ? `<p>${esc(x.subtitle)}${x.url ? ` · <a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">map</a>` : ''}</p>` : ''}
+            </li>`).join('')}
+        </ol>
+      </div>
+    </div>
+  </section>`;
+}
+
+function notes(data) {
+  const c = data.cover || {}, f = data.families || {}, g = data.gifts || {}, gl = data.gallery || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const blocks = [];
+  (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body)).forEach(s => blocks.push(`
+    <div ${R('note')}>
+      ${s.label ? `<p class="caps">${esc(s.label)}</p>` : ''}
+      ${s.title ? `<h3>${esc(s.title)}</h3>` : ''}
+      ${s.image ? `<figure>${I.img(s.image, s.title)}</figure>` : ''}
+      ${s.body ? `<p>${I.nl2br(s.body)}</p>` : ''}
+    </div>`));
+  if (c.hostText || fams.length || c.hostOutro) blocks.push(`
+    <div ${R('note')}>
+      <p class="caps">${esc(f.label || 'Hosted by')}</p>
+      ${c.hostText ? `<h3>${I.nl2br(c.hostText)}</h3>` : ''}
+      ${fams.map(x => `<p>${x.label ? esc(x.label) + ' · ' : ''}${esc(x.names || '')}</p>`).join('')}
+      ${c.hostOutro ? `<p>${I.nl2br(c.hostOutro)}</p>` : ''}
+    </div>`);
+  const accounts = (g.items || []).filter(x => x && x.account);
+  if (g.enabled !== false && (accounts.length || g.description)) blocks.push(`
+    <div ${R('note')}>
+      <p class="caps">${esc(g.label || 'With gratitude')}</p>
+      <h3>${esc(g.title || 'Gifts')}</h3>
+      ${g.description ? `<p>${I.nl2br(g.description)}</p>` : ''}
+      ${accounts.map(x => `<div class="acct"><span>${esc(x.bank || 'Account')} · ${esc(x.account)}</span><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}
+    </div>`);
+  const photos = (gl.enabled !== false ? (gl.items || []) : []).filter(x => x && x.url).slice(0, 6);
+  if (!blocks.length && !photos.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      ${blocks.length ? `<div class="divider" aria-hidden="true"><i></i></div><div class="notes">${blocks.join('')}</div>` : ''}
+      ${photos.length ? `
+        <div style="margin-top:${blocks.length ? 80 : 0}px">
+          <p ${R('caps')}>${esc(gl.label || 'Through the years')}</p>
+          ${gl.title ? `<h2 ${R('title')} data-fit>${esc(gl.title)}</h2>` : ''}
+          <div class="gallery" style="padding-bottom:22px">${photos.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}</figure>`).join('')}</div>
+        </div>` : ''}
+    </div>
+  </section>`;
+}
+
+function response(data) {
+  const r = data.rsvp || {};
+  if (r.enabled === false) return '';
+  return `
+  <section class="sec" id="rsvp" style="padding-top:0">
+    <div class="wrap">
+      <div ${R('card')}>
+        <p class="caps">${esc(r.label || 'Kindly respond')}</p>
+        <h2>${esc(r.title || 'The favour of a reply')}</h2>
+        ${r.description ? `<p class="desc">${I.nl2br(r.description)}</p>` : ''}
+        ${I.rsvpNotes(r).map(n => `<p class="notes-line">${esc(n)}</p>`).join('')}
+        ${I.rsvpForm(r, {
+          yes: 'Accepts with pleasure', no: 'Declines with regret',
+          nameLabel: 'Name', namePlaceholder: 'Your full name',
+          countLabel: 'Number of guests', wishesLabel: 'A message for the host',
+          wishesPlaceholder: 'With warmest wishes…', button: r.buttonText || 'Send reply',
+          doneTitle: 'With thanks'
+        })}
+        ${I.contactHtml(r, { intro: 'Enquiries' })}
+      </div>
+    </div>
+  </section>`;
+}
+
+function build(data) {
+  const c = data.cover || {};
+  const name = c.names || data.title || '';
+  document.title = (c.headline || `${name}'s Birthday`) + ' — Invitation';
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    countdown(data), evening(data), programme(data), notes(data), response(data),
+    `<footer><span class="mono"><span>${esc(I.initials(name) || '✦')}</span></span><p>We look forward to celebrating with you.</p></footer>`
+  ].join('');
+}
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

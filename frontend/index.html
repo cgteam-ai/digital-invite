@@ -77,11 +77,13 @@
             <p class="phone-eyebrow">Save the date</p>
             <p class="phone-names">Nadia<span class="phone-amp">&amp;</span>Karim</p>
             <div class="phone-rule"></div>
-            <p class="phone-date">12 June 2027 · Beirut</p>
-            <div class="phone-cd">
-              <div><b>128</b><small>Days</small></div>
-              <div><b>06</b><small>Hrs</small></div>
-              <div><b>42</b><small>Min</small></div>
+            <p class="phone-date">19 June 2035 · Beirut</p>
+            <!-- Showcase only: counts down to a fixed sample date in the browser. Not linked to the
+                 admin, the API or any real invitation. -->
+            <div class="phone-cd" data-demo-countdown="2035-06-19T00:00:00">
+              <div><b data-u="d">3203</b><small>Days</small></div>
+              <div><b data-u="h">00</b><small>Hrs</small></div>
+              <div><b data-u="m">00</b><small>Min</small></div>
             </div>
           </div>
         </div>
@@ -144,7 +146,7 @@
       </div>
 
       <div class="filter-row" id="tplFilter"></div>
-      <div class="tpl-grid" id="tplGrid"></div>
+      <div class="tpl-groups" id="tplGrid"></div>
     </div>
   </section>
 
@@ -394,18 +396,154 @@ const TEMPLATES = [
   {
     name: 'Elegant Noir', event: 'Wedding', category: 'wedding', key: 'elegant-noir',
     desc: 'A dark, cinematic invitation with script typography, an envelope opening and a scrolling story.',
-    thumb: '/assets/demo/couple-silhouette.svg'
+    thumb: '/assets/elegant-noir/thumb.jpg'
   },
   {
     name: 'Serene Beige', event: 'Wedding', category: 'wedding', key: 'serene-beige',
     desc: 'Soft, light and timeless — a monogram hero, calendar card and split venue details.',
-    thumb: '/assets/demo/petals.svg'
+    thumb: '/assets/serene-beige/thumb.jpg'
   },
-  { name: 'Golden Hour',  event: 'Engagement', soon: true, desc: 'Warm, romantic and understated — coming soon.' },
-  { name: 'Confetti',     event: 'Birthday',   soon: true, desc: 'Playful and colourful, for birthdays of every age — coming soon.' },
-  { name: 'Little One',   event: 'Baby Shower', soon: true, desc: 'Gentle pastels to welcome a new arrival — coming soon.' },
-  { name: 'Summa',        event: 'Graduation', soon: true, desc: 'Crisp and celebratory, for the class of tomorrow — coming soon.' }
+  {
+    name: 'Wedding Daily', event: 'Wedding', category: 'wedding', key: 'wedding-daily',
+    desc: 'A newspaper front page: blackletter masthead, black-and-white photography and a headline that announces the day.',
+    thumb: '/assets/wedding-daily/thumb.jpg'
+  },
+  {
+    name: 'Marble Waltz', event: 'Wedding', category: 'wedding', key: 'marble-waltz',
+    desc: 'White watercolour with an illustrated first dance, a winding itinerary of the day and a boxed "Coming?" RSVP.',
+    thumb: '/assets/marble-waltz/thumb.jpg'
+  },
+  {
+    name: 'Polaroid Heart', event: 'Wedding', category: 'wedding', key: 'polaroid-heart',
+    desc: 'A heart made of your photos, paper-clipped polaroids for when and where, and a closing wedding-day mosaic.',
+    thumb: '/assets/polaroid-heart/thumb.jpg'
+  },
+  {
+    name: 'Editorial Love Story', event: 'Wedding', category: 'wedding', key: 'editorial-love-story',
+    desc: 'A fashion-editorial story you swipe through: full-screen photography, large Didone type and a chapter for every part of the day.',
+    thumb: '/assets/editorial-love-story/thumb.jpg'
+  },
+  // Engagement
+  {
+    name: 'Rose Promise', event: 'Engagement', category: 'engagement', key: 'rose-promise',
+    desc: 'Romantic blush and ivory, cathedral-arch photographs, drawn botanical sprigs and a reply card sealed with your initials.',
+    thumb: '/assets/rose-promise/thumb.jpg'
+  },
+  {
+    name: 'Venn Union', event: 'Engagement', category: 'engagement', key: 'venn-union',
+    desc: 'Modern and art-directed: two overlapping circles, black-and-white photography and a numbered editorial layout.',
+    thumb: '/assets/venn-union/thumb.jpg'
+  },
+  // Birthday
+  {
+    name: 'Rocket Party', event: 'Birthday', category: 'birthday', key: 'rocket-party',
+    desc: "For little astronauts: a rocket lift-off, the age inside a ringed planet and a boarding-pass RSVP.",
+    thumb: '/assets/rocket-party/thumb.jpg'
+  },
+  {
+    name: 'Fairy Garden', event: 'Birthday', category: 'birthday', key: 'fairy-garden',
+    desc: 'A storybook garden tea party with bunting, a tiered cake, butterflies and flower-shaped countdown badges.',
+    thumb: '/assets/fairy-garden/thumb.jpg'
+  },
+  {
+    name: 'Hype Night', event: 'Birthday', category: 'birthday', key: 'hype-night',
+    desc: 'For teens: a streetwear gig poster with huge type, ticker bands, a scoreboard countdown and a guest list.',
+    thumb: '/assets/hype-night/thumb.jpg'
+  },
+  {
+    name: 'Lilac Glow', event: 'Birthday', category: 'birthday', key: 'lilac-glow',
+    desc: 'Soft and iridescent for a sweet sixteen: a shimmering name, frosted panels and a swipeable plan.',
+    thumb: '/assets/lilac-glow/thumb.jpg'
+  },
+  {
+    name: 'Gilded Soiree', event: 'Birthday', category: 'birthday', key: 'gilded-soiree',
+    desc: 'A black-tie evening for a 30th, 40th or 50th: art-deco gold, an engraved age numeral and a menu-card programme.',
+    thumb: '/assets/gilded-soiree/thumb.jpg'
+  },
+  // Baby shower
+  {
+    name: 'Little Cloud', event: 'Baby Shower', category: 'baby-shower', key: 'little-cloud',
+    desc: 'Gentle pastels for a boy or a girl: drifting clouds, a swaying nursery mobile and moon-shaped countdown badges.',
+    thumb: '/assets/little-cloud/thumb.jpg'
+  },
+  {
+    name: 'Paper Shapes', event: 'Baby Shower', category: 'baby-shower', key: 'paper-shapes',
+    desc: 'A modern art print: cut-paper shapes, tumbling letter blocks and a bright sticker-style reply.',
+    thumb: '/assets/paper-shapes/thumb.jpg'
+  },
+  // Graduation
+  {
+    name: 'Laurel Honors', event: 'Graduation', category: 'graduation', key: 'laurel-honors',
+    desc: 'Navy and gold with a laurel crest, a parchment certificate announcement and an Order of Proceedings.',
+    thumb: '/assets/laurel-honors/thumb.jpg'
+  },
+  {
+    name: 'Cap Toss', event: 'Graduation', category: 'graduation', key: 'cap-toss',
+    desc: 'A loud, happy grad party: a huge CLASS OF year, flying mortarboards and a confetti burst.',
+    thumb: '/assets/cap-toss/thumb.jpg'
+  },
+  // Second collection — two more designs in every category
+  {
+    name: 'Emerald Vows', event: 'Wedding', category: 'wedding', key: 'emerald-vows',
+    desc: 'Classic and timeless: emerald ink and gold on ivory, engraved oval cameos and a monogrammed reply card.',
+    thumb: '/assets/emerald-vows/thumb.jpg'
+  },
+  {
+    name: 'Atelier', event: 'Wedding', category: 'wedding', key: 'atelier',
+    desc: 'Modern and gallery-like: a sticky photo stage that changes as each numbered chapter scrolls past.',
+    thumb: '/assets/atelier/thumb.jpg'
+  },
+  {
+    name: 'Amalfi', event: 'Engagement', category: 'engagement', key: 'amalfi',
+    desc: 'Romance by the sea: lemon branches, majolica tiles, a postcard laid over the water and a postcard-back reply.',
+    thumb: '/assets/amalfi/thumb.jpg'
+  },
+  {
+    name: 'Ink Bloom', event: 'Engagement', category: 'engagement', key: 'ink-bloom',
+    desc: 'Modern and artistic: washi paper, an ink wash, a torn-edge photograph and one vermilion seal.',
+    thumb: '/assets/ink-bloom/thumb.jpg'
+  },
+  {
+    name: 'Arcade', event: 'Birthday', category: 'birthday', key: 'arcade',
+    desc: 'A retro video-game party: the age as a LEVEL, a pixel cake, a high-score countdown and an INSERT COIN reply.',
+    thumb: '/assets/arcade/thumb.jpg'
+  },
+  {
+    name: 'Velvet Hour', event: 'Birthday', category: 'birthday', key: 'velvet-hour',
+    desc: 'A candle-lit dinner for a milestone birthday: aubergine, oxblood and brass, with a reservation card to reply.',
+    thumb: '/assets/velvet-hour/thumb.jpg'
+  },
+  {
+    name: 'Little Honey', event: 'Baby Shower', category: 'baby-shower', key: 'little-honey',
+    desc: 'Soft and sweet for a boy or a girl: a faint honeycomb, a drifting bee, hexagon countdown and a jar-label reply.',
+    thumb: '/assets/little-honey/thumb.jpg'
+  },
+  {
+    name: 'Bubble Pop', event: 'Baby Shower', category: 'baby-shower', key: 'bubble-pop',
+    desc: 'Modern and playful: glossy bubbles floating up, a rainbow title, blob cards and a balloon-string plan.',
+    thumb: '/assets/bubble-pop/thumb.jpg'
+  },
+  {
+    name: 'Ivy Hall', event: 'Graduation', category: 'graduation', key: 'ivy-hall',
+    desc: 'Collegiate and elegant: ivy green, cream and burgundy, varsity ribbons, a matted portrait and an order of exercises.',
+    thumb: '/assets/ivy-hall/thumb.jpg'
+  },
+  {
+    name: 'Next Chapter', event: 'Graduation', category: 'graduation', key: 'next-chapter',
+    desc: 'Youthful and bold: a violet-to-orange gradient, chunky type, a degree progress bar and gradient-framed tiles.',
+    thumb: '/assets/next-chapter/thumb.jpg'
+  }
 ];
+
+// The showcase is organised by occasion, in this order.
+const CATEGORY_ORDER = ['Wedding', 'Engagement', 'Birthday', 'Baby Shower', 'Graduation'];
+const CATEGORY_BLURB = {
+  'Wedding':     'From classic and romantic to modern and editorial.',
+  'Engagement':  'For the evening you say yes, in whatever style suits you both.',
+  'Birthday':    'Kids, teens and milestone birthdays — playful to black-tie.',
+  'Baby Shower': 'Gentle or bright, and never only pink or blue.',
+  'Graduation':  'Academic and elegant, or loud and celebratory.'
+};
 
 const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -425,8 +563,24 @@ function renderFilter() {
 }
 
 function renderTemplates() {
-  const list = TEMPLATES.filter(t => tplFilter === 'All' || t.event === tplFilter);
-  document.getElementById('tplGrid').innerHTML = list.map(t => t.soon ? `
+  // One group per occasion, each with its own heading and grid of cards.
+  const groups = CATEGORY_ORDER
+    .filter(ev => tplFilter === 'All' || ev === tplFilter)
+    .map(ev => [ev, TEMPLATES.filter(t => t.event === ev)])
+    .filter(([, list]) => list.length);
+  document.getElementById('tplGrid').innerHTML = groups.map(([ev, list]) => `
+    <section class="tpl-cat" id="cat-${esc(ev.toLowerCase().replace(/\s+/g, '-'))}" aria-label="${esc(ev)} templates">
+      <div class="tpl-cat-head">
+        <h3>${esc(ev)}</h3>
+        <span class="tpl-count">${list.length} ${list.length === 1 ? 'design' : 'designs'}</span>
+        ${CATEGORY_BLURB[ev] ? `<p>${esc(CATEGORY_BLURB[ev])}</p>` : ''}
+      </div>
+      <div class="tpl-grid">${renderCards(list)}</div>
+    </section>`).join('');
+}
+
+function renderCards(list) {
+  return list.map(t => t.soon ? `
     <article class="tpl tpl-soon">
       <div class="tpl-thumb"><span>Coming soon</span><span class="tpl-tag">${esc(t.event)}</span></div>
       <div class="tpl-body">
@@ -582,6 +736,30 @@ function legalNote(e) {
 }
 
 document.getElementById('year').textContent = new Date().getFullYear();
+
+// ── HERO PHONE COUNTDOWN (showcase only) ─────────────────
+// Counts down to the fixed sample date in data-demo-countdown, entirely in the browser. It only
+// demonstrates the feature: it is deliberately not linked to the admin, the API or any invitation.
+(function () {
+  const box = document.querySelector('[data-demo-countdown]');
+  if (!box) return;
+  const target = new Date(box.dataset.demoCountdown).getTime();
+  if (isNaN(target)) return;
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const diff = Math.max(0, target - Date.now());
+    const v = {
+      d: String(Math.floor(diff / 86400000)),
+      h: pad(Math.floor(diff / 3600000) % 24),
+      m: pad(Math.floor(diff / 60000) % 60)
+    };
+    box.querySelectorAll('[data-u]').forEach(el => {
+      if (el.textContent !== v[el.dataset.u]) el.textContent = v[el.dataset.u];
+    });
+  };
+  tick();
+  setInterval(tick, 15000);   // minutes are the smallest unit shown
+})();
 </script>
 </body>
 </html>

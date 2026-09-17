@@ -375,6 +375,10 @@
 const API_BASE = (window.API_BASE || '').replace(/\/$/, '');
 const TOKEN_KEY = 'ic_admin_token';
 const USER_KEY  = 'ic_admin_user';
+// Wedding-date pickers accept any day from 2000 to the end of 2035. The templates themselves put
+// no limit on the year: every countdown runs off the full date, however far away it is.
+const DATE_MIN = '2000-01-01';
+const DATE_MAX = '2035-12-31';
 
 // ════════════════════════════════════════════════════════
 // STATE
@@ -817,7 +821,7 @@ function renderEditor() {
         </div>
         <div class="field">
           <label>Event date</label>
-          <input type="date" data-bind="eventDate" value="${esc((inv.eventDate || '').slice(0, 10))}" oninput="onFieldChange(this)">
+          <input type="date" min="${DATE_MIN}" max="${DATE_MAX}" data-bind="eventDate" value="${esc((inv.eventDate || '').slice(0, 10))}" oninput="onFieldChange(this)">
         </div>
         <div class="field">
           <label>Max attendees per RSVP</label>
@@ -829,24 +833,51 @@ function renderEditor() {
     <div id="client-account-card"></div>
 
     ${renderSection('cover', 'Cover Page', d.cover, [
-      { key: 'eventLabel', label: 'Event type' },
-      { key: 'names', label: 'Couple / host names' },
+      { key: 'eventLabel',
+        label: { default: 'Event type', '@birthday': 'Age they are turning (e.g. 30) — shown large',
+                 '@engagement': 'Small line above the names (e.g. The engagement of)',
+                 '@baby-shower': 'Small label (e.g. Baby Shower)', '@graduation': 'Class line (e.g. Class of 2026)' } },
+      { key: 'names',
+        label: { default: 'Couple / host names', '@birthday': 'Name of the birthday person',
+                 '@engagement': 'Couple names (e.g. Sarah & Daniel)', '@baby-shower': 'Parents\' names, or the baby\'s name',
+                 '@graduation': 'Graduate\'s name' } },
       { key: 'tagline', label: 'Tagline' },
       { key: 'buttonText', label: 'Open button text' },
-      { key: 'hostIntro', label: 'Host intro line' },
-      { key: 'hostOutro', label: 'Host outro line' },
-      { key: 'hostText', label: 'Hosting families', full: true },
-      { key: 'greeting', label: 'Greeting prefix (e.g. "Dear")', only: ['elegant-noir'] },
+      { key: 'hostIntro', label: { default: 'Host intro line', '@graduation': 'Short line under the name (e.g. is graduating)' } },
+      { key: 'hostOutro', label: { default: 'Host outro line', '@birthday': 'Closing line (e.g. Dress code: comfy & colourful)' } },
+      { key: 'hostText', full: true,
+        label: { default: 'Hosting families', '@birthday': 'Hosted by (optional)', '@baby-shower': 'Hosted by (optional)',
+                 '@graduation': 'Degree and school (e.g. BSc Architecture · AUB)' } },
+      { key: 'greeting', label: 'Greeting prefix (e.g. "Dear")', only: ['elegant-noir', 'wedding-daily'] },
       { key: 'sealImage', label: 'Wax-seal image', image: true, only: ['elegant-noir'] },
-      { key: 'image', label: 'Cover image', full: true, image: true },
+      { key: 'mastheadTitle', label: 'Newspaper masthead (e.g. "The Wedding Daily")', only: ['wedding-daily'] },
+      { key: 'editionLabel', label: 'Edition label (e.g. "Special Edition")', only: ['wedding-daily'] },
+      { key: 'headline', full: true, only: ['wedding-daily', 'marble-waltz', 'polaroid-heart', 'editorial-love-story', ...CELEBRATIONS],
+        label: { default: 'Headline', 'wedding-daily': 'Front-page headline (e.g. "Top Story of the Year")',
+                 '@birthday': 'Event title (e.g. Emma\'s 30th Birthday)', '@engagement': 'Event title (e.g. Engagement Celebration)',
+                 '@baby-shower': 'Event title (e.g. Baby Smith is coming)', '@graduation': 'Event title (e.g. Congratulations, Alex!)',
+                 'marble-waltz': 'Heading above the names (e.g. "Join Us")',
+                 'polaroid-heart': 'Heading of the "&" spread (e.g. "Celebrate with us our forever")',
+                 'editorial-love-story': 'Cover kicker (e.g. "The Wedding Issue")' } },
+      { key: 'image', full: true, image: true,
+        label: { default: 'Cover image', 'marble-waltz': 'Cover illustration or photo (a drawn couple by default)',
+                 'polaroid-heart': 'First photo in the "&" spread',
+                 'editorial-love-story': 'Cover photograph (full screen)' } },
       { key: 'video', label: 'Cover background video (optional — muted, looping; overrides the image)', full: true, video: true }
     ])}
 
+    ${currentTemplateKey() === 'polaroid-heart' ? renderCollage(d.cover) : ''}
+
     ${renderSection('countdown', 'Date & Countdown', d.countdown, [
+      { key: 'date', label: { default: 'Wedding date', '@birthday': 'Event date', '@engagement': 'Event date', '@baby-shower': 'Event date', '@graduation': 'Event date' }, type: 'date' },
+      { key: 'time', label: { default: 'Wedding time (24h — e.g. 17:30)', '@birthday': 'Start time (24h — e.g. 16:00)', '@engagement': 'Start time (24h — e.g. 19:30)', '@baby-shower': 'Start time (24h — e.g. 11:00)', '@graduation': 'Start time (24h — e.g. 18:00)' }, type: 'time' },
       { key: 'label', label: 'Section label' },
       { key: 'description', label: 'Description / venue line', full: true, type: 'textarea' },
-      { key: 'image', label: 'Background image', full: true, image: true }
-    ], 'The countdown uses the <strong>Event date</strong> set above — you only enter it once.')}
+      { key: 'image', full: true, image: true,
+        label: { default: 'Background image', 'wedding-daily': 'Photograph of the couple (printed under their names)',
+                 'polaroid-heart': 'Second photo in the "&" spread',
+                 'editorial-love-story': 'Photograph beside the date' } }
+    ], 'The countdown runs to the <strong>Wedding date</strong> and <strong>time</strong>. The date is the same one as <strong>Event date</strong> in Public Link — edit either and the other follows. Leave the time blank for midnight. The time is read as the wedding\'s local time, so guests in other countries count down to the real moment of the ceremony.')}
 
     ${renderFamilies(d.families)}
     ${renderGallery(d.gallery)}
@@ -893,6 +924,11 @@ function renderEditor() {
       const [sec, key] = input.dataset.sectionBind.split('.');
       d[sec] = d[sec] || {};
       d[sec][key] = input.type === 'number' ? Number(input.value) : input.value;
+      // The wedding date is shown in two places (Public Link → Event date, and Date & Countdown).
+      // saveCurrent() copies eventDate over countdown.date on the way out, so editing the countdown
+      // field alone would be silently discarded unless it writes back to eventDate too.
+      if (sec === 'countdown' && key === 'date') syncCountdownDate(input.value);
+      if (sec === 'countdown' && (key === 'date' || key === 'time')) stampCountdownTimezone();
       dirty = true;
       if (input.dataset.preview) {
         const img = document.getElementById(input.dataset.preview);
@@ -919,7 +955,33 @@ function syncEventDate(val) {
   d.countdown.date = day;
   const cd = document.getElementById('f-countdown-date');
   if (cd) cd.value = day;
+  stampCountdownTimezone();   // the offset depends on the date (summer/winter time)
   dirty = true;
+}
+
+// The other direction: the Date & Countdown section's own date field writes back to the single
+// event date, so whichever field the admin edits is the one that survives the save.
+function syncCountdownDate(val) {
+  if (!currentInv) return;
+  const day = (val || '').slice(0, 10);
+  currentInv.eventDate = day;
+  const ed = document.querySelector('[data-bind="eventDate"]');
+  if (ed) ed.value = day;
+  dirty = true;
+}
+
+// A date and a time on their own do not identify a moment — "17:30 on 12 June" means a different
+// instant in Beirut than in London. Recording the offset that was in force where the admin is, on
+// that date, turns the pair into an absolute instant the invitation can count down to from any
+// timezone. Measured on the wedding date itself, so summer/winter time is already accounted for.
+function stampCountdownTimezone() {
+  if (!currentInv) return;
+  const cd = currentInv.data.countdown || {};
+  const [y, mo, da] = (cd.date || '').split('-').map(Number);
+  if (!y || !mo || !da) { cd.tzOffset = null; return; }
+  const [hh, mi] = (cd.time || '00:00').split(':').map(Number);
+  cd.tzOffset = new Date(y, mo - 1, da, hh || 0, mi || 0).getTimezoneOffset();
+  currentInv.data.countdown = cd;
 }
 
 function onTitleChange(val) {
@@ -1056,11 +1118,33 @@ function currentTemplateKey() {
   return t ? t.name.toLowerCase().replace(/\s+/g, '-') : '';
 }
 
-// A field/section may declare `only: ['elegant-noir']` to restrict it to specific templates.
+// Event category of the invitation being edited, as "@birthday", "@baby-shower", … — the same key
+// the public dispatcher uses for the template folder. Lets a field target a whole category.
+function currentTemplateCategory() {
+  if (!currentInv || !currentInv.templateId) return '';
+  const t = templates.find(x => x.id === currentInv.templateId);
+  return t ? '@' + String(t.eventType || 'Wedding').trim().toLowerCase().replace(/\s+/g, '-') : '';
+}
+
+// A field/section may declare `only: ['elegant-noir']` to restrict it to specific templates, or
+// `only: ['@birthday']` to show it for every template in a category.
 function appliesToCurrentTemplate(f) {
   if (!f || !f.only) return true;
   const key = currentTemplateKey();
-  return key ? f.only.includes(key) : true;   // unknown template → show everything (safe default)
+  if (!key) return true;                       // unknown template → show everything (safe default)
+  return f.only.includes(key) || f.only.includes(currentTemplateCategory());
+}
+
+// Categories whose templates share the non-wedding fields (headline, contact details, …).
+const CELEBRATIONS = ['@birthday', '@engagement', '@baby-shower', '@graduation'];
+
+// A field's `label` is normally a plain string. Where one template stores the same value for a
+// visibly different purpose (the countdown image is a background in most templates but a printed
+// photograph in Wedding Daily), it may instead be an object keyed by template — or by category,
+// as "@birthday" — with a `default`. A template key wins over its category.
+function labelOf(f) {
+  if (!f.label || typeof f.label !== 'object') return f.label || '';
+  return f.label[currentTemplateKey()] || f.label[currentTemplateCategory()] || f.label.default || '';
 }
 
 function renderSection(key, title, obj, fields, note) {
@@ -1085,6 +1169,7 @@ function renderSection(key, title, obj, fields, note) {
 
 function fieldHtmlFor(f, obj, sectionKey) {
   const path = `${sectionKey}.${f.key}`;
+  const label = labelOf(f);
   const val  = obj[f.key] == null ? '' : obj[f.key];
   const id   = `f-${sectionKey}-${f.key}`;
 
@@ -1093,18 +1178,19 @@ function fieldHtmlFor(f, obj, sectionKey) {
   if (f.image || f.video) {
     const holder = `<input id="${id}" type="hidden" data-section-bind="${path}" data-media-holder value="${esc(val)}">`;
     return `<div class="field ${f.full ? 'full' : ''}">
-      <label for="${id}">${esc(f.label)}</label>
+      <label for="${id}">${esc(label)}</label>
       ${mediaField(holder, val, f.video ? 'video' : 'image')}
     </div>`;
   }
 
   let input;
   if (f.type === 'textarea') input = `<textarea id="${id}" data-section-bind="${path}">${esc(val)}</textarea>`;
-  else if (f.type === 'date') input = `<input id="${id}" type="date" data-section-bind="${path}" value="${esc(val)}">`;
+  else if (f.type === 'date') input = `<input id="${id}" type="date" min="${DATE_MIN}" max="${DATE_MAX}" data-section-bind="${path}" value="${esc(val)}">`;
+  else if (f.type === 'time') input = `<input id="${id}" type="time" data-section-bind="${path}" value="${esc(val)}">`;
   else if (f.type === 'number') input = `<input id="${id}" type="number" data-section-bind="${path}" value="${esc(val)}">`;
   else input = `<input id="${id}" type="text" data-section-bind="${path}" value="${esc(val)}">`;
   return `<div class="field ${f.full ? 'full' : ''}">
-    <label for="${id}">${esc(f.label)}</label>
+    <label for="${id}">${esc(label)}</label>
     ${input}
   </div>`;
 }
@@ -1197,7 +1283,8 @@ function renderGifts(G) {
         <div class="field"><label>Section label</label><input data-section-bind="gifts.label" value="${esc(G.label)}"></div>
         <div class="field"><label>Section title</label><input data-section-bind="gifts.title" value="${esc(G.title)}"></div>
         <div class="field full"><label>Description</label><textarea data-section-bind="gifts.description">${esc(G.description)}</textarea></div>
-        <div class="field full"><label>Background image</label>${mediaField(`<input type="hidden" data-section-bind="gifts.image" data-media-holder value="${esc(G.image)}">`, G.image)}</div>
+        <div class="field full"><label>${esc(labelOf({ label: { default: 'Background image', 'marble-waltz': 'Photo under the gift details', 'polaroid-heart': 'First polaroid under the gift details', 'editorial-love-story': 'Photograph beside the gift details' } }))}</label>${mediaField(`<input type="hidden" data-section-bind="gifts.image" data-media-holder value="${esc(G.image)}">`, G.image)}</div>
+        ${appliesToCurrentTemplate({ only: ['polaroid-heart'] }) ? `<div class="field full"><label>Second polaroid under the gift details</label>${mediaField(`<input type="hidden" data-section-bind="gifts.image2" data-media-holder value="${esc(G.image2)}">`, G.image2)}</div>` : ''}
         <div class="item-list">${items}</div>
         <button class="add-btn" onclick="addItem('gifts', { bank:'', account:'' })">+ Add account</button>
         <p class="field-help" style="grid-column:1/-1;">Disable the whole section if your customer doesn't want to share any account.</p>
@@ -1237,11 +1324,17 @@ function renderRsvp(R) {
   return renderSection('rsvp', 'RSVP', R, [
     { key: 'label', label: 'Section label' },
     { key: 'title', label: 'Section title' },
+    { key: 'description', label: 'Message shown above the reply buttons', full: true, type: 'textarea', only: ['wedding-daily', 'marble-waltz', 'editorial-love-story', ...CELEBRATIONS] },
+    { key: 'question', label: 'Reply question (e.g. "Coming?")', only: ['wedding-daily', 'marble-waltz'] },
+    { key: 'contactName', label: 'Contact person for questions (e.g. Rana, Emma\'s mum)', only: CELEBRATIONS },
+    { key: 'contactPhone', label: 'Contact phone (guests get Call and WhatsApp buttons)', only: CELEBRATIONS },
+    { key: 'contactLink', label: 'Social link (a URL, or an @handle for Instagram)', full: true, only: CELEBRATIONS },
     { key: 'deadline', label: 'Reservation deadline', type: 'date' },
     { key: 'buttonText', label: 'Submit button text' },
     { key: 'acceptMessage', label: 'Message shown when a guest ACCEPTS', full: true, type: 'textarea' },
     { key: 'declineMessage', label: 'Message shown when a guest DECLINES', full: true, type: 'textarea' },
-    { key: 'image', label: 'Background image', full: true, image: true }
+    { key: 'image', full: true, image: true,
+      label: { default: 'Background image', 'wedding-daily': 'Photograph printed above the reply' } }
   ]);
 }
 
@@ -1276,8 +1369,41 @@ function renderFamilies(F) {
       </div>
       <div class="section-body">
         <div class="field full"><label>Outro line (e.g. "Together with their families")</label><input data-section-bind="families.label" value="${esc(F.label)}"></div>
+        ${appliesToCurrentTemplate({ only: ['editorial-love-story'] }) ? `<div class="field full"><label>Photograph behind the invitation page (full screen)</label>${mediaField(`<input type="hidden" data-section-bind="families.image" data-media-holder value="${esc(F.image)}">`, F.image)}</div>` : ''}
         <div class="item-list">${items}</div>
         <button class="add-btn" onclick="addItem('families', { label:'Mr. & Mrs.', names:'' })">+ Add family</button>
+      </div>
+    </div>`;
+}
+
+// Polaroid Heart's cover collage — the photos arranged into the heart, in order. Fewer photos than
+// the heart has places is fine: the template repeats them to fill it.
+function renderCollage(C) {
+  const list = (C && C.collage) || [];
+  const items = list.map((x, i) => `
+    <div class="item-card">
+      <div class="item-card-header">
+        <span class="item-card-title">Photo ${i + 1}${i === 0 ? ' — the large one in the centre' : ''}</span>
+        <div class="item-card-controls">
+          <button class="btn btn-icon" onclick="moveItem('cover.collage',${i},-1)">↑</button>
+          <button class="btn btn-icon" onclick="moveItem('cover.collage',${i},1)">↓</button>
+          <button class="btn btn-icon btn-danger" onclick="removeItem('cover.collage',${i})">✕</button>
+        </div>
+      </div>
+      <div class="item-grid">
+        <div class="field full"><label>Image</label>${mediaField(`<input type="hidden" data-item="cover.collage.${i}.url" data-media-holder value="${esc(x.url)}">`, x.url)}</div>
+      </div>
+    </div>`).join('');
+  return `
+    <div class="section" id="sec-collage">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <h2>Heart Collage <span class="pill" style="margin-left:8px;">${list.length} photos</span></h2>
+        <div class="section-controls"><span class="chev">▾</span></div>
+      </div>
+      <div class="section-body">
+        <p class="field-help" style="grid-column:1/-1;">The photos that form the heart on the cover, in order — the first is the large one in the centre. The heart has 18 places; with fewer photos they repeat to fill it.</p>
+        <div class="item-list">${items}</div>
+        <button class="add-btn" onclick="addItem('cover.collage', { url:'', caption:'' })">+ Add photo</button>
       </div>
     </div>`;
 }
@@ -1314,6 +1440,7 @@ function renderGallery(G) {
       <div class="section-body">
         <div class="field"><label>Section label</label><input data-section-bind="gallery.label" value="${esc(G.label)}"></div>
         <div class="field"><label>Section title</label><input data-section-bind="gallery.title" value="${esc(G.title)}"></div>
+        ${appliesToCurrentTemplate({ only: ['marble-waltz'] }) ? `<div class="field full"><label>Feature video (large centre plate — optional, muted and looping)</label>${mediaField(`<input type="hidden" data-section-bind="gallery.video" data-media-holder value="${esc(G.video)}">`, G.video, 'video')}</div>` : ''}
         <div class="item-list">${items}</div>
         <button class="add-btn" onclick="addItem('gallery', { url:'', caption:'' })">+ Add photo</button>
       </div>
@@ -1362,33 +1489,43 @@ function renderTimeline(T) {
 }
 
 // dynamic items handler
+// A repeatable list usually lives at <section>.items, with its inputs bound as
+// "<section>.<index>.<key>". A few lists live under their own key inside a section instead —
+// Polaroid Heart's cover.collage — and are bound as "<section>.<list>.<index>.<key>".
+function listAt(listPath, create) {
+  const d = currentInv.data;
+  const [sec, key = 'items'] = listPath.split('.');
+  d[sec] = d[sec] || { enabled: true };
+  if (create && !Array.isArray(d[sec][key])) d[sec][key] = [];
+  return d[sec][key] || [];
+}
+
 document.addEventListener('input', e => {
   const t = e.target;
   if (!t.dataset.item || !currentInv) return;
   const path = t.dataset.item.split('.');
-  const sec  = path[0];
-  const idx  = parseInt(path[1]);
-  const key  = path[2];
   const d = currentInv.data;
-  d[sec] = d[sec] || (sec === 'customSections' ? [] : { items: [] });
-  if (sec === 'customSections') d[sec][idx][key] = t.value;
-  else { d[sec].items = d[sec].items || []; d[sec].items[idx][key] = t.value; }
+  if (path[0] === 'customSections') {
+    d.customSections = d.customSections || [];
+    d.customSections[parseInt(path[1])][path[2]] = t.value;
+  } else {
+    const nested = path.length === 4;
+    const list = listAt(nested ? path[0] + '.' + path[1] : path[0], true);
+    list[parseInt(path[nested ? 2 : 1])][path[nested ? 3 : 2]] = t.value;
+  }
   dirty = true;
 });
 
-function addItem(section, blank) {
-  const d = currentInv.data;
-  d[section] = d[section] || { enabled: true, items: [] };
-  d[section].items = d[section].items || [];
-  d[section].items.push(blank);
+function addItem(listPath, blank) {
+  listAt(listPath, true).push(blank);
   dirty = true; renderEditor();
 }
-function removeItem(section, idx) {
-  currentInv.data[section].items.splice(idx, 1);
+function removeItem(listPath, idx) {
+  listAt(listPath).splice(idx, 1);
   dirty = true; renderEditor();
 }
-function moveItem(section, idx, dir) {
-  const arr = currentInv.data[section].items;
+function moveItem(listPath, idx, dir) {
+  const arr = listAt(listPath);
   const j = idx + dir;
   if (j < 0 || j >= arr.length) return;
   [arr[idx], arr[j]] = [arr[j], arr[idx]];
@@ -1417,9 +1554,14 @@ function moveCustom(idx, dir) {
 // ════════════════════════════════════════════════════════
 async function saveCurrent() {
   if (!currentInv) return;
-  // Keep the single event date mirrored into the countdown before persisting.
-  if (currentInv.eventDate && currentInv.data.countdown)
+  // Keep the single event date mirrored into the countdown before persisting. The countdown object
+  // is created when it is missing rather than skipped: without it the server stores no Countdown
+  // section at all, so the wedding date survives only on the invitation row and never reaches a
+  // template that reads it from the section data.
+  if (currentInv.eventDate) {
+    currentInv.data.countdown = currentInv.data.countdown || {};
     currentInv.data.countdown.date = currentInv.eventDate.slice(0, 10);
+  }
   try {
     await api('PUT', `/api/admin/invitations/${currentInv.id}`, {
       title: currentInv.title,

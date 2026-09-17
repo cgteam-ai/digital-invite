@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f4efe4">
+<title>Graduation Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Spectral: a scholarly text serif with a fine italic. Oswald: condensed collegiate capitals. -->
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * IVY HALL — an elegant, collegiate graduation invitation.
+   * Ivy green, cream and burgundy with a brass line: striped varsity ribbons, ivy leaves that grow
+   * along the margin, a matted portrait, a burgundy commencement band and a cream reply card.
+   * Traditional in spirit, crisp in execution.
+   */
+  :root {
+    --ivy:      #14452f;
+    --ivy-2:    #1d5a3e;
+    --cream:    #f4efe4;
+    --parch:    #ebe3d2;
+    --burgundy: #6e1f2b;
+    --brass:    #b08d57;
+    --ink:      #1f2a22;
+    --muted:    rgba(31,42,34,.66);
+    --line:     rgba(31,42,34,.14);
+    --serif:  'Spectral', Georgia, serif;
+    --caps:   'Oswald', 'Arial Narrow', sans-serif;
+    --pad: clamp(20px, 6vw, 48px);
+    --stripes: repeating-linear-gradient(90deg, var(--burgundy) 0 12px, var(--cream) 12px 16px, var(--ivy) 16px 28px, var(--cream) 28px 32px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--cream); color: var(--ink); font-family: var(--serif); font-size: 17px; line-height: 1.6; -webkit-tap-highlight-color: transparent; }
+  img, video, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 960px); margin: 0 auto; padding: 0 var(--pad); }
+  .sec { position: relative; padding: clamp(56px, 12vw, 108px) 0; }
+  .caps { font-family: var(--caps); font-weight: 500; letter-spacing: .22em; text-transform: uppercase; font-size: .76rem; color: var(--burgundy); }
+  .h2 { font-family: var(--serif); font-weight: 500; line-height: 1.12; color: var(--ivy); font-size: calc(clamp(1.9rem, 7.5vw, 3rem) * var(--fit, 1)); margin-top: 8px; }
+  .lead { color: var(--muted); max-width: 46ch; margin-top: 10px; }
+  .ribbon { height: 10px; background: var(--stripes); }
+  .center { text-align: center; } .center .lead { margin-inline: auto; }
+
+  .rv { opacity: 0; transform: translateY(18px); transition: opacity 1s ease, transform 1.1s cubic-bezier(.2,.7,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* Ivy: a vine that grows down the margin, leaf by leaf. */
+  .vine { position: absolute; left: 6px; top: 130px; width: 64px; height: calc(100% - 130px); pointer-events: none; opacity: .9; }
+  .vine .stem { fill: none; stroke: var(--ivy-2); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 3s ease .3s; }
+  .vine .leaf { fill: var(--ivy-2); opacity: 0; transform-box: fill-box; transform-origin: 0% 50%; transform: scale(.2); transition: opacity .5s ease, transform .7s cubic-bezier(.2,1.3,.4,1); }
+  .is-ready .vine .stem { stroke-dashoffset: 0; }
+  .is-ready .vine .leaf { opacity: 1; transform: none; }
+  @media (max-width: 600px) { .vine { display: none; } }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-items: center; overflow: hidden; padding: 0 0 50px; }
+  .top-ribbon { position: relative; padding: calc(env(safe-area-inset-top) + 18px) var(--pad) 18px; text-align: center; background: var(--ivy); color: var(--cream); }
+  .top-ribbon::after { content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px; background: var(--stripes); }
+  .top-ribbon .caps { color: var(--cream); font-size: clamp(.9rem, 4.2vw, 1.2rem); letter-spacing: .34em; padding-left: .34em; }
+  .hero-grid { display: grid; gap: 26px; align-items: center; text-align: center; padding-top: 50px; }
+  .mat { position: relative; width: min(64vw, 300px); margin: 0 auto; padding: 14px; background: #fff; border: 1px solid var(--line); box-shadow: 0 24px 50px rgba(31,42,34,.14); }
+  .mat .ph { aspect-ratio: 4 / 5; overflow: hidden; background: var(--parch); }
+  .mat .ph img, .mat .ph video { width: 100%; height: 100%; object-fit: cover; }
+  .mat .pin { position: absolute; left: 50%; top: -12px; translate: -50% 0; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #e6cf9c, var(--brass) 60%); box-shadow: 0 3px 6px rgba(0,0,0,.25); }
+  .mat .crest { display: grid; place-items: center; aspect-ratio: 4 / 5; background: var(--ivy); color: var(--cream); }
+  .mat .crest svg { width: 60%; }
+  .hero-in > * { opacity: 0; transform: translateY(12px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .is-ready .hero-in > * { opacity: 1; transform: none; }
+  .hero-in > *:nth-child(2) { transition-delay: .2s; } .hero-in > *:nth-child(3) { transition-delay: .4s; } .hero-in > *:nth-child(n+4) { transition-delay: .6s; }
+  .intro { font-style: italic; color: var(--muted); font-size: clamp(1.05rem, 4.4vw, 1.3rem); }
+  .name { font-family: var(--serif); font-weight: 600; color: var(--ivy); line-height: 1.08; font-size: calc(clamp(2.2rem, 9.5vw, 4rem) * var(--fit, 1)); margin-top: 8px; }
+  .degree { font-style: italic; font-size: clamp(1.05rem, 4.4vw, 1.3rem); line-height: 1.45; margin-top: 12px; color: var(--ink); }
+  .rule { width: 80px; height: 2px; margin: 18px auto; background: var(--brass); }
+  .when { font-family: var(--caps); letter-spacing: .18em; text-transform: uppercase; font-size: clamp(.78rem, 3.2vw, .92rem); color: var(--burgundy); line-height: 1.9; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; margin-top: 22px; padding: 0 30px; background: var(--burgundy); color: var(--cream);
+         font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; font-size: .8rem; text-decoration: none; transition: background .3s; }
+  .btn:hover { background: var(--ivy); }
+  @media (min-width: 860px) { .hero-grid { grid-template-columns: .8fr 1.2fr; text-align: left; gap: 50px; } .hero-grid .rule { margin-inline: 0; } .mat { margin: 0; } }
+
+  /* ── WITH PRIDE (families) ── */
+  .pride { max-width: 640px; margin: 0 auto; }
+  .pride .big { font-size: clamp(1.3rem, 5.2vw, 1.8rem); line-height: 1.4; }
+  .fams { display: grid; gap: 14px; margin-top: 18px; }
+  @media (min-width: 640px) { .fams { grid-template-columns: 1fr 1fr; } }
+  .fam b { display: block; font-weight: 600; font-size: 1.25rem; color: var(--ivy); overflow-wrap: anywhere; }
+
+  /* ── COMMENCEMENT BAND (countdown) ── */
+  .band { background: var(--burgundy); color: var(--cream); position: relative; }
+  .band::before, .band::after { content: ''; position: absolute; left: 0; right: 0; height: 10px; background: var(--stripes); }
+  .band::before { top: 0; } .band::after { bottom: 0; }
+  .band .caps { color: #e3c8a3; }
+  .band .h2 { color: var(--cream); }
+  .cd { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(6px, 2vw, 14px); max-width: 680px; margin: 28px auto 0; }
+  .cd-cell { min-width: 0; padding: clamp(14px, 4vw, 24px) 4px; text-align: center; background: rgba(0,0,0,.18); border: 1px solid rgba(244,239,228,.25); }
+  .cd-num { display: block; font-family: var(--caps); font-weight: 500; font-size: clamp(1.7rem, 8vw, 3.4rem); line-height: 1; font-variant-numeric: tabular-nums; }
+  .cd-unit { display: block; margin-top: 6px; font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; font-size: clamp(.5rem, 2.2vw, .68rem); color: #e3c8a3; }
+  .cd-note { grid-column: 1 / -1; font-style: italic; font-size: 1.7rem; text-align: center; }
+  .band .lead { color: rgba(244,239,228,.8); }
+
+  /* ── VENUES ── */
+  .venues { display: grid; gap: 22px; margin-top: 30px; }
+  @media (min-width: 760px) { .venues { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .venue { background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--ivy); padding: 24px 24px 26px; box-shadow: 0 14px 34px rgba(31,42,34,.07); }
+  .venue figure { margin: -24px -24px 18px; aspect-ratio: 16 / 9; overflow: hidden; }
+  .venue figure img { width: 100%; height: 100%; object-fit: cover; }
+  .venue h3 { font-weight: 600; color: var(--ivy); font-size: clamp(1.35rem, 5.5vw, 1.7rem); line-height: 1.2; margin-top: 6px; overflow-wrap: anywhere; }
+  .venue p { color: var(--muted); overflow-wrap: anywhere; }
+  .venue .time { font-style: italic; color: var(--ink); margin-top: 4px; }
+  .link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; font-family: var(--caps); letter-spacing: .18em; text-transform: uppercase; font-size: .72rem; color: var(--burgundy); text-decoration: none; border-bottom: 2px solid var(--brass); }
+
+  /* ── ORDER OF EXERCISES ── */
+  .exercises { list-style: none; max-width: 640px; margin: 30px auto 0; counter-reset: ex; }
+  .exercises li { display: grid; grid-template-columns: 44px 1fr; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .exercises li::before { counter-increment: ex; content: counter(ex); grid-row: 1 / span 2; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--burgundy); color: var(--cream); font-family: var(--caps); font-weight: 500; font-size: .95rem; }
+  .exercises .t { font-family: var(--caps); letter-spacing: .16em; text-transform: uppercase; font-size: .72rem; color: var(--brass); }
+  .exercises h3 { font-weight: 600; color: var(--ivy); font-size: 1.25rem; line-height: 1.25; overflow-wrap: anywhere; }
+  .exercises p { color: var(--muted); grid-column: 2; }
+  .exercises a { color: var(--burgundy); }
+
+  /* ── NOTES / YEARBOOK ── */
+  .notes { display: grid; gap: 22px; margin-top: 30px; }
+  @media (min-width: 760px) { .notes { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .note { padding: 26px 24px; background: var(--parch); border-left: 4px solid var(--burgundy); }
+  .note h3 { font-weight: 600; color: var(--ivy); font-size: 1.4rem; line-height: 1.2; margin-top: 6px; overflow-wrap: anywhere; }
+  .note p { color: var(--muted); margin-top: 8px; }
+  .note figure { margin: 12px 0; }
+  .acct { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .acct span { overflow-wrap: anywhere; }
+  .copy { min-height: 40px; padding: 0 14px; border: 1px solid var(--ivy); background: transparent; color: var(--ivy); font-family: var(--caps); letter-spacing: .14em; text-transform: uppercase; font-size: .7rem; cursor: pointer; }
+  .yearbook { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 3vw, 22px); margin-top: 30px; }
+  @media (min-width: 760px) { .yearbook { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .yearbook figure { padding: 10px; background: #fff; border: 1px solid var(--line); box-shadow: 0 12px 26px rgba(31,42,34,.08); }
+  .yearbook img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+
+  /* ── REPLY CARD ── */
+  .card { max-width: 580px; margin: 30px auto 0; background: #fff; border: 1px solid var(--line); box-shadow: 0 30px 60px rgba(31,42,34,.12); }
+  .card .ribbon { height: 12px; }
+  .card-body { padding: clamp(24px, 6vw, 40px); }
+  .card h2 { font-weight: 600; color: var(--ivy); font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: 1.15; text-align: center; }
+  .card .desc { text-align: center; color: var(--muted); font-style: italic; margin-top: 8px; }
+  .card .notes-line { text-align: center; font-family: var(--caps); letter-spacing: .16em; text-transform: uppercase; font-size: .7rem; color: var(--burgundy); margin-top: 10px; }
+  .rsvp { display: grid; gap: 16px; margin-top: 24px; }
+  .rsvp-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rsvp-choice { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 52px; padding: 8px 10px; cursor: pointer;
+                 border: 1px solid var(--ivy); color: var(--ivy); font-family: var(--caps); letter-spacing: .1em; text-transform: uppercase; font-size: .8rem; line-height: 1.2; transition: background .3s, color .3s; }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice.on { background: var(--ivy); color: var(--cream); }
+  .rsvp-choice:nth-child(2).on { background: var(--burgundy); border-color: var(--burgundy); }
+  .rsvp-choice:focus-within { outline: 2px solid var(--brass); outline-offset: 3px; }
+  .rsvp-field { display: grid; gap: 2px; }
+  .rsvp-label { font-family: var(--caps); letter-spacing: .16em; text-transform: uppercase; font-size: .68rem; color: var(--brass); }
+  .rsvp-input { width: 100%; min-height: 48px; padding: 8px 0; border: 0; border-bottom: 1px solid rgba(31,42,34,.35); border-radius: 0; background: transparent; color: var(--ink); font-size: 17px; }
+  textarea.rsvp-input { resize: none; min-height: 72px; }
+  .rsvp-input::placeholder { color: rgba(31,42,34,.4); font-style: italic; }
+  .rsvp-input:focus { outline: none; border-bottom-color: var(--ivy); }
+  .rsvp-error { color: var(--burgundy); font-style: italic; }
+  .rsvp-submit { min-height: 56px; margin-top: 6px; border: 0; cursor: pointer; background: var(--ivy); color: var(--cream); font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; font-size: .82rem; transition: background .3s; }
+  .rsvp-submit:hover { background: var(--burgundy); }
+  .rsvp-done { margin-top: 24px; text-align: center; }
+  .rsvp-done-title { font-weight: 600; color: var(--ivy); font-size: 1.8rem; }
+  .rsvp-done-body { color: var(--muted); font-style: italic; }
+  .contact { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); text-align: center; }
+  .contact-intro { font-family: var(--caps); letter-spacing: .16em; text-transform: uppercase; font-size: .66rem; color: var(--brass); }
+  .contact-name { font-weight: 600; font-size: 1.2rem; color: var(--ivy); }
+  .contact-phone { color: var(--muted); }
+  .contact-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border: 1px solid var(--ivy); color: var(--ivy); font-family: var(--caps); letter-spacing: .12em; text-transform: uppercase; font-size: .7rem; text-decoration: none; }
+
+  footer { text-align: center; padding: 34px var(--pad) calc(env(safe-area-inset-bottom) + 70px); background: var(--ivy); color: var(--cream); }
+  footer .caps { color: #e3c8a3; }
+  footer p.n { font-style: italic; margin-top: 6px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .hero-in > * { opacity: 1; transform: none; transition: none; }
+    .vine .stem { stroke-dashoffset: 0; transition: none; } .vine .leaf { opacity: 1; transform: none; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const DEFAULT_DATA = {
+  template: 'ivy-hall',
+  title: 'Graduation',
+  cover: {
+    enabled: true, headline: 'Class of 2026', eventLabel: 'Commencement', names: 'Name',
+    tagline: 'Please join us to celebrate this achievement', greeting: 'Dear',
+    hostIntro: 'proudly announces the graduation of', hostOutro: '', hostText: 'Degree · University', image: '', video: '', buttonText: 'Reply'
+  },
+  countdown: { enabled: true, label: 'The commencement', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: true, label: 'With pride', title: '', items: [] },
+  locations: { enabled: true, label: 'Venues', title: 'Ceremony & reception', image: '', items: [
+    { label: 'Commencement ceremony', time: '', name: '', addr: '', url: '', img: '' },
+    { label: 'Reception', time: '', name: '', addr: '', url: '', img: '' }
+  ] },
+  timeline:  { enabled: true, label: 'Programme', title: 'Order of exercises', items: [] },
+  gallery:   { enabled: false, label: 'Yearbook', title: 'The years', items: [] },
+  gifts:     { enabled: false, label: 'Gifts', title: 'With gratitude', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'Reply', title: 'Kindly reply', description: '',
+    deadline: '', maxPeople: 4, buttonText: 'Send reply', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+const CAP = `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M32 4 L62 18 L32 32 L2 18 Z" fill="#f4efe4"/><path d="M14 24 V36 C14 40 24 44 32 44 C40 44 50 40 50 36 V24 L32 32 Z" fill="#b08d57"/><path d="M56 21 V36" stroke="#f4efe4" stroke-width="2"/><circle cx="56" cy="38" r="3" fill="#f4efe4"/></svg>`;
+
+/** An ivy vine down the left margin: one stem, leaves alternating sides, growing top to bottom. */
+const VINE = (() => {
+  let leaves = '';
+  for (let i = 0; i < 14; i++) {
+    const y = 60 + i * 120, side = i % 2 ? 1 : -1, x = 32 + side * 4;
+    leaves += `<path class="leaf" style="transition-delay:${(.4 + i * .18).toFixed(2)}s" transform="translate(${x} ${y}) scale(${side} 1)" d="M0 0 C6 -10 20 -12 26 -2 C22 6 10 10 0 0 Z M0 0 L22 -2"/>`;
+  }
+  return `<svg class="vine" viewBox="0 0 64 1800" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><path class="stem" pathLength="1" d="M32 0 C40 200 24 400 32 600 C40 800 24 1000 32 1200 C40 1400 24 1600 32 1800"/>${leaves}</svg>`;
+})();
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const name = c.names || data.title || '';
+  const dp = I.dateParts(cd);
+  const guest = I.guestName();
+  const photo = I.media(c.image, c.video, name, true);
+  return `
+  <section class="hero">
+    <div class="top-ribbon"><p class="caps">${esc(c.headline || 'Class of')}</p></div>
+    ${VINE}
+    <div class="wrap hero-grid">
+      <div class="mat">
+        <span class="pin" aria-hidden="true"></span>
+        ${photo ? `<div class="ph">${photo}</div>` : `<div class="crest">${CAP}</div>`}
+      </div>
+      <div class="hero-in">
+        <p class="caps">${guest ? `${esc(c.greeting || 'Dear')} ${esc(guest)}` : esc(c.eventLabel || 'Commencement')}</p>
+        <p class="intro">${esc(c.hostIntro || 'proudly announces the graduation of')}</p>
+        <h1 class="name" data-fit=".45">${esc(name)}</h1>
+        ${c.hostText ? `<p class="degree">${I.nl2br(c.hostText)}</p>` : ''}
+        <div class="rule" aria-hidden="true"></div>
+        <p class="when">${dp ? `${esc(dp.weekday)}, ${dp.d} ${esc(dp.month)} ${dp.y}${cd.time ? `<br>${esc(I.fmtClock(cd.time))}` : ''}` : 'Date to be announced'}</p>
+        <div><a class="btn" href="#rsvp">${esc(c.buttonText || 'Reply')}</a></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function pride(data) {
+  const c = data.cover || {}, f = data.families || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const custom = (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body));
+  if (!c.tagline && !fams.length && !c.hostOutro && !custom.length) return '';
+  return `
+  <section class="sec center">
+    <div class="wrap pride">
+      ${fams.length ? `<p ${R('caps')}>${esc(f.label || 'With pride')}</p><div ${R('fams')}>${fams.map(x => `<div class="fam">${x.label ? `<span class="caps" style="color:var(--brass);letter-spacing:.14em">${esc(x.label)}</span>` : ''}<b>${esc(x.names || '')}</b></div>`).join('')}</div>` : ''}
+      ${c.tagline ? `<p ${R('big')} style="margin-top:${fams.length ? 24 : 0}px">${esc(c.tagline)}</p>` : ''}
+      ${c.hostOutro ? `<p ${R('lead')}>${I.nl2br(c.hostOutro)}</p>` : ''}
+      ${custom.map(s => `<div ${R()} style="margin-top:34px">${s.label ? `<p class="caps">${esc(s.label)}</p>` : ''}${s.title ? `<h2 class="h2" data-fit>${esc(s.title)}</h2>` : ''}${s.image ? `<figure style="max-width:360px;margin:16px auto 0">${I.img(s.image, s.title)}</figure>` : ''}${s.body ? `<p class="lead">${I.nl2br(s.body)}</p>` : ''}</div>`).join('')}
+    </div>
+  </section>`;
+}
+
+function countdown(data) {
+  const cd = data.countdown || {};
+  if (cd.enabled === false) return '';
+  const target = I.eventInstant(cd);
+  const dp = I.dateParts(cd);
+  return `
+  <section class="sec band center">
+    <div class="wrap">
+      <p ${R('caps')}>${esc(cd.label || 'The commencement')}</p>
+      <h2 ${R('h2')} data-fit>${dp ? `${esc(dp.weekday)}, ${esc(I.ordinal(dp.d))} ${esc(dp.month)}` : 'Date to be announced'}</h2>
+      ${target !== null ? `<div ${R('cd')} data-countdown="${target}" data-past-today="Today we celebrate" data-past-after="Thank you for celebrating with us">${I.countdownCells()}</div>` : ''}
+      ${cd.time || cd.description ? `<p ${R('lead')} style="margin-top:20px">${[cd.time ? 'Beginning at ' + esc(I.fmtClock(cd.time)) : '', esc(cd.description || '')].filter(Boolean).join(' · ')}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function venues(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.addr));
+  if (l.enabled === false || !items.length) return '';
+  return `
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('caps')}>${esc(l.label || 'Venues')}</p>
+      <h2 ${R('h2')} data-fit>${esc(l.title || 'Ceremony & reception')}</h2>
+      <div class="venues">
+        ${items.map(x => `
+          <article ${R('venue')}>
+            ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+            ${x.label ? `<p class="caps" style="color:var(--brass)">${esc(x.label)}</p>` : ''}
+            ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+            ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+            ${x.time ? `<p class="time">${esc(x.time)}</p>` : ''}
+            ${x.url ? `<a class="link" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Directions</a>` : ''}
+          </article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+function exercises(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled === false || !items.length) return '';
+  return `
+  <div class="ribbon" aria-hidden="true"></div>
+  <section class="sec">
+    <div class="wrap">
+      <p ${R('caps')}>${esc(t.label || 'Programme')}</p>
+      <h2 ${R('h2')} data-fit>${esc(t.title || 'Order of exercises')}</h2>
+      <ol class="exercises">
+        ${items.map(x => `
+          <li ${R()}>
+            <div>${x.time ? `<span class="t">${esc(x.time)}</span>` : ''}<h3>${esc(x.title || '')}</h3></div>
+            ${x.subtitle || x.url ? `<p>${esc(x.subtitle || '')}${x.url ? ` <a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Directions</a>` : ''}</p>` : ''}
+          </li>`).join('')}
+      </ol>
+    </div>
+  </section>`;
+}
+
+function extras(data) {
+  const g = data.gallery || {}, gf = data.gifts || {};
+  const photos = (g.enabled !== false ? (g.items || []) : []).filter(x => x && x.url).slice(0, 6);
+  const accounts = (gf.items || []).filter(x => x && x.account);
+  const gifts = gf.enabled !== false && (accounts.length || gf.description);
+  if (!photos.length && !gifts) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      ${photos.length ? `
+        <p ${R('caps')}>${esc(g.label || 'Yearbook')}</p>
+        ${g.title ? `<h2 ${R('h2')} data-fit>${esc(g.title)}</h2>` : ''}
+        <div class="yearbook">${photos.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}</figure>`).join('')}</div>` : ''}
+      ${gifts ? `
+        <div class="notes" style="margin-top:${photos.length ? 50 : 0}px">
+          <div ${R('note')}>
+            <p class="caps">${esc(gf.label || 'Gifts')}</p>
+            <h3>${esc(gf.title || 'With gratitude')}</h3>
+            ${gf.description ? `<p>${I.nl2br(gf.description)}</p>` : ''}
+            ${accounts.map(x => `<div class="acct"><span><b>${esc(x.bank || 'Account')}</b> · ${esc(x.account)}</span><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>
+  </section>`;
+}
+
+function reply(data) {
+  const r = data.rsvp || {};
+  if (r.enabled === false) return '';
+  return `
+  <section class="sec" id="rsvp" style="padding-top:0">
+    <div class="wrap">
+      <p ${R('caps')} style="text-align:center">${esc(r.label || 'Reply')}</p>
+      <div ${R('card')}>
+        <div class="ribbon" aria-hidden="true"></div>
+        <div class="card-body">
+          <h2>${esc(r.title || 'Kindly reply')}</h2>
+          ${r.description ? `<p class="desc">${I.nl2br(r.description)}</p>` : ''}
+          ${I.rsvpNotes(r).map(n => `<p class="notes-line">${esc(n)}</p>`).join('')}
+          ${I.rsvpForm(r, {
+            yes: 'Will attend', no: 'Unable to attend',
+            nameLabel: 'Name', namePlaceholder: 'Your full name',
+            countLabel: 'Number of guests', wishesLabel: 'A message for the graduate',
+            wishesPlaceholder: 'Congratulations…', button: r.buttonText || 'Send reply',
+            doneTitle: 'Thank you'
+          })}
+          ${I.contactHtml(r, { intro: 'Enquiries' })}
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function build(data) {
+  const c = data.cover || {};
+  const name = c.names || data.title || '';
+  document.title = `${name} — Graduation Invitation`;
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    pride(data), countdown(data), venues(data), exercises(data), extras(data), reply(data),
+    `<div class="ribbon" aria-hidden="true"></div><footer><p class="caps">${esc(c.headline || 'Class of')}</p><p class="n">${esc(name)}</p></footer>`
+  ].join('');
+}
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

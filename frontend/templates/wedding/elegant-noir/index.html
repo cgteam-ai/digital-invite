@@ -22,13 +22,19 @@
     --muted: rgba(244,237,225,.5);
   }
 
-  html { scroll-behavior: smooth; }
+  /* manipulation: a double tap on "Tap to open" must not zoom the page in — that zoom is what
+     pushed the right-hand side of the invitation off a phone's screen. Pinch-zoom still works. */
+  html { scroll-behavior: smooth; touch-action: manipulation; }
   body {
     background: var(--bg);
     color: var(--text);
     font-family: 'Jost', sans-serif;
     overflow-x: hidden;
   }
+  /* overflow-x on <body> alone does not stop a phone dragging the page sideways; `clip` on both
+     does, without turning <html> into a scroll container. `hidden` above stays as the fallback. */
+  html, body { max-width: 100%; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
 
   /* ── TYPOGRAPHY ── */
   .script  { font-family: 'Great Vibes', cursive; font-weight: 400; color: var(--ivory); }
@@ -45,8 +51,9 @@
     background: radial-gradient(ellipse at 50% 30%, #221c15 0%, var(--bg) 70%);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 2.2rem; text-align: center; padding: 2rem;
-    cursor: pointer;
+    gap: clamp(1.1rem, 4.5vh, 2.2rem); text-align: center;
+    padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem max(1.5rem, env(safe-area-inset-bottom));
+    overflow-y: auto; cursor: pointer;
     transition: opacity 1s ease, transform 1s ease;
   }
   #envelope.opened { opacity: 0; transform: translateY(-6%); pointer-events: none; }
@@ -59,7 +66,7 @@
     color: var(--ivory);
   }
   .env-seal {
-    width: 130px; height: 130px; border-radius: 50%;
+    width: clamp(120px, 34vmin, 190px); height: clamp(120px, 34vmin, 190px); border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #d8b26a, #9a7736 60%, #6f5423);
     box-shadow: 0 12px 40px rgba(0,0,0,.6), inset 0 2px 8px rgba(255,255,255,.25);
     display: flex; align-items: center; justify-content: center;
@@ -68,6 +75,15 @@
     animation: sealPulse 2.6s ease-in-out infinite;
   }
   @keyframes sealPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  /* With a photo in it the seal becomes a round framed portrait; the gold rim and soft halo keep it
+     reading as the same wax seal. */
+  .env-seal.has-photo {
+    border: 3px solid var(--gold);
+    background-color: var(--card);
+    box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 0 7px rgba(201,164,92,.14);
+  }
+  /* A phone on its side: keep greeting, seal and prompt on one screen. */
+  @media (max-height: 460px) { .env-seal { width: 104px; height: 104px; } }
   .env-open {
     display: flex; flex-direction: column; align-items: center; gap: 10px;
   }
@@ -80,9 +96,13 @@
   /* ── LAYOUT ── */
   main { opacity: 0; transition: opacity 1.2s ease .3s; }
   main.visible { opacity: 1; }
+  /* Every section spans the full width, so the cover video and the background photos fill a
+     tablet or desktop screen edge to edge instead of sitting in a 560px strip between dark bands.
+     The content keeps its 560px column through the side padding — (width − 560) / 2 plus the
+     usual 1.8rem gutter is exactly the room the old max-width left it. */
   section {
-    max-width: 560px; margin: 0 auto;
-    padding: 4.5rem 1.8rem;
+    width: 100%;
+    padding: 4.5rem max(1.8rem, calc((100% - 560px) / 2 + 1.8rem));
     text-align: center;
     position: relative;
   }
@@ -93,7 +113,7 @@
   .reveal.in { opacity: 1; transform: none; }
 
   /* ── HERO ── */
-  #hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 5rem; }
+  #hero { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 5rem; }
   /* Cover background video. Everything here is scoped to .has-video so a hero WITHOUT a video keeps
      its original layout exactly — an earlier unscoped `#hero > *` rule out-specified .hero-ring's
      `position:absolute` and turned the centred ring into a block that pushed the names off-centre. */
@@ -111,7 +131,7 @@
     pointer-events: none;
   }
   .hero-amp { font-family: 'Great Vibes', cursive; font-size: 2.2rem; color: var(--gold); }
-  .hero-names { font-size: clamp(3.4rem, 14vw, 5.4rem); line-height: 1.15; }
+  .hero-names { font-size: clamp(3.4rem, 14vw, 5.4rem); line-height: 1.15; overflow-wrap: anywhere; }
   .hero-date {
     margin-top: 2.2rem; font-size: 1rem; letter-spacing: .35em;
     text-transform: uppercase; color: var(--ivory); font-weight: 400;
@@ -129,16 +149,19 @@
   .hero-fam-names { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--ivory); margin-top: .15rem; }
   .hero-fam-and { display: block; font-family: 'Great Vibes', cursive; font-size: 1.3rem; color: var(--gold); }
 
-  .countdown { display: flex; gap: .7rem; justify-content: center; margin-top: 2.4rem; }
+  /* The four boxes share the row instead of being a fixed 66px each, which ran off screens under
+     about 360px wide; they still stop at 76px on wider ones. Days can run to four digits for a date
+     years away, so the figures shrink a little on the narrowest phones. */
+  .countdown { display: flex; gap: clamp(.35rem, 2vw, .7rem); justify-content: center; margin-top: 2.4rem; width: 100%; }
   .cd-box {
-    width: 66px; padding: .9rem 0 .7rem;
+    flex: 0 1 76px; min-width: 0; padding: .9rem .15rem .7rem;
     background: rgba(255,255,255,.045);
     border: 1px solid rgba(201,164,92,.18);
     border-radius: 10px;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
   }
-  .cd-num { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; color: var(--ivory); line-height: 1; }
-  .cd-lbl { font-size: .55rem; letter-spacing: .25em; text-transform: uppercase; color: var(--muted); }
+  .cd-num { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.3rem, 6.4vw, 1.7rem); color: var(--ivory); line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .cd-lbl { font-size: .55rem; letter-spacing: clamp(.08em, .7vw, .25em); text-transform: uppercase; color: var(--muted); }
 
   .scroll-hint {
     margin-top: 3rem; display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -337,7 +360,7 @@
        would flash "Dear Guest" before the real name arrives. Revealed once data has loaded.
        &nbsp; reserves the line height so nothing shifts when the name appears. -->
   <p class="env-greeting" id="envGreeting" data-pending>&nbsp;</p>
-  <div class="env-seal" id="envSeal">&amp;</div>
+  <div class="env-seal" id="envSeal" data-pending>&amp;</div>
   <div class="env-open">
     <span id="envButtonText">Tap to open</span>
     <div class="stem"></div>
@@ -348,6 +371,7 @@
 
 <script src="../../../shared/demo-data.js"></script>
 <script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
 
 <script>
 // ── API CONFIG ─────────────────────────────────────────
@@ -371,7 +395,7 @@ const DEFAULT_DATA = {
     tagline: 'Are getting married',
     greeting: 'Dear',
     image: '',
-    sealImage: '',
+    sealImage: '/assets/elegant-noir/seal.jpg',
     buttonText: 'Tap to open'
   },
   countdown: {
@@ -729,11 +753,15 @@ function build(data) {
     : (c.names || data.title || 'Welcome');
   greetEl.removeAttribute('data-pending');   // reveal only now that the real name is known
   if (c.buttonText) document.getElementById('envButtonText').textContent = c.buttonText;
+  const seal = document.getElementById('envSeal');
   if (c.sealImage) {
-    const seal = document.getElementById('envSeal');
-    seal.style.backgroundImage = `url('${c.sealImage}')`;
+    seal.style.backgroundImage = `url("${mediaSrc(c.sealImage).replace(/"/g, '%22')}")`;
     seal.textContent = '';
+    seal.classList.add('has-photo');
+    seal.setAttribute('role', 'img');
+    seal.setAttribute('aria-label', c.names || data.title || 'The couple');
   }
+  seal.removeAttribute('data-pending');   // shown once it is known whether it holds a photo
 
   const parts = [];
   parts.push(renderHero(data));
@@ -811,7 +839,7 @@ function spawnPetal() {
   const p = document.createElement('span');
   p.className = 'petal';
   p.textContent = PETALS[Math.floor(Math.random() * PETALS.length)];
-  p.style.left = Math.random() * 100 + 'vw';
+  p.style.left = (2 + Math.random() * 90) + 'vw';   // clear of the right edge, so no petal widens the page
   p.style.color = Math.random() < .35 ? 'rgba(201,164,92,.7)' : 'rgba(216,138,158,.55)';
   p.style.fontSize = (9 + Math.random() * 8) + 'px';
   p.style.animationDuration = (9 + Math.random() * 8) + 's';

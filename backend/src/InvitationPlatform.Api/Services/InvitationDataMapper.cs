@@ -148,8 +148,11 @@ public static class InvitationDataMapper
     {
         public LocationsConfig(LocationsData d) : this(d.Label, d.Title, d.Image) { }
     }
-    private record GiftsConfig(string? Label, string? Title, string? Image, string? Description)
+    // Every GiftsData field a template reads must be listed here as well: this record is what is
+    // written to the config, so anything missing from it is silently dropped on save.
+    // InvitationDataMapperTests round-trips each one.
+    private record GiftsConfig(string? Label, string? Title, string? Image, string? Description, string? Image2)
     {
-        public GiftsConfig(GiftsData d) : this(d.Label, d.Title, d.Image, d.Description) { }
+        public GiftsConfig(GiftsData d) : this(d.Label, d.Title, d.Image, d.Description, d.Image2) { }
     }
 }

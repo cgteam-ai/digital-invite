@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Imperial Script is the reference's thin copperplate script (looped capitals, an E-shaped
+     ampersand); Cormorant Garamond carries every letterspaced capital and the body copy. -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,600;1,700&family=Imperial+Script&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * MARBLE WALTZ — white watercolour, an illustrated first dance, a winding itinerary.
+   *
+   * Sizes are proportions of --pw (the card width) so a phone shows the reference's layout and a
+   * desktop gets the same card, centred, at up to 620px. max()/clamp() floors keep small text
+   * readable on narrow phones.
+   */
+  :root {
+    --paper: #fbfbfb;
+    --ink:   #1c1c18;
+    --ink-2: #3a3a36;
+    --soft:  #6f6f69;
+    --line:  #1c1c18;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* overflow-x:clip stops the sideways drag on phones without creating a scroll container. */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+
+  /* Watercolour ground: one stitched turbulence tile, rendered once and repeated, so the texture
+     costs nothing while scrolling. */
+  body {
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    line-height: 1.5;
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='w' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0035 0.005' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.52 0 0 0 0 0.52 0 0 0 0 0.52 1.9 0 0 0 -0.82'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)' opacity='0.28'/%3E%3C/svg%3E");
+    background-size: 900px 900px;
+  }
+  img, video { display: block; max-width: 100%; }
+
+  .page {
+    --pw: min(100vw, 620px);
+    width: min(100%, 620px);
+    margin: 0 auto;
+    padding: 0 calc(var(--pw) * .06);
+  }
+
+  .script { font-family: 'Imperial Script', 'Great Vibes', cursive; font-weight: 400; line-height: 1.15; }
+  .caps {
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: .24em;
+  }
+
+  /* ── COVER ─────────────────────────────────────────────── */
+  .cover {
+    min-height: 100svh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: calc(var(--pw) * .1) 0 calc(var(--pw) * .08);
+  }
+  .cover-head { font-size: clamp(54px, calc(var(--pw) * .19), 118px); }
+  .cover-sub  { font-size: max(11px, calc(var(--pw) * .036)); letter-spacing: .32em; margin-top: calc(var(--pw) * -.01); }
+  .cover-art  {
+    width: calc(var(--pw) * .44); max-width: 280px;
+    margin: calc(var(--pw) * .06) auto calc(var(--pw) * .05);
+    /* The drawn couple ships on white; multiply lets the watercolour show through it. */
+    mix-blend-mode: multiply;
+  }
+  .cover-art img, .cover-art video { width: 100%; height: auto; }
+  .names { width: 100%; }
+  .names-text {
+    display: inline-block; white-space: nowrap;
+    font-size: calc(clamp(40px, calc(var(--pw) * .15), 96px) * var(--fit, 1));
+  }
+
+  .dateblock { width: 100%; margin-top: calc(var(--pw) * .09); }
+  .db-month { font-size: max(13px, calc(var(--pw) * .052)); letter-spacing: .12em; }
+  .db-row {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: calc(var(--pw) * .035);
+  }
+  /* SATURDAY and AT 7 PM sit between a rule above and below, as in the reference. */
+  .db-side {
+    position: relative;
+    padding: calc(var(--pw) * .014) 0;
+    font-size: max(12px, calc(var(--pw) * .048)); letter-spacing: .12em;
+    white-space: nowrap;
+  }
+  .db-side::before, .db-side::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 1.5px; background: var(--line);
+    transform: scaleX(0); transform-origin: var(--o, left);
+    transition: transform 1s cubic-bezier(.3,.6,.2,1);
+  }
+  .db-side::before { top: 0; }
+  .db-side::after  { bottom: 0; }
+  .db-side:last-child { --o: right; }
+  .db-side.in::before, .db-side.in::after { transform: scaleX(1); }
+  .db-side .db-t { opacity: 0; transition: opacity .8s ease .5s; }
+  .db-side.in .db-t { opacity: 1; }
+  .db-day  { font-size: clamp(40px, calc(var(--pw) * .135), 88px); font-weight: 500; line-height: 1; }
+  .db-year { font-size: max(12px, calc(var(--pw) * .044)); letter-spacing: .16em; margin-top: calc(var(--pw) * .006); }
+
+  /* Countdown: a quiet row under the date. The date above never disappears — when the day has
+     passed only this row changes. */
+  .cd { margin-top: calc(var(--pw) * .07); width: 100%; }
+  .cd-label { font-size: max(11px, calc(var(--pw) * .032)); letter-spacing: .3em; color: var(--soft); }
+  .cd-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    margin-top: calc(var(--pw) * .025);
+  }
+  .cd-cell { border-left: 1px solid rgba(28,28,24,.25); padding: calc(var(--pw) * .01) 0; }
+  .cd-cell:first-child { border-left: none; }
+  .cd-num {
+    display: block; font-weight: 500; line-height: 1;
+    font-size: clamp(24px, calc(var(--pw) * .085), 54px);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .cd-unit { display: block; font-size: max(10px, calc(var(--pw) * .026)); letter-spacing: .22em; color: var(--soft); margin-top: calc(var(--pw) * .01); text-transform: uppercase; font-weight: 600; }
+  .cd-note { grid-column: 1 / -1; font-style: italic; font-size: max(14px, calc(var(--pw) * .05)); color: var(--ink-2); }
+  .cd-empty { margin-top: calc(var(--pw) * .06); font-style: italic; font-size: max(13px, calc(var(--pw) * .045)); color: var(--soft); }
+
+  .families { margin-top: calc(var(--pw) * .05); font-size: max(13px, calc(var(--pw) * .042)); color: var(--ink-2); }
+  .families b { font-weight: 600; }
+
+  /* ── ITINERARY ─────────────────────────────────────────── */
+  .section { padding: calc(var(--pw) * .14) 0 calc(var(--pw) * .06); }
+  .sec-names { text-align: center; font-size: clamp(38px, calc(var(--pw) * .13), 84px); margin-bottom: calc(var(--pw) * .08); }
+  .itin { position: relative; }
+  /* The winding dashed line is drawn in an SVG laid over the gutter, through the centre of every
+     dot, once the items have been laid out (see drawItinerary). */
+  .itin-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .itin-path path { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-dasharray: 7 7; stroke-linecap: round; }
+  .itin-item {
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: calc(var(--pw) * .3) 1fr;
+    padding-bottom: calc(var(--pw) * .19);
+  }
+  .itin-item:last-child { padding-bottom: 0; }
+  .itin-dot {
+    justify-self: center; margin-top: calc(var(--pw) * .012);
+    width: calc(var(--pw) * .06); height: calc(var(--pw) * .06); max-width: 40px; max-height: 40px;
+    border-radius: 50%; background: var(--dot, var(--ink));
+    transform: translateX(-12%);
+  }
+  /* A step with an emoji shows it in a ring of the step's shade instead of a filled dot. */
+  .itin-dot.has-icon {
+    width: calc(var(--pw) * .115); height: calc(var(--pw) * .115); max-width: 64px; max-height: 64px;
+    margin-top: calc(var(--pw) * -.025);
+    background: var(--paper); border: 2px solid var(--dot, var(--ink));
+    display: grid; place-items: center;
+  }
+  .itin-ico { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; font-size: min(calc(var(--pw) * .06), 34px); line-height: 1; }
+  .itin-title { font-size: max(15px, calc(var(--pw) * .058)); letter-spacing: .09em; line-height: 1.15; }
+  .itin-time  { font-size: clamp(26px, calc(var(--pw) * .085), 54px); color: var(--soft); margin: calc(var(--pw) * -.004) 0 calc(var(--pw) * .006); }
+  .itin-place {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-size: max(11px, calc(var(--pw) * .037)); letter-spacing: .28em;
+    color: var(--ink); text-decoration: none;
+  }
+  .itin-place span { border-bottom: 1.5px solid var(--ink); padding-bottom: .05em; }
+  .itin-place svg { width: 1.45em; height: 1.45em; flex: none; }
+
+  /* ── RSVP ──────────────────────────────────────────────── */
+  .rsvp { text-align: center; }
+  .rsvp-msg { font-weight: 600; font-size: max(15px, calc(var(--pw) * .052)); line-height: 1.4; color: var(--ink-2); }
+  .rsvp-q { font-size: clamp(64px, calc(var(--pw) * .22), 140px); margin: calc(var(--pw) * .07) 0 calc(var(--pw) * .06); }
+  .rsvp-deadline { font-style: italic; color: var(--soft); font-size: max(13px, calc(var(--pw) * .042)); margin-top: calc(var(--pw) * -.02); margin-bottom: calc(var(--pw) * .05); }
+  .choice { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--pw) * .05); }
+  /* Boxed buttons with the reference's hard offset shadow; pressing sinks the box into it. */
+  .choice-btn {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    min-height: max(46px, calc(var(--pw) * .115));
+    background: #fff; color: var(--ink);
+    border: 1.5px solid var(--ink); border-radius: 8px;
+    box-shadow: -6px 6px 0 var(--ink);
+    font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    font-size: max(13px, calc(var(--pw) * .038));
+    cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, background .2s ease, color .2s ease;
+  }
+  .choice-btn input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice-btn:active { transform: translate(-3px, 3px); box-shadow: -3px 3px 0 var(--ink); }
+  .choice-btn.on { background: var(--ink); color: #fff; }
+  .choice-btn:focus-within { outline: 2px solid var(--ink); outline-offset: 4px; }
+  .rsvp-form { max-width: 100%; }
+  .rsvp-more { text-align: left; margin-top: calc(var(--pw) * .06); }
+  .field { margin-top: calc(var(--pw) * .04); }
+  .field label { display: block; font-size: max(11px, calc(var(--pw) * .032)); letter-spacing: .22em; text-transform: uppercase; font-weight: 600; color: var(--soft); }
+  .field input, .field select, .field textarea {
+    width: 100%; background: transparent; border: none; border-bottom: 1.5px solid var(--ink);
+    padding: .5em 0; font: 500 max(16px, calc(var(--pw) * .048)) 'Cormorant Garamond', Georgia, serif; color: var(--ink);
+    border-radius: 0;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-bottom-width: 2.5px; }
+  .field input[readonly] { border-bottom-style: dashed; }
+  .field textarea { resize: none; }
+  .send {
+    margin-top: calc(var(--pw) * .07); width: 100%;
+    min-height: max(48px, calc(var(--pw) * .12));
+    background: var(--ink); color: #fff; border: 1.5px solid var(--ink); border-radius: 8px;
+    box-shadow: -6px 6px 0 rgba(28,28,24,.35);
+    font: 700 max(13px, calc(var(--pw) * .038)) 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: .2em; text-transform: uppercase; cursor: pointer;
+  }
+  .send:disabled { opacity: .55; cursor: default; }
+  .thanks { display: none; margin-top: calc(var(--pw) * .05); font-size: clamp(34px, calc(var(--pw) * .11), 64px); }
+  .thanks-note { display: none; font-style: italic; color: var(--ink-2); font-size: max(14px, calc(var(--pw) * .046)); }
+
+  /* ── GIFT ──────────────────────────────────────────────── */
+  .gift-title { font-style: italic; font-weight: 700; font-size: max(22px, calc(var(--pw) * .075)); line-height: 1.1; letter-spacing: -.01em; }
+  .gift-desc { font-size: max(14px, calc(var(--pw) * .044)); color: var(--ink-2); margin-top: calc(var(--pw) * .02); }
+  .gift-acc { display: flex; flex-wrap: wrap; align-items: baseline; gap: .45em; font-weight: 600; font-size: max(14px, calc(var(--pw) * .045)); margin-top: calc(var(--pw) * .015); }
+  .copy {
+    border: 1px solid var(--ink); background: transparent; border-radius: 999px;
+    font: 600 max(11px, calc(var(--pw) * .03)) 'Cormorant Garamond', Georgia, serif; letter-spacing: .14em; text-transform: uppercase;
+    padding: .25em .9em; cursor: pointer; color: var(--ink);
+  }
+
+  /* ── FRAMED PHOTOGRAPHY ─────────────────────────────────── */
+  .frame {
+    position: relative; overflow: hidden; width: 100%;
+    border: 1.5px solid var(--ink-2);
+    background: #e9e9e7;
+    contain: layout paint;
+  }
+  .frame > img, .frame > video { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+  .gift-photo { margin-top: calc(var(--pw) * .07); aspect-ratio: 3 / 2; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--pw) * .04); }
+  .grid .wide { grid-column: span 2; }
+  .grid .half   { aspect-ratio: 7 / 5; }
+  .grid .tall   { aspect-ratio: 6 / 7; }
+  .grid .banner { aspect-ratio: 18 / 5; }
+  .grid figure { align-self: start; }
+
+  /* ── MISC ───────────────────────────────────────────────── */
+  .note-block { text-align: center; }
+  .note-title { font-size: clamp(40px, calc(var(--pw) * .13), 80px); }
+  .note-body  { font-size: max(15px, calc(var(--pw) * .048)); color: var(--ink-2); margin-top: calc(var(--pw) * .02); }
+  .note-label { font-size: max(11px, calc(var(--pw) * .032)); letter-spacing: .3em; color: var(--soft); margin-top: calc(var(--pw) * .03); }
+  .btn-link {
+    display: inline-block; margin-top: calc(var(--pw) * .05);
+    border: 1.5px solid var(--ink); border-radius: 8px; box-shadow: -5px 5px 0 var(--ink);
+    padding: .7em 1.6em; background: #fff; color: var(--ink); text-decoration: none;
+    font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: max(12px, calc(var(--pw) * .036));
+  }
+  .foot { text-align: center; padding: calc(var(--pw) * .16) 0 calc(var(--pw) * .12); font-size: clamp(34px, calc(var(--pw) * .1), 60px); color: var(--soft); }
+
+  /* ── REVEALS ──────────────────────────────────────────────
+     Opacity/transform/clip-path only, each firing once per element — nothing here animates a
+     layout property, so scrolling stays on the compositor. */
+  .rv { opacity: 0; transform: translateY(18px); transition: opacity .9s ease, transform .9s ease; }
+  .rv.in { opacity: 1; transform: none; }
+  .rv-wipe { clip-path: inset(-20% 100% -20% -20%); transition: clip-path 1.2s cubic-bezier(.3,.6,.2,1); }
+  .rv-wipe.in { clip-path: inset(-20% -20% -20% -20%); }
+  .rv-draw { clip-path: inset(0 0 100% 0); transition: clip-path 2.2s ease-in-out; }
+  .rv-draw.in { clip-path: inset(0 0 0 0); }
+  .rv-pop { transform: scale(0); transition: transform .5s cubic-bezier(.3,1.6,.5,1); }
+  .rv-pop.in { transform: scale(1) translateX(-12%); }
+  /* Typewriter: the message is split into letters that appear in sequence, as the reference types it. */
+  .tw > span { opacity: 0; transition: opacity .01s linear; transition-delay: var(--d); }
+  .tw.in > span { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .rv-wipe, .rv-draw, .rv-pop, .tw > span, .db-side .db-t { opacity: 1 !important; transform: none !important; clip-path: none !important; transition: none !important; }
+    .db-side::before, .db-side::after { transform: none !important; transition: none !important; }
+  }
+  @media (max-width: 640px) { .field input, .field select, .field textarea { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+
+<div class="page"><main id="main"></main></div>
+
+<script>
+// ── API CONFIG ─────────────────────────────────────────
+const API_BASE = (typeof window !== 'undefined' && window.API_BASE)
+  ? window.API_BASE.replace(/\/$/, '')
+  : '';
+
+let CURRENT_SLUG = null;
+// Set when opened through a personal guest-list link (?g=<token>)
+let CURRENT_GUEST = null;
+
+// ── DEFAULT DATA ───────────────────────────────────────
+const DEFAULT_DATA = {
+  template: 'marble-waltz',
+  title: 'Name 1 & Name 2',
+  cover: {
+    enabled: true, headline: 'Join Us', tagline: 'For the wedding of', eventLabel: '',
+    names: 'Name 1 & Name 2', greeting: 'Dear',
+    image: '/assets/marble-waltz/illustration.png', video: '', buttonText: ''
+  },
+  countdown: { enabled: true, label: 'Until we say I do', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: false, label: '', title: '', items: [] },
+  locations: { enabled: false, label: '', title: '', image: '', items: [] },
+  timeline:  { enabled: true, label: '', title: '', items: [] },
+  gallery:   { enabled: true, label: '', title: '', video: '/assets/marble-waltz/silhouette.mp4', items: [] },
+  gifts:     { enabled: true, label: '', title: 'Send the Newlyweds a Whish', description: '', image: '/assets/marble-waltz/couple.jpg', image2: '', items: [] },
+  rsvp:      {
+    enabled: true, label: '', title: '',
+    description: 'Having you beside us on our wedding day would make this chapter even more meaningful.',
+    question: 'Coming?', deadline: '', maxPeople: 10, buttonText: 'Send Reply', allowWishes: true, image: ''
+  },
+  memories:  { enabled: false, title: 'Share Your Memories', description: '', url: '', buttonText: 'Share Memories' },
+  music:     { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+// ── HELPERS ────────────────────────────────────────────
+function decodeData(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(s))));
+}
+function mergeDefaults(data) {
+  const out = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  for (const k of Object.keys(data || {})) {
+    if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && out[k]) {
+      out[k] = Object.assign({}, out[k], data[k]);
+    } else {
+      out[k] = data[k];
+    }
+  }
+  return out;
+}
+function parseQuery() {
+  const raw = window.location.search.replace(/^\?/, '').replace(/\?/g, '&');
+  return new URLSearchParams(raw);
+}
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+// Resolve API-relative uploaded media (/api/public/media/<id>) against API_BASE.
+const mediaSrc = u => u && /^\/api\//.test(u) ? (API_BASE || '') + u : (u || '');
+function fmtDate(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+  if (!m) return s || '';
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/**
+ * The API sends the invitation's event date next to the section data. Invitations whose Date &
+ * Countdown section carries no date of its own still have it there, so use it as the fallback.
+ */
+function withEventDate(data, eventDate) {
+  data.countdown = data.countdown || {};
+  if (!data.countdown.date && eventDate) data.countdown.date = String(eventDate).slice(0, 10);
+  return data;
+}
+
+// ── DATA LOADING ───────────────────────────────────────
+async function loadData() {
+  const params = parseQuery();
+
+  // ?demo=<key> renders the built-in sample invitation (sales/preview mode, no API call).
+  if (window.getDemoData) {
+    const demo = window.getDemoData(window.location.search);
+    if (demo) return mergeDefaults(demo);
+  }
+
+  const enc = params.get('d');
+  if (enc) {
+    try { return mergeDefaults(decodeData(enc)); }
+    catch (e) { console.warn('Bad ?d payload:', e); }
+  }
+
+  // Personal guest-list link (?g=<token>)
+  const token = params.get('g');
+  if (token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/public/guest/${encodeURIComponent(token)}`, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const body = await res.json();
+        CURRENT_SLUG  = body.slug;
+        CURRENT_GUEST = Object.assign({ token }, body.guest || {});
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('Guest API returned', res.status);
+    } catch (e) { console.warn('Guest API fetch failed:', e); }
+  }
+
+  const id = params.get('id');
+  if (id) {
+    CURRENT_SLUG = id;
+    try {
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(id)}`, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const body = await res.json();
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('API returned', res.status);
+    } catch (e) { console.warn('API fetch failed:', e); }
+    try {
+      const all = JSON.parse(localStorage.getItem('ic_people') || '{}');
+      if (all[id]) return mergeDefaults(all[id].data);
+    } catch { /* ignore */ }
+  }
+
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+// ── URL PERSONALIZATION ────────────────────────────────
+function getGuestName() {
+  if (CURRENT_GUEST && CURRENT_GUEST.name) return CURRENT_GUEST.name;
+  const p = parseQuery();
+  const gn = p.get('gn');
+  if (gn && gn.trim()) return gn.trim();
+  const name = (p.get('name') || '').trim();
+  const spouse = (p.get('spouse') || '').trim();
+  if (!name) return null;
+  return spouse && spouse !== 'null' ? `${name} & ${spouse}` : name;
+}
+function getMaxOverride() {
+  if (CURRENT_GUEST && CURRENT_GUEST.maxAttendees) return CURRENT_GUEST.maxAttendees;
+  const v = parseInt(parseQuery().get('np') || parseQuery().get('max'));
+  return v > 0 ? v : null;
+}
+
+// ── WEDDING DATE ───────────────────────────────────────
+/** The configured day as typed (the wedding's own calendar), or null. */
+function weddingDay(cd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((cd && cd.date) || '');
+  if (!m) return null;
+  const [y, mo, d] = [+m[1], +m[2], +m[3]];
+  return y >= 2000 ? { y, mo, d } : null;   // 0001-01-01 etc. is an unset DateTime, not a date
+}
+/** Epoch ms of the ceremony, pinned to the wedding's timezone when the admin's offset was recorded. */
+function weddingInstant(cd) {
+  const day = weddingDay(cd);
+  if (!day) return null;
+  const [hh, mi] = /^\d{1,2}:\d{2}/.test(cd.time || '') ? cd.time.split(':').map(Number) : [0, 0];
+  const t = typeof cd.tzOffset === 'number'
+    ? Date.UTC(day.y, day.mo - 1, day.d, hh, mi) + cd.tzOffset * 60000
+    : new Date(day.y, day.mo - 1, day.d, hh, mi).getTime();
+  return isNaN(t) ? null : t;
+}
+/** "19:00" → "7 PM", "15:30" → "3:30 PM". */
+function clockShort(t) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t || '');
+  if (!m) return '';
+  const h = +m[1];
+  return `${h % 12 || 12}${m[2] === '00' ? '' : ':' + m[2]} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+
+/**
+ * The emoji for a step: the one the admin picked, otherwise one read from what the step is — groom,
+ * bride, church or venue — so a plain "Bride's House" still gets its icon. The admin editor's
+ * placeholder "✦" counts as not chosen.
+ */
+function stepIcon(x) {
+  const own = String((x && x.icon) || '').trim();
+  if (own && own !== '✦') return own;
+  const t = `${x.title || x.label || ''} ${x.subtitle || x.name || ''}`.toLowerCase();
+  if (/groom/.test(t)) return '🤵';
+  if (/bride/.test(t)) return '👰';
+  if (/mosque/.test(t)) return '🕌';
+  if (/church|chapel|cathedral|ceremony|mass/.test(t)) return '⛪';
+  if (/venue|reception|party|dinner|celebration|hall|cocktail/.test(t)) return '🥂';
+  return '';
+}
+/** A map link: a real URL as-is; anything else typed into the field is searched on Google Maps. */
+function mapHref(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  return /^https?:\/\//i.test(u) ? u : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(u);
+}
+
+// ── RENDERERS ──────────────────────────────────────────
+const PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s-7-7.1-7-12.4A7 7 0 0 1 19 9.6C19 14.9 12 22 12 22Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+
+/** Cover media: an uploaded video if there is one, the illustration/photo otherwise. */
+function coverMedia(c) {
+  const img = mediaSrc(c.image || '');
+  const vid = mediaSrc(c.video || '');
+  if (vid) return `<div class="cover-art rv"><video data-bg-video autoplay loop muted playsinline preload="metadata" ${img ? `poster="${esc(img)}"` : ''} src="${esc(vid)}"></video></div>`;
+  if (img) return `<div class="cover-art rv"><img src="${esc(img)}" alt="${esc(c.names || 'The couple')}" decoding="async"></div>`;
+  return '';
+}
+
+function renderDateBlock(cd) {
+  const day = weddingDay(cd);
+  if (!day) return '';
+  const dt = new Date(day.y, day.mo - 1, day.d);
+  const month = dt.toLocaleDateString('en-US', { month: 'long' });
+  const weekday = dt.toLocaleDateString('en-US', { weekday: 'long' });
+  const at = clockShort(cd.time);
+  return `
+    <div class="dateblock">
+      <div class="db-month caps rv">${esc(month)}</div>
+      <div class="db-row">
+        <div class="db-side caps rv-rule"><span class="db-t">${esc(weekday)}</span></div>
+        <div class="db-day rv">${day.d}</div>
+        <div class="db-side caps rv-rule"><span class="db-t">${at ? 'At ' + esc(at) : '&nbsp;'}</span></div>
+      </div>
+      <div class="db-year caps rv">${day.y}</div>
+    </div>`;
+}
+
+function renderCountdown(cd) {
+  if (!cd || cd.enabled === false) return '';
+  const target = weddingInstant(cd);
+  if (target === null) return `<p class="cd-empty rv">The date is being set — we will share it here soon</p>`;
+  const cell = (k, u) => `<div class="cd-cell"><span class="cd-num" data-cd="${k}">–</span><span class="cd-unit">${u}</span></div>`;
+  return `
+    <div class="cd rv">
+      ${cd.label ? `<div class="cd-label caps">${esc(cd.label)}</div>` : ''}
+      <div class="cd-row" data-countdown="${target}">${cell('d', 'Days')}${cell('h', 'Hours')}${cell('m', 'Mins')}${cell('s', 'Secs')}</div>
+    </div>`;
+}
+
+function renderCover(data) {
+  const c = data.cover || {};
+  const f = data.families || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  return `
+  <section class="cover">
+    ${c.headline ? `<h1 class="cover-head script rv-wipe">${esc(c.headline)}</h1>` : ''}
+    ${c.tagline ? `<p class="cover-sub caps rv">${esc(c.tagline)}</p>` : ''}
+    ${coverMedia(c)}
+    <div class="names rv-wipe"><span class="names-text script">${esc(c.names || data.title || '')}</span></div>
+    ${fams.length ? `<p class="families rv">${f.label ? esc(f.label) + '<br>' : ''}${fams.map(x => `${esc(x.label || '')} <b>${esc(x.names || '')}</b>`).join('<br>')}</p>` : ''}
+    ${renderDateBlock(data.countdown || {})}
+    ${renderCountdown(data.countdown)}
+  </section>`;
+}
+
+function renderItinerary(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.title || x.time || x.subtitle));
+  if (t.enabled === false || !items.length) return '';
+  // Dots fade from near-black to warm grey down the day, as in the reference.
+  const shade = i => {
+    const a = [0x1c, 0x1c, 0x18], b = [0xae, 0xab, 0x9e];
+    const k = items.length > 1 ? i / (items.length - 1) : 0;
+    return '#' + a.map((v, j) => Math.round(v + (b[j] - v) * k).toString(16).padStart(2, '0')).join('');
+  };
+  const rows = items.map((x, i) => {
+    const icon = stepIcon(x);
+    const place = x.subtitle || (x.url ? 'View on map' : '');
+    const placeHtml = place
+      ? (x.url
+          ? `<a class="itin-place caps" href="${esc(mapHref(x.url))}" target="_blank" rel="noopener">${PIN}<span>${esc(place)}</span></a>`
+          : `<span class="itin-place caps">${PIN}<span>${esc(place)}</span></span>`)
+      : '';
+    return `
+      <div class="itin-item">
+        <span class="itin-dot rv-pop${icon ? ' has-icon' : ''}" style="--dot:${shade(i)}">${icon ? `<span class="itin-ico" aria-hidden="true">${esc(icon)}</span>` : ''}</span>
+        <div class="rv">
+          ${x.title ? `<div class="itin-title caps">${esc(x.title)}</div>` : ''}
+          ${x.time ? `<div class="itin-time script">${esc(x.time)}</div>` : ''}
+          ${placeHtml}
+        </div>
+      </div>`;
+  }).join('');
+  const names = (data.cover || {}).names || data.title || '';
+  return `
+  <section class="section">
+    ${t.title ? `<h2 class="sec-names script rv-wipe">${esc(t.title)}</h2>` : (names ? `<h2 class="sec-names script rv-wipe">${esc(names)}</h2>` : '')}
+    <div class="itin">
+      <svg class="itin-path rv-draw" aria-hidden="true"><path d=""/></svg>
+      ${rows}
+    </div>
+  </section>`;
+}
+
+function renderRsvp(r, maxPeople, guestName) {
+  const opts = ['<option value="" disabled selected>How many of you?</option>'];
+  for (let i = 1; i <= maxPeople; i++) opts.push(`<option value="${i}">${i}</option>`);
+  return `
+  <section class="section rsvp">
+    ${r.title ? `<h2 class="note-title script rv-wipe">${esc(r.title)}</h2>` : ''}
+    ${r.description ? `<p class="rsvp-msg tw">${esc(r.description)}</p>` : ''}
+    <div class="rsvp-q script rv-wipe">${esc(r.question || 'Coming?')}</div>
+    ${r.deadline ? `<p class="rsvp-deadline rv">Kindly reply before ${esc(fmtDate(r.deadline))}</p>` : ''}
+    <form class="rsvp-form" data-rsvp>
+      <div class="choice rv">
+        <label class="choice-btn" data-choice><input type="radio" name="attending" value="yes"><span>Yes!</span></label>
+        <label class="choice-btn" data-choice><input type="radio" name="attending" value="no"><span>No</span></label>
+      </div>
+      <div class="rsvp-more" data-more hidden>
+        <div class="field">
+          <label>${guestName ? 'Invitation for' : 'Your name(s)'}</label>
+          ${guestName
+            // Personal link: shown for confirmation but locked; the server ignores a submitted name.
+            ? `<input type="text" data-guest-name value="${esc(guestName)}" readonly aria-readonly="true" tabindex="-1">`
+            : `<input type="text" data-guest-name placeholder="Write your name here">`}
+        </div>
+        <div class="field" data-count-field hidden>
+          <label>How many of you${guestName ? ` (up to ${maxPeople})` : ''}</label>
+          <select data-guest-count>${opts.join('')}</select>
+        </div>
+        ${r.allowWishes !== false ? `
+        <div class="field">
+          <label>A note for the couple (optional)</label>
+          <textarea data-wishes rows="3" maxlength="200" placeholder="Your wishes…"></textarea>
+        </div>` : ''}
+        <button type="submit" class="send">${esc(r.buttonText || 'Send Reply')}</button>
+      </div>
+    </form>
+    <div class="thanks script" data-thanks>Thank you</div>
+    <p class="thanks-note" data-rsvp-success
+       data-accept="${esc(r.acceptMessage || "Thank you! We can't wait to celebrate with you.")}"
+       data-decline="${esc(r.declineMessage || 'Thank you for letting us know. You will be missed.')}"></p>
+  </section>`;
+}
+
+// How far each plate may change shape to suit its photo, as min:max of width/height. Inside the
+// band the plate simply becomes the photo's own shape; beyond it cover trims the excess.
+const PLATE_FIT = { half: '0.9:1.6', tall: '0.7:1.25', banner: '1.25:2.4' };
+
+/** A framed plate; video when given, image otherwise. */
+function plate(cls, url, video, alt) {
+  const src = mediaSrc(url || ''), vid = mediaSrc(video || '');
+  if (!src && !vid) return '';
+  return `<figure class="${cls.includes('wide') ? 'wide' : ''}"><div class="frame ${cls} rv" data-fit="${PLATE_FIT[cls.split(' ')[0]] || ''}">${vid
+    ? `<video data-bg-video autoplay loop muted playsinline preload="metadata" ${src ? `poster="${esc(src)}"` : ''} src="${esc(vid)}"></video>`
+    : `<img src="${esc(src)}" alt="${esc(alt || 'Photograph')}" loading="lazy" decoding="async">`}</div></figure>`;
+}
+
+function renderGift(data) {
+  const g = data.gifts || {};
+  const accounts = (g.items || []).filter(x => x && x.account);
+  if (g.enabled === false || !(g.title || g.description || accounts.length || g.image)) return '';
+  return `
+  <section class="section">
+    ${g.title ? `<h2 class="gift-title rv">${esc(g.title)}</h2>` : ''}
+    ${g.description ? `<p class="gift-desc rv">${nl2br(g.description)}</p>` : ''}
+    ${accounts.map(x => `
+      <div class="gift-acc rv">
+        <span>${esc(x.bank ? x.bank + ':' : 'Account:')}</span><span>${esc(x.account)}</span>
+        <button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button>
+      </div>`).join('')}
+    ${g.image ? `<div class="frame gift-photo rv" data-fit="1:1.8"><img src="${esc(mediaSrc(g.image))}" alt="The couple" loading="lazy" decoding="async"></div>` : ''}
+  </section>`;
+}
+
+function renderGallery(data) {
+  const g = data.gallery || {};
+  if (g.enabled === false) return '';
+  const photos = (g.items || []).filter(x => x && x.url).map(x => x.url);
+  const video = g.video || '';
+  if (!photos.length && !video) return '';
+  // Reference layout: two small plates, one tall feature (the video), one wide banner. With no
+  // video the third photo takes the tall place. Anything beyond that continues as pairs.
+  const cells = [];
+  let i = 0;
+  if (photos[i]) cells.push(plate('half', photos[i++]));
+  if (photos[i]) cells.push(plate('half', photos[i++]));
+  if (video) cells.push(plate('tall wide', photos[i] || '', video));
+  else if (photos[i]) cells.push(plate('tall wide', photos[i++]));
+  if (photos[i]) cells.push(plate('banner wide', photos[i++]));
+  while (photos[i]) cells.push(plate('half', photos[i++]));
+  return `
+  <section class="section">
+    ${g.title ? `<h2 class="sec-names script rv-wipe">${esc(g.title)}</h2>` : ''}
+    <div class="grid">${cells.join('')}</div>
+  </section>`;
+}
+
+function renderNotes(data) {
+  const out = [];
+  (data.customSections || []).forEach(s => {
+    if (!s || s.enabled === false || !(s.title || s.body)) return;
+    out.push(`
+    <section class="section note-block">
+      ${s.title ? `<h2 class="note-title script rv-wipe">${esc(s.title)}</h2>` : ''}
+      ${s.body ? `<p class="note-body rv">${nl2br(s.body)}</p>` : ''}
+      ${s.label ? `<p class="note-label caps rv">${esc(s.label)}</p>` : ''}
+    </section>`);
+  });
+  const m = data.memories;
+  if (m && m.enabled !== false && m.url) {
+    out.push(`
+    <section class="section note-block">
+      ${m.title ? `<h2 class="note-title script rv-wipe">${esc(m.title)}</h2>` : ''}
+      ${m.description ? `<p class="note-body rv">${nl2br(m.description)}</p>` : ''}
+      <a class="btn-link rv" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.buttonText || 'Share Memories')}</a>
+    </section>`);
+  }
+  return out.join('');
+}
+
+// ── BUILD ──────────────────────────────────────────────
+function build(data) {
+  const guestName = getGuestName();
+  const maxPeople = getMaxOverride() || (data.rsvp && data.rsvp.maxPeople) || 10;
+
+  const parts = [];
+  if (data.cover && data.cover.enabled !== false) parts.push(renderCover(data));
+  parts.push(renderItinerary(data));
+  parts.push(renderNotes(data));
+  if (data.rsvp && data.rsvp.enabled !== false) parts.push(renderRsvp(data.rsvp, maxPeople, guestName));
+  parts.push(renderGift(data));
+  parts.push(renderGallery(data));
+  parts.push(`<footer class="foot script">with love</footer>`);
+
+  document.getElementById('main').innerHTML = parts.join('');
+  document.title = (data.title || (data.cover && data.cover.names) || 'Invitation') + ' — Wedding Invitation';
+
+  splitTypewriter();
+  fitFrames();
+  fitNames();
+  drawItinerary();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitNames(); drawItinerary(); }).catch(() => {});
+  setupReveal();
+  startCountdown();
+  startBackgroundVideos();
+  if (window.InvitationMusic) InvitationMusic.init(data.music, API_BASE);
+}
+
+// ── PHOTO FITTING ──────────────────────────────────────
+// Each plate takes the aspect ratio of the picture put in it, clamped to its data-fit band, so an
+// uploaded photo keeps the faces in it instead of being sliced into the slot's default strip.
+// object-fit:cover trims only what the clamp still leaves over — nothing stretches or letterboxes.
+function fitFrames() {
+  document.querySelectorAll('.frame[data-fit]').forEach(frame => {
+    if (!frame.dataset.fit) return;
+    const m = frame.querySelector('img, video');
+    if (!m) return;
+    const apply = () => {
+      const w = m.naturalWidth || m.videoWidth, h = m.naturalHeight || m.videoHeight;
+      if (!w || !h) return;
+      const [min, max] = frame.dataset.fit.split(':').map(Number);
+      frame.style.aspectRatio = String(Math.min(max, Math.max(min, w / h)));
+    };
+    if (m.tagName === 'VIDEO') {
+      if (m.readyState >= 1) apply(); else m.addEventListener('loadedmetadata', apply, { once: true });
+    } else if (m.complete && m.naturalWidth) {
+      apply();
+    } else {
+      // A deferred lazy image reports complete with naturalWidth 0 — pick it up when it decodes.
+      m.addEventListener('load', apply, { once: true });
+    }
+  });
+}
+
+// ── NAMES FIT ──────────────────────────────────────────
+// The couple's names span ~82% of the card in the reference; how wide a script runs depends on the
+// names, so measure once and scale. Width is linear in font size, so no search loop is needed.
+function fitNames() {
+  document.querySelectorAll('.names').forEach(row => {
+    const t = row.querySelector('.names-text');
+    if (!t) return;
+    t.style.setProperty('--fit', '1');
+    const w = t.getBoundingClientRect().width, avail = row.clientWidth;
+    if (w && avail) t.style.setProperty('--fit', Math.max(.45, Math.min(1.6, (avail * .86) / w)).toFixed(3));
+  });
+}
+
+// ── ITINERARY PATH ─────────────────────────────────────
+// A dashed line that winds through every dot, bulging right then left between them like the
+// reference's hand-drawn path. Drawn from measured dot positions, so it follows whatever the
+// items' text makes their heights.
+function drawItinerary() {
+  const wrap = document.querySelector('.itin');
+  if (!wrap) return;
+  const svg = wrap.querySelector('.itin-path');
+  const dots = [...wrap.querySelectorAll('.itin-dot')];
+  if (!svg || dots.length < 2) { if (svg) svg.querySelector('path').setAttribute('d', ''); return; }
+  const box = wrap.getBoundingClientRect();
+  // Dots carry a scale() while hidden, so measure their layout box rather than their transformed rect.
+  const pts = dots.map(d => [d.offsetLeft + d.offsetWidth / 2 - d.offsetWidth * .12,
+                             d.offsetTop + d.parentElement.offsetTop + d.offsetHeight / 2]);
+  const gut = dots[0].offsetLeft * 2 + dots[0].offsetWidth;
+  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+    const bx = i % 2 ? gut * 1.05 : gut * .06;          // alternate: bulge right, then left
+    d += ` C ${bx.toFixed(1)} ${(y0 + (y1 - y0) * .12).toFixed(1)}, ${bx.toFixed(1)} ${(y1 - (y1 - y0) * .12).toFixed(1)}, ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  }
+  svg.setAttribute('viewBox', `0 0 ${box.width.toFixed(1)} ${box.height.toFixed(1)}`);
+  svg.querySelector('path').setAttribute('d', d);
+}
+
+let reflowTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(reflowTimer);
+  reflowTimer = setTimeout(() => { fitNames(); drawItinerary(); }, 150);
+}, { passive: true });
+
+// ── TYPEWRITER ─────────────────────────────────────────
+function splitTypewriter() {
+  document.querySelectorAll('.tw').forEach(el => {
+    if (el.dataset.split) return;
+    const text = el.textContent;
+    el.textContent = '';
+    [...text].forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.textContent = ch;
+      s.style.setProperty('--d', (i * 28) + 'ms');
+      el.appendChild(s);
+    });
+    el.setAttribute('aria-label', text);
+    el.dataset.split = '1';
+  });
+}
+
+// ── COUNTDOWN ──────────────────────────────────────────
+let countdownTimer = null;
+function startCountdown() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  const node = document.querySelector('[data-countdown]');
+  if (!node) return;
+  // Derived from an absolute instant against the clock on every tick, so a reload or a sleeping
+  // phone can never drift or reset it.
+  const target = Number(node.dataset.countdown);
+  if (!Number.isFinite(target)) return;
+  const cells = node.querySelectorAll('[data-cd]');
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      clearInterval(countdownTimer); countdownTimer = null;
+      node.innerHTML = `<p class="cd-note">${diff > -86400000 ? 'Today is the day' : 'Thank you for celebrating with us'}</p>`;
+      return;
+    }
+    const v = {
+      d: String(Math.floor(diff / 86400000)),
+      h: pad(Math.floor(diff / 3600000) % 24),
+      m: pad(Math.floor(diff / 60000) % 60),
+      s: pad(Math.floor(diff / 1000) % 60)
+    };
+    cells.forEach(e => { if (e.textContent !== v[e.dataset.cd]) e.textContent = v[e.dataset.cd]; });
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) startCountdown(); });
+
+// ── BACKGROUND VIDEO ───────────────────────────────────
+// A <video> injected via innerHTML doesn't always pick up `muted` from the attribute, and browsers
+// refuse autoplay otherwise. A rejected play() (e.g. Low Power Mode) just leaves the poster.
+function startBackgroundVideos() {
+  document.querySelectorAll('[data-bg-video]').forEach(v => {
+    v.muted = true; v.defaultMuted = true;
+    const p = v.play(); if (p && p.catch) p.catch(() => {});
+  });
+}
+
+// ── REVEAL ─────────────────────────────────────────────
+const REVEAL = '.rv, .rv-wipe, .rv-rule, .rv-draw, .rv-pop, .tw';
+function revealInView() {
+  const pending = document.querySelectorAll(REVEAL.split(', ').map(s => s + ':not(.in)').join(', '));
+  if (!pending.length) return;
+  const h = window.innerHeight;
+  pending.forEach(el => { const r = el.getBoundingClientRect(); if (r.top < h && r.bottom > 0) el.classList.add('in'); });
+}
+function setupReveal() {
+  const els = document.querySelectorAll(REVEAL);
+  if (!('IntersectionObserver' in window)) { els.forEach(el => el.classList.add('in')); return; }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+  els.forEach(el => io.observe(el));
+  revealInView();
+}
+// Safety net for anything the observer misses, run only once scrolling stops (a per-frame
+// measurement would force layout on every scroll frame).
+let idleSweep = null;
+window.addEventListener('scroll', () => { clearTimeout(idleSweep); idleSweep = setTimeout(revealInView, 160); }, { passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) revealInView(); });
+
+// ── EVENTS ─────────────────────────────────────────────
+document.addEventListener('click', e => {
+  const copy = e.target.closest('[data-copy]');
+  if (!copy) return;
+  navigator.clipboard?.writeText(copy.dataset.copy).then(() => {
+    const orig = copy.textContent;
+    copy.textContent = 'Copied';
+    setTimeout(() => { copy.textContent = orig; }, 2000);
+  });
+});
+
+// YES!/NO are radio inputs inside the boxed buttons: reflect the choice, open the rest of the form,
+// and only ask for a party size when the answer is yes.
+document.addEventListener('change', e => {
+  if (!e.target.matches('input[name="attending"]')) return;
+  const form = e.target.closest('[data-rsvp]');
+  form.querySelectorAll('[data-choice]').forEach(b => b.classList.toggle('on', b.contains(e.target)));
+  form.querySelector('[data-more]').hidden = false;
+  form.querySelector('[data-count-field]').hidden = e.target.value !== 'yes';
+});
+
+document.addEventListener('submit', async e => {
+  const form = e.target.closest('[data-rsvp]');
+  if (!form) return;
+  e.preventDefault();
+
+  const att       = form.querySelector('input[name="attending"]:checked');
+  const countEl   = form.querySelector('[data-guest-count]');
+  const nameInput = form.querySelector('[data-guest-name]');
+  const wishes    = form.querySelector('[data-wishes]');
+  const name      = getGuestName() || (nameInput ? nameInput.value.trim() : '');
+
+  if (!att) return alert('Please choose Yes or No.');
+  const attending = att.value === 'yes';
+  const count = countEl ? countEl.value : '';
+  if (!name) return alert('Please enter your name.');
+  if (attending && !count) return alert('Please choose how many of you are coming.');
+
+  const btn = form.querySelector('.send');
+  const original = btn.textContent;
+
+  if (CURRENT_SLUG) {
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      const guestNames = attending ? name.split(/\s*(?:&|,| and )\s*/i).map(s => s.trim()).filter(Boolean) : [];
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(CURRENT_SLUG)}/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          response: attending ? 'yes' : 'no',
+          partySize: attending ? parseInt(count) : 0,
+          contactName: name,
+          message: wishes ? (wishes.value.trim() || null) : null,
+          guests: guestNames.map(n => ({ fullName: n })),
+          guestToken: CURRENT_GUEST ? CURRENT_GUEST.token : null
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        btn.disabled = false; btn.textContent = original;
+        return alert(err.error || `Submission failed (${res.status}). Please try again.`);
+      }
+    } catch {
+      btn.disabled = false; btn.textContent = original;
+      return alert('Network error. Please check your connection and try again.');
+    }
+  }
+
+  form.style.display = 'none';
+  const note = form.parentElement.querySelector('[data-rsvp-success]');
+  note.innerHTML = nl2br(attending ? note.dataset.accept : note.dataset.decline);
+  note.style.display = 'block';
+  form.parentElement.querySelector('[data-thanks]').style.display = 'block';
+});
+
+// ── INIT ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    build(await loadData());
+  } catch (e) {
+    console.error('Failed to load invitation data:', e);
+    build(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  }
+});
+</script>
+</body>
+</html>

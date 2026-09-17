@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using InvitationPlatform.Api.Auth;
 using InvitationPlatform.Domain.Entities;
 using InvitationPlatform.Infrastructure.Data;
@@ -23,6 +25,7 @@ public class DatabaseSeeder(
         await EnsureSuperAdminAsync(ct);
         await RetireRemovedTemplatesAsync(ct);
         await SeedTemplatesAsync(ct);
+        await BackfillBuiltinTemplatePhotosAsync(ct);
         await BackfillGuestSlugsAsync(ct);
     }
 
@@ -102,6 +105,70 @@ public class DatabaseSeeder(
         await db.SaveChangesAsync(ct);
         log.LogInformation("Seeded {Count} built-in template(s): {Names}",
             toAdd.Count, string.Join(", ", toAdd.Select(t => t.Name)));
+    }
+
+    // The photo fields a built-in template's default data can carry, and its photo lists. These are
+    // the only things BackfillBuiltinTemplatePhotosAsync ever writes.
+    private static readonly string[] PhotoKeys = ["image", "image2", "video", "sealImage"];
+    private static readonly (string Section, string List)[] PhotoLists = [("gallery", "items"), ("cover", "collage")];
+
+    /// <summary>
+    /// Built-in templates are inserted once, so default photos added to the catalogue afterwards —
+    /// as they were for Elegant Noir, Serene Beige and Wedding Daily — would never reach a database
+    /// that already has those templates, and new invitations would keep starting without photos.
+    /// This copies the catalogue's photos in, but only into photo fields that are still empty (or a
+    /// photo list that is empty): an admin's own photos and every other field are left as they are.
+    /// A photo an admin deliberately clears will come back on the next start; replace it instead.
+    /// </summary>
+    private async Task BackfillBuiltinTemplatePhotosAsync(CancellationToken ct)
+    {
+        var catalogue = BuiltinTemplates.All.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        var stored = await db.Templates.Where(t => t.IsBuiltin).ToListAsync(ct);
+        var updated = new List<string>();
+
+        foreach (var template in stored)
+        {
+            if (!catalogue.TryGetValue(template.Name, out var seed)) continue;
+            JsonObject? data, defaults;
+            try
+            {
+                data = JsonNode.Parse(template.Data) as JsonObject;
+                defaults = JsonNode.Parse(seed.Data) as JsonObject;
+            }
+            catch (JsonException) { continue; }
+            if (data is null || defaults is null) continue;
+
+            var changed = false;
+            foreach (var (section, node) in defaults)
+            {
+                if (node is not JsonObject want || data[section] is not JsonObject have) continue;
+                foreach (var key in PhotoKeys)
+                {
+                    if (want[key] is not JsonValue w || !w.TryGetValue<string>(out var photo) || string.IsNullOrEmpty(photo)) continue;
+                    var current = have[key] is JsonValue h && h.TryGetValue<string>(out var s) ? s : null;
+                    if (!string.IsNullOrEmpty(current)) continue;   // the admin's own choice stays
+                    have[key] = photo;
+                    changed = true;
+                }
+            }
+            foreach (var (section, list) in PhotoLists)
+            {
+                if (defaults[section]?[list] is not JsonArray wantList || wantList.Count == 0) continue;
+                if (data[section] is not JsonObject have) continue;
+                if (have[list] is JsonArray haveList && haveList.Count > 0) continue;
+                have[list] = wantList.DeepClone();
+                changed = true;
+            }
+
+            if (!changed) continue;
+            template.Data = data.ToJsonString();
+            template.UpdatedAt = DateTime.UtcNow;
+            updated.Add(template.Name);
+        }
+
+        if (updated.Count == 0) return;
+        await db.SaveChangesAsync(ct);
+        log.LogInformation("Added default photos to built-in template(s): {Names}", string.Join(", ", updated));
     }
 
     /// <summary>Gives pre-slug guests a name-based slug so their personal links keep working.</summary>

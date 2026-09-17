@@ -137,6 +137,25 @@
     font-size: 2rem; color: rgba(194,168,136,.3); z-index: -1;
   }
 
+  /* Days · Hours · Minutes · Seconds under the calendar, in the same card style. */
+  .cd-strip {
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    width: 100%; max-width: 350px; margin-top: 18px;
+  }
+  .cd-item {
+    background: var(--card-bg); border: 1px solid var(--border-light);
+    border-radius: 14px; padding: 14px 4px 12px; text-align: center;
+    box-shadow: 0 6px 18px rgba(74,59,50,.07); min-width: 0;
+  }
+  .cd-n {
+    display: block; font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.35rem, 6.5vw, 1.9rem); line-height: 1; color: var(--text-main);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .cd-l { display: block; margin-top: 6px; font-size: .58rem; letter-spacing: clamp(1px, .45vw, 2px); text-transform: uppercase; color: var(--accent); }
+  .cd-note { grid-column: 1 / -1; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.25rem; color: var(--text-main); padding: 10px 0; }
+
   /* ── SPLIT DETAILS ── */
   .split-section {
     display: flex; flex-wrap: wrap;
@@ -307,6 +326,7 @@
 
 <script src="../../../shared/demo-data.js"></script>
 <script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
 
 <main id="main"></main>
 
@@ -527,6 +547,13 @@ function renderCalendar(cd) {
       <div class="cal-year">${y}</div>
       <div class="cal-grid">${cells}</div>
     </div>
+    ${countdownTarget(cd) !== null ? `
+    <div class="cd-strip" data-countdown="${countdownTarget(cd)}">
+      <div class="cd-item"><span class="cd-n" data-cd="d">–</span><span class="cd-l">Days</span></div>
+      <div class="cd-item"><span class="cd-n" data-cd="h">–</span><span class="cd-l">Hours</span></div>
+      <div class="cd-item"><span class="cd-n" data-cd="m">–</span><span class="cd-l">Minutes</span></div>
+      <div class="cd-item"><span class="cd-n" data-cd="s">–</span><span class="cd-l">Seconds</span></div>
+    </div>` : ''}
     ${cd.description ? `<p style="position:relative;z-index:2;margin-top:25px;color:var(--text-muted);font-size:.95rem;">${esc(cd.description)}</p>` : ''}
   </section>`;
 }
@@ -674,8 +701,60 @@ function build(data) {
   document.title = (data.title || (data.cover && data.cover.names) || 'Invitation') + ' — Wedding Invitation';
 
   startBackgroundVideos();
+  startCountdown();
   if (window.InvitationMusic) InvitationMusic.init(data.music, API_BASE);
 }
+
+// ── COUNTDOWN ──────────────────────────────────────────
+/**
+ * The instant the countdown runs to (epoch ms), or null when no usable date is set. When the
+ * admin saved a wedding time and their timezone, those pin it to one real moment for every guest,
+ * as in the other templates; otherwise it is midnight at the start of the day, local time.
+ * Nothing caps the year — a wedding years away simply shows a four-digit day count.
+ */
+function countdownTarget(cd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((cd && cd.date) || '');
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (y < 2000) return null;           // an unset DateTime placeholder, not a real wedding
+  const [hh, mi] = /^\d{1,2}:\d{2}/.test(cd.time || '') ? cd.time.split(':').map(Number) : [0, 0];
+  const t = typeof cd.tzOffset === 'number'
+    ? Date.UTC(y, mo - 1, d, hh, mi) + cd.tzOffset * 60000
+    : new Date(y, mo - 1, d, hh, mi).getTime();
+  return isNaN(t) ? null : t;
+}
+
+let countdownTimer = null;
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdownTimer = null;
+  const node = document.querySelector('[data-countdown]');
+  if (!node) return;
+  const target = Number(node.dataset.countdown);
+  if (!Number.isFinite(target)) return;
+  const cells = node.querySelectorAll('[data-cd]');
+  const pad = n => String(n).padStart(2, '0');
+  const tick = () => {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      node.innerHTML = `<p class="cd-note">${diff > -86400000 ? 'Today is the day' : 'Thank you for celebrating with us'}</p>`;
+      return;
+    }
+    const v = {
+      d: String(Math.floor(diff / 86400000)),
+      h: pad(Math.floor(diff / 3600000) % 24),
+      m: pad(Math.floor(diff / 60000) % 60),
+      s: pad(Math.floor(diff / 1000) % 60)
+    };
+    cells.forEach(e => { if (e.textContent !== v[e.dataset.cd]) e.textContent = v[e.dataset.cd]; });
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+// Timers are throttled in a background tab; recompute as soon as the page is visible again.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) startCountdown(); });
 
 // A <video> injected via innerHTML doesn't always pick up the muted PROPERTY from its attribute,
 // and browsers refuse autoplay for anything not muted. Set it explicitly, then start playback —

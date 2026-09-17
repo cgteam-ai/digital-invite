@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#15121f">
+<title>Graduation Party</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Archivo Black for the loud headlines, Archivo for text, Space Mono for the little labels. -->
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * NEXT CHAPTER — a modern, youthful graduation party.
+   * Near-black with a violet-to-orange gradient that slowly shifts, chunky black type, a degree
+   * "progress bar" that fills to 100% on load, gradient-bordered tilted photo and countdown tiles,
+   * bookmark-tabbed sections and a bright reply card. Energetic, but clean.
+   */
+  :root {
+    --black:  #15121f;
+    --black-2:#1e1a2c;
+    --paper:  #f7f5ff;
+    --violet: #6c2bd9;
+    --magenta:#ff3d81;
+    --orange: #ff8a3d;
+    --lime:   #c6ff4d;
+    --muted:  rgba(247,245,255,.66);
+    --line:   rgba(247,245,255,.14);
+    --grad:   linear-gradient(110deg, var(--violet), var(--magenta) 50%, var(--orange));
+    --display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+    --sans:    'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --mono:    'Space Mono', ui-monospace, Menlo, monospace;
+    --pad: clamp(18px, 5.5vw, 48px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { background: var(--black); color: var(--paper); font-family: var(--sans); font-size: 16px; line-height: 1.55; -webkit-tap-highlight-color: transparent; }
+  img, video, svg { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .wrap { width: min(100%, 1040px); margin: 0 auto; padding: 0 var(--pad); }
+  .sec { position: relative; padding: clamp(50px, 11vw, 96px) 0; }
+  .mono { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .big { font-family: var(--display); text-transform: uppercase; line-height: .95; letter-spacing: -.01em; font-size: calc(clamp(2rem, 9vw, 4rem) * var(--fit, 1)); margin-top: 10px; }
+  .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  /* Bookmark tab that hangs off the left of a section heading. */
+  .bookmark { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 14px; background: var(--grad); color: #fff; font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+              clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%); }
+  /* Gradient border trick: a padded gradient box with a dark inner box. */
+  .gb { position: relative; padding: 3px; background: var(--grad); border-radius: 22px; }
+  .gb > .in { background: var(--black-2); border-radius: 19px; height: 100%; }
+
+  .rv { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .8s cubic-bezier(.2,1.2,.3,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ── HERO ── */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; overflow: hidden; padding: calc(env(safe-area-inset-top) + 20px) 0 50px; }
+  .beam { position: absolute; left: -20%; right: -20%; top: 38%; height: 34%; background: var(--grad); background-size: 200% 100%; rotate: -8deg; opacity: .9; z-index: 0; animation: shift 12s ease-in-out infinite alternate; }
+  @keyframes shift { to { background-position: 100% 0; } }
+  .hero .wrap { position: relative; z-index: 1; }
+  .topbar { display: flex; justify-content: space-between; gap: 12px; margin-bottom: clamp(30px, 8vw, 60px); }
+  .hero-grid { display: grid; gap: 26px; align-items: center; }
+  .class-tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--paper); color: var(--black); font-family: var(--mono); font-weight: 700; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; rotate: -3deg; max-width: 100%; }
+  .headline { font-family: var(--display); text-transform: uppercase; line-height: .9; letter-spacing: -.02em; font-size: calc(clamp(2.6rem, 13vw, 6.2rem) * var(--fit, 1)); margin-top: 16px; }
+  .headline .grad-text { display: block; }
+  .name { font-weight: 700; font-size: clamp(1.4rem, 6vw, 2.2rem); line-height: 1.15; margin-top: 14px; }
+  .degree { color: var(--muted); font-size: clamp(1rem, 4vw, 1.15rem); margin-top: 4px; max-width: 40ch; }
+  .progress { margin-top: 22px; max-width: 420px; }
+  .progress .lbl { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .progress .bar { margin-top: 8px; height: 12px; border-radius: 999px; background: rgba(247,245,255,.12); overflow: hidden; }
+  .progress .bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--grad); transition: width 2.2s cubic-bezier(.2,.8,.2,1) .4s; }
+  .is-ready .progress .bar i { width: 100%; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .chips span { display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); font-family: var(--mono); font-size: .72rem; max-width: 100%; }
+  .cta { display: inline-flex; align-items: center; gap: 10px; min-height: 56px; margin-top: 22px; padding: 0 26px; border-radius: 999px; background: var(--paper); color: var(--black); text-decoration: none; font-weight: 700; transition: transform .25s; }
+  .cta:hover { transform: translateY(-2px); }
+  .frame { width: min(64vw, 300px); margin: 0 auto; rotate: 4deg; }
+  .frame .ph { aspect-ratio: 4 / 5; overflow: hidden; border-radius: 19px; background: var(--black-2); display: grid; place-items: center; }
+  .frame .ph img, .frame .ph video { width: 100%; height: 100%; object-fit: cover; }
+  .frame .ph .yr { font-family: var(--display); font-size: clamp(4rem, 18vw, 7rem); line-height: 1; color: var(--paper); }
+  .hero-in > * { opacity: 0; transform: translateY(16px); transition: opacity .8s ease, transform .9s cubic-bezier(.2,1.2,.3,1); }
+  .is-ready .hero-in > * { opacity: 1; transform: none; }
+  .hero-in > *:nth-child(2) { transition-delay: .15s; } .hero-in > *:nth-child(3) { transition-delay: .3s; } .hero-in > *:nth-child(n+4) { transition-delay: .45s; }
+  @media (min-width: 880px) { .hero-grid { grid-template-columns: 1.25fr .75fr; gap: 50px; } .frame { margin: 0 0 0 auto; width: 100%; max-width: 340px; } }
+
+  /* ── COUNTDOWN TILES ── */
+  .cd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+  @media (min-width: 640px) { .cd { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .cd-cell { padding: 3px; background: var(--grad); border-radius: 22px; min-width: 0; }
+  .cd-cell > * { display: block; }
+  .cd-num { padding: clamp(18px, 5vw, 28px) 10px 0; background: var(--black-2); border-radius: 19px 19px 0 0; text-align: center; font-family: var(--display); font-size: clamp(2.6rem, 12vw, 4.2rem); line-height: 1; font-variant-numeric: tabular-nums; }
+  .cd-unit { padding: 6px 10px clamp(16px, 4vw, 22px); background: var(--black-2); border-radius: 0 0 19px 19px; text-align: center; font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .cd-note { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.8rem, 8vw, 3rem); line-height: 1; grid-column: 1 / -1; }
+  .cd-meta { margin-top: 18px; color: var(--muted); }
+
+  /* ── PLACES ── */
+  .places { display: grid; gap: 18px; margin-top: 28px; }
+  @media (min-width: 760px) { .places { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
+  .place .in { padding: 22px; }
+  .place figure { margin: -22px -22px 18px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 19px 19px 0 0; }
+  .place figure img { width: 100%; height: 100%; object-fit: cover; }
+  .place h3 { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.4rem, 6vw, 1.9rem); line-height: 1; margin-top: 8px; overflow-wrap: anywhere; }
+  .place p { color: var(--muted); overflow-wrap: anywhere; }
+  .place .time { color: var(--lime); font-family: var(--mono); font-size: .8rem; margin-top: 6px; }
+  .go { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 14px; padding: 0 18px; border-radius: 999px; background: var(--paper); color: var(--black); font-weight: 700; text-decoration: none; }
+
+  /* ── THE PLAN: steps on a gradient rail ── */
+  .steps { list-style: none; position: relative; margin-top: 30px; padding-left: 34px; }
+  .steps::before { content: ''; position: absolute; left: 10px; top: 8px; bottom: 8px; width: 4px; border-radius: 4px; background: var(--grad); }
+  .steps li { position: relative; padding: 0 0 26px; }
+  .steps li::before { content: ''; position: absolute; left: -32px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--black); border: 4px solid var(--magenta); }
+  .steps .t { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; color: var(--lime); }
+  .steps h3 { font-weight: 700; font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
+  .steps h3 .ic { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; margin-right: 6px; }
+  .steps p { color: var(--muted); }
+  .steps a { color: var(--orange); font-weight: 600; }
+  @media (min-width: 760px) {
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 40px 0 0; }
+    .steps::before { left: 0; right: 0; top: 8px; bottom: auto; height: 4px; width: auto; }
+    .steps li { padding: 0; } .steps li::before { left: 0; top: -40px; }
+  }
+
+  /* ── NOTES & GALLERY ── */
+  .notes { display: grid; gap: 18px; margin-top: 28px; }
+  @media (min-width: 760px) { .notes { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .note .in { padding: 22px; }
+  .note h3 { font-family: var(--display); text-transform: uppercase; font-size: 1.5rem; line-height: 1; margin-top: 8px; overflow-wrap: anywhere; }
+  .note p { color: var(--muted); margin-top: 8px; }
+  .note figure { margin: 12px 0; border-radius: 14px; overflow: hidden; }
+  .acct { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .acct span { overflow-wrap: anywhere; }
+  .copy { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--paper); color: var(--black); font-weight: 700; cursor: pointer; }
+  .tilt { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 4vw, 26px); margin-top: 30px; }
+  @media (min-width: 760px) { .tilt { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .tilt figure { padding: 3px; background: var(--grad); border-radius: 16px; }
+  .tilt figure:nth-child(2n) { rotate: 2deg; } .tilt figure:nth-child(2n+1) { rotate: -2deg; }
+  .tilt img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 13px; }
+
+  /* ── RSVP ── */
+  .reply-sec { background: linear-gradient(180deg, var(--black), #241c3a); }
+  .card { max-width: 600px; margin: 28px auto 0; padding: clamp(24px, 6vw, 40px); border-radius: 26px; background: var(--paper); color: var(--black); box-shadow: 0 30px 70px rgba(0,0,0,.45); }
+  .card h2 { font-family: var(--display); text-transform: uppercase; font-size: clamp(2rem, 9vw, 3.2rem); line-height: .95; }
+  .card .desc { color: rgba(21,18,31,.68); margin-top: 10px; }
+  .card .notes-line { margin-top: 8px; font-family: var(--mono); font-size: .72rem; text-transform: uppercase; color: var(--violet); }
+  .rsvp { display: grid; gap: 14px; margin-top: 22px; }
+  .rsvp-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rsvp-choice { position: relative; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 60px; padding: 8px 10px; border-radius: 16px; cursor: pointer;
+                 border: 2px solid var(--black); font-weight: 700; line-height: 1.15; transition: background .25s, color .25s, transform .25s cubic-bezier(.2,1.4,.4,1); }
+  .rsvp-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .rsvp-choice.on { background: var(--black); color: var(--lime); transform: rotate(-1.5deg) scale(1.03); }
+  .rsvp-choice:nth-child(2).on { color: var(--orange); transform: rotate(1.5deg) scale(1.03); }
+  .rsvp-choice:focus-within { outline: 3px solid var(--magenta); outline-offset: 3px; }
+  .rsvp-field { display: grid; gap: 6px; }
+  .rsvp-label { font-family: var(--mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: rgba(21,18,31,.6); }
+  .rsvp-input { width: 100%; min-height: 54px; padding: 12px 16px; border: 2px solid rgba(21,18,31,.18); border-radius: 14px; background: #fff; color: var(--black); font-size: 16px; }
+  textarea.rsvp-input { resize: none; min-height: 90px; }
+  .rsvp-input::placeholder { color: rgba(21,18,31,.4); }
+  .rsvp-input:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 4px rgba(108,43,217,.18); }
+  .rsvp-error { color: #c4144f; font-weight: 700; }
+  .rsvp-submit { min-height: 60px; border: 0; border-radius: 999px; cursor: pointer; background: var(--grad); background-size: 200% 100%; color: #fff; font-weight: 700; font-size: 1.1rem; transition: background-position .6s ease, transform .2s; }
+  .rsvp-submit:hover { background-position: 100% 0; }
+  .rsvp-submit:active { transform: scale(.98); }
+  .rsvp-done { margin-top: 20px; }
+  .rsvp-done-title { font-family: var(--display); text-transform: uppercase; font-size: clamp(2rem, 9vw, 3rem); line-height: .95; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .rsvp-done-body { color: rgba(21,18,31,.7); margin-top: 8px; }
+  .contact { margin-top: 24px; padding-top: 18px; border-top: 2px dashed rgba(21,18,31,.15); }
+  .contact-intro { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; color: rgba(21,18,31,.6); }
+  .contact-name { font-weight: 700; font-size: 1.4rem; }
+  .contact-phone { color: rgba(21,18,31,.7); }
+  .contact-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .contact-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--black); font-weight: 700; text-decoration: none; }
+  .contact-link:hover { background: var(--black); color: var(--paper); }
+
+  footer { padding: 40px var(--pad) calc(env(safe-area-inset-bottom) + 70px); text-align: center; }
+  footer p { font-family: var(--display); text-transform: uppercase; line-height: .95; font-size: calc(clamp(2.4rem, 12vw, 6rem) * var(--fit, 1)); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .rv, .hero-in > * { opacity: 1; transform: none; transition: none; }
+    .progress .bar i { width: 100%; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-core.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+<script>
+const DEFAULT_DATA = {
+  template: 'next-chapter',
+  title: 'Graduation Party',
+  cover: {
+    enabled: true, headline: 'The next chapter starts now', eventLabel: 'Class of 2026', names: 'Name',
+    tagline: '', greeting: 'Hey', hostIntro: 'Just graduated', hostOutro: '', hostText: 'Degree · University',
+    image: '', video: '', buttonText: "I'll be there"
+  },
+  countdown: { enabled: true, label: 'Party in', date: '', time: '', tzOffset: null, description: '', image: '' },
+  families:  { enabled: false, label: 'Big thanks to', title: '', items: [] },
+  locations: { enabled: true, label: 'Where', title: 'The venue', image: '', items: [
+    { label: 'Grad party', time: '', name: '', addr: '', url: '', img: '' }
+  ] },
+  timeline:  { enabled: true, label: 'The plan', title: 'How the night goes', items: [] },
+  gallery:   { enabled: false, label: 'Highlights', title: 'The highlights', items: [] },
+  gifts:     { enabled: false, label: 'Gifts', title: 'Grad fund', description: '', image: '', items: [] },
+  rsvp: {
+    enabled: true, label: 'RSVP', title: 'Are you coming?', description: '',
+    deadline: '', maxPeople: 4, buttonText: 'Send it', allowWishes: true, image: '',
+    contactName: '', contactPhone: '', contactLink: ''
+  },
+  memories: { enabled: false, title: '', description: '', url: '', buttonText: '' },
+  music:    { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+const I = Invite, esc = I.esc;
+const R = (cls, extra) => `class="${cls ? cls + ' ' : ''}rv"${extra ? ' ' + extra : ''}`;
+/** The last word of the headline in gradient, on its own line. */
+function headline(s) {
+  const w = String(s || '').trim().split(/\s+/);
+  if (w.length < 2) return `<span class="grad-text">${esc(s)}</span>`;
+  return `${esc(w.slice(0, -1).join(' '))}<span class="grad-text">${esc(w[w.length - 1])}</span>`;
+}
+
+function hero(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const name = c.names || data.title || '';
+  const dp = I.dateParts(cd);
+  const year = I.numberIn(c.eventLabel) || (dp ? String(dp.y) : '');
+  const place = ((data.locations || {}).items || []).find(x => x && x.name);
+  const guest = I.guestName();
+  const photo = I.media(c.image, c.video, name, true);
+  return `
+  <section class="hero">
+    <div class="beam" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="topbar mono"><span>${guest ? esc(`${c.greeting || 'Hey'} ${guest}`) : "You're invited"}</span><span>${dp ? `${I.pad2(dp.d)} / ${I.pad2(dp.mo)} / ${dp.y}` : ''}</span></div>
+      <div class="hero-grid">
+        <div class="hero-in">
+          <span class="class-tag">🎓 ${esc(c.eventLabel || 'Graduation')}</span>
+          <h1 class="headline" data-fit=".4">${headline(c.headline || 'The next chapter starts now')}</h1>
+          <p class="name">${esc(name)}</p>
+          ${c.hostIntro || c.hostText ? `<p class="degree">${esc(c.hostIntro || '')}${c.hostIntro && c.hostText ? ' · ' : ''}${I.nl2br(c.hostText || '')}</p>` : ''}
+          <div class="progress" aria-hidden="true"><div class="lbl"><span>Degree progress</span><span>100%</span></div><div class="bar"><i></i></div></div>
+          <div class="chips">
+            ${dp ? `<span>${esc(dp.weekdayShort)} ${dp.d} ${esc(dp.monthShort)}</span>` : ''}
+            ${cd.time ? `<span>${esc(I.fmtClock(cd.time))}</span>` : ''}
+            ${place ? `<span>${esc(place.name)}</span>` : ''}
+          </div>
+          <a class="cta" href="#rsvp">${esc(c.buttonText || "I'll be there")} <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="frame gb"><div class="ph in">${photo || `<span class="yr">${esc(year.slice(-2) || '🎓')}</span>`}</div></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function countdown(data) {
+  const cd = data.countdown || {};
+  if (cd.enabled === false) return '';
+  const target = I.eventInstant(cd);
+  const dp = I.dateParts(cd);
+  return `
+  <section class="sec">
+    <div class="wrap">
+      <span ${R('bookmark')}>${esc(cd.label || 'Party in')}</span>
+      <h2 ${R('big')} data-fit>${dp ? `${esc(dp.weekday)} <span class="grad-text">${dp.d} ${esc(dp.monthShort)}</span>` : 'Date coming soon'}</h2>
+      ${target !== null ? `<div ${R('cd')} data-countdown="${target}" data-past-today="It's tonight." data-past-after="That was a night. Thank you.">${I.countdownCells()}</div>` : ''}
+      ${cd.time || cd.description ? `<p ${R('cd-meta')}>${[cd.time ? 'Doors at ' + esc(I.fmtClock(cd.time)) : '', esc(cd.description || '')].filter(Boolean).join(' · ')}</p>` : ''}
+    </div>
+  </section>`;
+}
+
+function places(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.addr || x.label));
+  if (l.enabled === false || !items.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <span ${R('bookmark')}>${esc(l.label || 'Where')}</span>
+      <h2 ${R('big')} data-fit>${esc(l.title || 'The venue')}</h2>
+      <div class="places">
+        ${items.map(x => `
+          <article ${R('place gb')}><div class="in">
+            ${x.img ? `<figure>${I.img(x.img, x.name)}</figure>` : ''}
+            ${x.label ? `<p class="mono">${esc(x.label)}</p>` : ''}
+            ${x.name ? `<h3>${esc(x.name)}</h3>` : ''}
+            ${x.addr ? `<p>${I.nl2br(x.addr)}</p>` : ''}
+            ${x.time ? `<p class="time">${esc(x.time)}</p>` : ''}
+            ${x.url ? `<a class="go" href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Directions →</a>` : ''}
+          </div></article>`).join('')}
+      </div>
+    </div>
+  </section>`;
+}
+
+function plan(data) {
+  const t = data.timeline || {};
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (t.enabled === false || !items.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <span ${R('bookmark')}>${esc(t.label || 'The plan')}</span>
+      <h2 ${R('big')} data-fit>${esc(t.title || 'How the night goes')}</h2>
+      <ol class="steps">
+        ${items.map(x => `
+          <li ${R()}>
+            ${x.time ? `<p class="t">${esc(x.time)}</p>` : ''}
+            <h3>${I.stepIcon(x) ? `<span class="ic" aria-hidden="true">${esc(I.stepIcon(x))}</span>` : ''}${esc(x.title || '')}</h3>
+            ${x.subtitle ? `<p>${esc(x.subtitle)}</p>` : ''}
+            ${x.url ? `<p><a href="${esc(I.mapHref(x.url))}" target="_blank" rel="noopener">Map ↗</a></p>` : ''}
+          </li>`).join('')}
+      </ol>
+    </div>
+  </section>`;
+}
+
+function extras(data) {
+  const c = data.cover || {}, f = data.families || {}, g = data.gifts || {}, gl = data.gallery || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const cards = [];
+  (data.customSections || []).filter(s => s && s.enabled !== false && (s.title || s.body)).forEach(s => cards.push(`
+    <div ${R('note gb')}><div class="in">
+      ${s.label ? `<p class="mono">${esc(s.label)}</p>` : ''}
+      ${s.title ? `<h3>${esc(s.title)}</h3>` : ''}
+      ${s.image ? `<figure>${I.img(s.image, s.title)}</figure>` : ''}
+      ${s.body ? `<p>${I.nl2br(s.body)}</p>` : ''}
+    </div></div>`));
+  if (fams.length || c.hostOutro) cards.push(`
+    <div ${R('note gb')}><div class="in">
+      <p class="mono">${esc(f.label || 'Big thanks to')}</p>
+      ${fams.map(x => `<h3>${esc(x.names || '')}</h3>${x.label ? `<p>${esc(x.label)}</p>` : ''}`).join('')}
+      ${c.hostOutro ? `<p>${I.nl2br(c.hostOutro)}</p>` : ''}
+    </div></div>`);
+  const accounts = (g.items || []).filter(x => x && x.account);
+  if (g.enabled !== false && (accounts.length || g.description)) cards.push(`
+    <div ${R('note gb')}><div class="in">
+      <p class="mono">${esc(g.label || 'Gifts')}</p>
+      <h3>${esc(g.title || 'Grad fund')}</h3>
+      ${g.description ? `<p>${I.nl2br(g.description)}</p>` : ''}
+      ${accounts.map(x => `<div class="acct"><span><b>${esc(x.bank || 'Account')}</b> · ${esc(x.account)}</span><button type="button" class="copy" data-copy="${esc(x.account)}">Copy</button></div>`).join('')}
+    </div></div>`);
+  const photos = (gl.enabled !== false ? (gl.items || []) : []).filter(x => x && x.url).slice(0, 8);
+  if (!cards.length && !photos.length) return '';
+  return `
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      ${cards.length ? `<span ${R('bookmark')}>Good to know</span><div class="notes">${cards.join('')}</div>` : ''}
+      ${photos.length ? `
+        <div style="margin-top:${cards.length ? 60 : 0}px"><span ${R('bookmark')}>${esc(gl.label || 'Highlights')}</span>
+        ${gl.title ? `<h2 ${R('big')} data-fit>${esc(gl.title)}</h2>` : ''}</div>
+        <div class="tilt">${photos.map(x => `<figure ${R()}>${I.img(x.url, x.caption || 'Photo')}</figure>`).join('')}</div>` : ''}
+    </div>
+  </section>`;
+}
+
+function rsvp(data) {
+  const r = data.rsvp || {};
+  if (r.enabled === false) return '';
+  return `
+  <section class="sec reply-sec" id="rsvp">
+    <div class="wrap">
+      <span ${R('bookmark')}>${esc(r.label || 'RSVP')}</span>
+      <div ${R('card')}>
+        <h2>${esc(r.title || 'Are you coming?')}</h2>
+        ${r.description ? `<p class="desc">${I.nl2br(r.description)}</p>` : ''}
+        ${I.rsvpNotes(r).map(n => `<p class="notes-line">${esc(n)}</p>`).join('')}
+        ${I.rsvpForm(r, {
+          yes: '100% yes', no: 'Next time',
+          nameLabel: 'Your name', namePlaceholder: 'First and last name',
+          countLabel: 'How many of you', wishesLabel: 'Congrats message (optional)',
+          wishesPlaceholder: 'You did it!', button: r.buttonText || 'Send it',
+          doneTitle: "You're in"
+        })}
+        ${I.contactHtml(r, { intro: 'Questions? Ask' })}
+      </div>
+    </div>
+  </section>`;
+}
+
+function build(data) {
+  const c = data.cover || {};
+  const name = c.names || data.title || '';
+  document.title = `${c.headline || name} — Graduation Party`;
+  document.getElementById('app').innerHTML = [
+    c.enabled !== false ? hero(data) : '',
+    countdown(data), places(data), plan(data), extras(data), rsvp(data),
+    `<footer><p data-fit>See you <span class="grad-text">there</span></p></footer>`
+  ].join('');
+}
+
+Invite.boot(build, DEFAULT_DATA);
+</script>
+</body>
+</html>

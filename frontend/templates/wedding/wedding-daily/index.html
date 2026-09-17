@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Two families only. Playfair Display carries the whole paper — headlines, body and the masthead
+     nameplate — and Lobster Two Bold Italic is the script, matching the reference's heavy,
+     high-contrast retro brush. The blackletter that the reference used for its nameplate was tried
+     in three variants (UnifrakturMaguntia, UnifrakturCook, Old English Text MT) and dropped: it
+     never became comfortably readable, least of all set in capitals on a phone.
+     Only the weights actually used are requested, so the page pulls fewer font files. -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500;1,700&family=Lobster+Two:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * WEDDING DAILY — newspaper front page.
+   *
+   * Type is sized from --pw (the printed "page width") rather than from vw, so the layout keeps
+   * the reference design's proportions on a phone AND stops growing once the page reaches its
+   * 880px maximum on a laptop/desktop. The max()/clamp() guards keep the smallest labels legible
+   * on narrow phones, where a straight proportional scale would drop them below ~9px.
+   */
+  :root {
+    --paper:     #eeece8;   /* warm newsprint */
+    --paper-alt: #e7e4de;   /* boxes / map tile ground */
+    --ink:       #2b2a27;   /* headline black */
+    --ink-soft:  #55524d;   /* secondary copy */
+    --rule:      #2b2a27;
+    --accent:    #b23b2e;   /* map pin only — the page is otherwise monochrome */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* overflow-x on <body> alone is ignored by mobile browsers when <html> can still scroll, which
+     is what lets a page be dragged sideways on a phone. `hidden` would fix that but it also turns
+     <html> into a scroll container, and a sticky child then sticks to THAT instead of the viewport
+     — which detached the masthead. `clip` suppresses the sideways drag without creating the
+     scroll container, so the masthead keeps sticking; `hidden` stays as the fallback. */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    line-height: 1.5;
+    /* No -webkit-font-smoothing:antialiased here on purpose: it thins every stroke on macOS/iOS,
+       which is the last thing a blackletter masthead and a high-contrast Didone need. */
+  }
+  img, video { max-width: 100%; display: block; }
+
+  /* ── PAGE ─────────────────────────────────────────────── */
+  .paper {
+    --pw: min(100vw, 880px);
+    width: min(100%, 880px);
+    margin: 0 auto;
+    padding: 0 calc(var(--pw) * .037);
+    position: relative;
+  }
+  /* Suggestion of the paper's edges once there is room beside it. */
+  @media (min-width: 940px) {
+    body { background: #e6e3dd; }
+    .paper { background: var(--paper); box-shadow: 0 0 0 1px rgba(43,42,39,.12), 0 18px 60px rgba(43,42,39,.10); }
+  }
+
+  /* ── RULES ────────────────────────────────────────────── */
+  .rule        { border-top: max(1px, calc(var(--pw) * .0018)) solid var(--rule); }
+  .rule-thick  { border-top: max(2px, calc(var(--pw) * .0033)) solid var(--rule); }
+  .rule-double { padding-top: max(3px, calc(var(--pw) * .006)); }
+  .rule-double > i { display: block; border-top: max(1px, calc(var(--pw) * .0018)) solid var(--rule); }
+
+  /* ── MASTHEAD (sticky: the reference repeats it on every page) ──
+     The masthead keeps ONE size at every scroll position. It used to shrink on scroll, but
+     font-size and padding are layout properties — animating them re-laid out the sticky header
+     and everything under it on every frame for the length of the transition, which is what made
+     scrolling past the masthead stutter. A constant size is also what the reference does, since
+     it reprints the masthead at full size on each page.
+     will-change + contain keep the header on its own compositor layer, so scrolling content
+     underneath it does not repaint it. */
+  .masthead {
+    position: sticky; top: 0; z-index: 30;
+    background: var(--paper);
+    padding: calc(var(--pw) * .022) 0 0;
+    will-change: transform;
+    contain: layout paint;
+  }
+  /* The masthead is set in the page's own Didone rather than in blackletter. Blackletter is what
+     the Canva reference used, but it was tried in three variants here and stayed hard to read —
+     worst of all in capitals, where its capitals are barely distinguishable from one another. A
+     heavy high-contrast serif, widely letterspaced between rules, is the other classic broadsheet
+     nameplate and it reads instantly at any size. It also costs no extra download: this is the
+     face the headlines already use. */
+  .masthead-title {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-weight: 900;
+    font-size: clamp(21px, calc(var(--pw) * .069), 62px);
+    line-height: 1.16;
+    text-align: center;
+    letter-spacing: .06em;
+    text-rendering: optimizeLegibility;
+    padding: calc(var(--pw) * .019) 0 calc(var(--pw) * .014);
+    overflow-wrap: break-word;
+  }
+  .masthead-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: calc(var(--pw) * .02);
+    padding: calc(var(--pw) * .014) 0;
+    font-size: max(9px, calc(var(--pw) * .0232));
+    font-style: italic; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .masthead-bar > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .masthead-bar .mb-mid { font-weight: 700; }
+  .ast { width: max(10px, calc(var(--pw) * .026)); height: max(10px, calc(var(--pw) * .026)); flex: none; color: var(--ink); }
+
+  /* ── SECTIONS ─────────────────────────────────────────── */
+  .sheet { padding: calc(var(--pw) * .055) 0 calc(var(--pw) * .05); }
+  .sheet-end { padding-top: calc(var(--pw) * .012); }
+
+  /* ── FRAMED PHOTOGRAPHY (always monochrome, as in the reference) ──
+     Every photo slot is a fixed-ratio box that the picture fills with object-fit:cover, so an
+     upload can never stretch, distort, overflow or leave a gap whatever its dimensions. The ratio
+     below is only the starting point used before the file has loaded (it reserves the right space
+     so nothing jumps); fitFrames() then re-points the box at the picture's OWN ratio, clamped to
+     the range in data-fit. That is what stops a portrait being guillotined into a letterbox: the
+     frame becomes portrait too, and cover then has almost nothing left to crop. */
+  .frame {
+    position: relative; width: 100%;
+    border: max(1px, calc(var(--pw) * .002)) solid var(--ink);
+    background: var(--paper-alt);
+    overflow: hidden;
+    /* The grayscale filter is the expensive part of painting these. Containing each frame stops a
+       repaint inside it from invalidating the rest of the page while the reader scrolls. */
+    contain: layout paint;
+  }
+  .frame > img, .frame > video {
+    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    /* Slightly above centre: when a tall picture still has to lose a little, it is better to take
+       it off the feet than off the faces. */
+    object-position: center 42%;
+    filter: grayscale(1) contrast(1.06);
+  }
+  .frame-lead   { aspect-ratio: 5 / 6; }
+  .frame-couple { aspect-ratio: 16 / 7; }
+  .frame-venue  { aspect-ratio: 1 / 1; }
+  .frame-rsvp   { aspect-ratio: 16 / 9; }
+  .frame-wide   { aspect-ratio: 16 / 9; }
+  .frame-half   { aspect-ratio: 4 / 3; }
+  @media (min-width: 760px) {
+    .frame-lead   { aspect-ratio: 4 / 3; }
+    .frame-couple { aspect-ratio: 21 / 8; }
+  }
+  .caption {
+    font-size: max(9px, calc(var(--pw) * .0215));
+    font-style: italic; color: var(--ink-soft);
+    padding-top: calc(var(--pw) * .012);
+    text-align: center;
+  }
+
+  /* ── FRONT PAGE ───────────────────────────────────────── */
+  .headline {
+    font-weight: 900; text-transform: uppercase;
+    font-size: clamp(30px, calc(var(--pw) * .122), 108px);
+    line-height: 1.06; letter-spacing: -.012em;
+    text-align: center; text-wrap: balance;
+    margin-bottom: calc(var(--pw) * .04);
+    overflow-wrap: break-word;
+  }
+  .standfirst {
+    font-weight: 500; text-transform: uppercase;
+    font-size: max(11px, calc(var(--pw) * .0315));
+    line-height: 1.34; letter-spacing: .005em;
+    text-align: center; text-wrap: balance;
+    max-width: 88%; margin: 0 auto calc(var(--pw) * .04);
+  }
+
+  /* ── COUPLE ───────────────────────────────────────────── */
+  /* The reference sets the couple's names across the full measure of the page. How wide a script
+     face runs depends on the names themselves, so the size below is only a starting point:
+     fitNames() measures the rendered row and scales it to the reference proportion. */
+  .names {
+    text-align: center;
+    padding-bottom: calc(var(--pw) * .03);
+    --names-scale: 1;
+  }
+  .names-inner {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0 calc(var(--pw) * .022);
+    max-width: 100%;
+  }
+  /* Names too long for one line get a line each, with the ampersand centred between them. The
+     stagger is dropped there — it only reads as a stagger when the names sit side by side. */
+  .names-inner.wrapped { flex-wrap: wrap; }
+  .names-inner.wrapped > * { flex: 0 0 100%; }
+  .names-inner.wrapped .n1, .names-inner.wrapped .n2 { transform: none; }
+  .names-inner.wrapped .amp { line-height: 1; }
+  .names .n {
+    font-family: 'Lobster Two', 'Yellowtail', 'Brush Script MT', cursive;
+    font-weight: 700; font-style: italic;
+    font-size: calc(clamp(30px, calc(var(--pw) * .097), 86px) * var(--names-scale));
+    line-height: 1.24;
+    overflow-wrap: anywhere;
+  }
+  /* The reference staggers the two names around an oversized ampersand. */
+  .names .n1 { transform: translateY(calc(var(--pw) * -.016)); }
+  .names .n2 { transform: translateY(calc(var(--pw) * .016)); }
+  .names .amp {
+    font-family: 'Lobster Two', 'Yellowtail', cursive;
+    font-weight: 700; font-style: italic;
+    font-size: calc(clamp(46px, calc(var(--pw) * .168), 148px) * var(--names-scale));
+    line-height: .9;
+  }
+  .byline {
+    text-align: center; color: var(--ink-soft);
+    font-size: max(10px, calc(var(--pw) * .0245));
+    font-style: italic;
+    padding-bottom: calc(var(--pw) * .03);
+  }
+  .byline b { font-style: normal; font-weight: 700; color: var(--ink); }
+  /* One family per line — a run-on line of both sets of parents is unreadable on a phone. */
+  .byline-row { display: block; }
+  .dateline {
+    text-align: center;
+    font-size: max(10px, calc(var(--pw) * .0245));
+    text-transform: uppercase; letter-spacing: .16em;
+    color: var(--ink-soft);
+    padding-top: calc(var(--pw) * .026);
+  }
+
+  /* ── SAVE THE DATE ────────────────────────────────────────
+     The wedding day set as a dated newspaper slug line. It is deliberately independent of the
+     counter below it: the date is the thing guests come back to check, so it stays on the page
+     whether the wedding is years away, tomorrow, or already past. */
+  .datepanel { text-align: center; padding-top: calc(var(--pw) * .01); }
+  .dp-weekday {
+    font-size: max(10px, calc(var(--pw) * .026));
+    text-transform: uppercase; letter-spacing: .3em;
+    color: var(--ink-soft);
+    padding-bottom: calc(var(--pw) * .012);
+  }
+  .dp-date {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(34px, calc(var(--pw) * .115), 100px);
+    line-height: 1; letter-spacing: -.02em;
+  }
+  .dp-time {
+    font-style: italic;
+    font-size: max(11px, calc(var(--pw) * .0305));
+    color: var(--ink);
+    padding-top: calc(var(--pw) * .016);
+  }
+
+  /* ── COUNTDOWN ────────────────────────────────────────────
+     Set as a newspaper stock-listing strip: ruled cells, Didone figures, small-caps labels.
+     Tabular figures stop the numbers jittering sideways as the seconds tick over. */
+  .countdown {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    margin-top: calc(var(--pw) * .03);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .cd-cell {
+    text-align: center;
+    padding: calc(var(--pw) * .022) calc(var(--pw) * .004);
+    border-left: 1px solid rgba(43,42,39,.28);
+  }
+  .cd-cell:first-child { border-left: none; }
+  .cd-num {
+    display: block;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+    font-size: clamp(20px, calc(var(--pw) * .058), 52px);
+    line-height: 1.05; letter-spacing: -.02em;
+  }
+  .cd-label {
+    display: block;
+    font-size: max(9px, calc(var(--pw) * .0195));
+    text-transform: uppercase; letter-spacing: .12em;
+    color: var(--ink-soft);
+    padding-top: calc(var(--pw) * .008);
+  }
+  /* The closing message replaces the four cells inside the same grid, so it has to be told to span
+     the whole row — otherwise it is laid out in the first column and reads as a stray quarter-width
+     line hanging off the left edge. */
+  .cd-past {
+    grid-column: 1 / -1;
+    text-align: center; font-style: italic;
+    font-size: max(11px, calc(var(--pw) * .0285));
+    color: var(--ink-soft);
+    padding: calc(var(--pw) * .022) 0;
+  }
+  /* Shown instead of a broken or empty counter while no wedding date has been configured yet. */
+  .countdown-empty {
+    margin-top: calc(var(--pw) * .03);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: calc(var(--pw) * .028) calc(var(--pw) * .02);
+    text-align: center; font-style: italic;
+    font-size: max(11px, calc(var(--pw) * .0285));
+    color: var(--ink-soft);
+  }
+
+  /* ── DETAILS (date · venue · map) ──────────────────────── */
+  .detail { padding-top: calc(var(--pw) * .05); }
+  .detail:first-child { padding-top: 0; }
+  /* Text beside the map at every width, and alternating sides between locations, as the
+     reference does. Only a very narrow phone stacks them. */
+  .detail-row {
+    display: grid;
+    grid-template-columns: 1fr .82fr;
+    gap: calc(var(--pw) * .028);
+    align-items: center;
+    padding-top: calc(var(--pw) * .035);
+  }
+  .detail-row.flip .detail-text { order: 2; text-align: right; }
+  .detail-row.flip .map { order: 1; }
+  @media (max-width: 359px) {
+    .detail-row, .detail-row.flip { grid-template-columns: 1fr; }
+    .detail-row.flip .detail-text { order: 0; text-align: left; }
+  }
+  .detail-date {
+    font-weight: 700;
+    font-size: clamp(28px, calc(var(--pw) * .081), 72px);
+    line-height: 1.05; letter-spacing: -.015em;
+  }
+  .detail-label {
+    font-weight: 700; font-style: italic;
+    font-size: clamp(17px, calc(var(--pw) * .047), 42px);
+    line-height: 1.2;
+    padding-top: calc(var(--pw) * .008);
+  }
+  /* The venue name is set the way the reference sets its venue line: the same Didone italic as
+     the rest of the block, but at the heavier weight, so it reads as the second headline of the
+     entry rather than as part of the address underneath it. */
+  .detail-venue {
+    font-weight: 700; font-style: italic;
+    font-size: clamp(15px, calc(var(--pw) * .041), 36px);
+    line-height: 1.24;
+    letter-spacing: -.005em;
+  }
+  .detail-addr {
+    font-style: italic;
+    font-size: clamp(13px, calc(var(--pw) * .036), 32px);
+    line-height: 1.28;
+    color: var(--ink-soft);
+  }
+  .detail-time {
+    display: inline-block;
+    margin-top: calc(var(--pw) * .014);
+    font-size: max(10px, calc(var(--pw) * .0245));
+    text-transform: uppercase; letter-spacing: .14em;
+    border-top: 1px solid var(--rule);
+    padding-top: calc(var(--pw) * .01);
+  }
+
+  /* Map tile — a newsprint stand-in for the reference's pasted map screenshot. It links out to
+     the location's Maps URL, which is the field the admin editor already provides. */
+  .map {
+    display: block; position: relative;
+    border: max(1px, calc(var(--pw) * .002)) solid var(--ink);
+    background: var(--paper-alt);
+    aspect-ratio: 4 / 3;
+    text-decoration: none; color: inherit;
+    overflow: hidden;
+  }
+  .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .map-head {
+    position: absolute; top: 5%; left: 4%; right: 4%;
+    background: #fbfaf8; border: 1px solid rgba(43,42,39,.25);
+    padding: 3% 4%; border-radius: 2px;
+    font-size: max(8px, calc(var(--pw) * .019));
+    line-height: 1.25;
+    text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+  }
+  .map-head b { font-weight: 700; }
+  .map-foot {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(251,250,248,.92);
+    border-top: 1px solid rgba(43,42,39,.2);
+    padding: 2.5% 4%;
+    font-size: max(8px, calc(var(--pw) * .0185));
+    text-transform: uppercase; letter-spacing: .12em;
+    text-align: center;
+    transition: background .25s ease, color .25s ease;
+  }
+  a.map:hover .map-foot { background: var(--ink); color: var(--paper); }
+
+  /* ── ORDER OF THE DAY ─────────────────────────────────── */
+  .kicker {
+    text-align: center;
+    font-size: max(9px, calc(var(--pw) * .0225));
+    text-transform: uppercase; letter-spacing: .22em;
+    color: var(--ink-soft);
+    padding-bottom: calc(var(--pw) * .012);
+  }
+  .sec-title {
+    text-align: center; font-weight: 900; text-transform: uppercase;
+    font-size: clamp(20px, calc(var(--pw) * .062), 56px);
+    line-height: 1.1; letter-spacing: -.01em;
+    padding-bottom: calc(var(--pw) * .03);
+    text-wrap: balance;
+  }
+  .sec-title-script {
+    font-family: 'Lobster Two', 'Yellowtail', cursive;
+    font-weight: 700; font-style: italic;
+    font-size: clamp(26px, calc(var(--pw) * .085), 74px);
+    line-height: 1.25; letter-spacing: 0;
+    text-transform: none;
+  }
+  .agenda { border-top: 1px solid var(--rule); }
+  .agenda-row {
+    display: grid; grid-template-columns: auto 1fr;
+    gap: calc(var(--pw) * .028);
+    align-items: baseline;
+    padding: calc(var(--pw) * .022) 0;
+    border-bottom: 1px solid rgba(43,42,39,.28);
+  }
+  .agenda-time {
+    font-weight: 700; white-space: nowrap;
+    font-size: max(12px, calc(var(--pw) * .032));
+  }
+  .agenda-title {
+    font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    font-size: max(11px, calc(var(--pw) * .028));
+  }
+  /* Emojis go grey here to stay in the page's black-and-white print. */
+  .agenda-ico { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; margin-right: .45em; filter: grayscale(1); }
+  .agenda-sub {
+    font-style: italic; color: var(--ink-soft);
+    font-size: max(10px, calc(var(--pw) * .0255));
+  }
+  .agenda-link {
+    display: inline-block; margin-top: calc(var(--pw) * .008);
+    font-size: max(9px, calc(var(--pw) * .0215));
+    text-transform: uppercase; letter-spacing: .14em;
+    color: var(--ink); text-decoration: none;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* ── ARTICLE (custom sections) ────────────────────────── */
+  .article-body {
+    font-size: max(12px, calc(var(--pw) * .0295));
+    line-height: 1.62;
+    text-align: justify; hyphens: auto;
+  }
+  .article-body::first-letter {
+    float: left; font-weight: 900; line-height: .82;
+    font-size: 3.1em; padding: .06em .1em 0 0;
+  }
+  @media (min-width: 720px) {
+    .article-body { column-count: 2; column-gap: calc(var(--pw) * .045); column-rule: 1px solid rgba(43,42,39,.25); }
+  }
+
+  /* ── RSVP ─────────────────────────────────────────────── */
+  .rsvp-head { text-align: center; padding-bottom: calc(var(--pw) * .03); }
+  .rsvp-kicker {
+    font-weight: 900; text-transform: uppercase;
+    font-size: clamp(22px, calc(var(--pw) * .087), 78px);
+    line-height: 1.02; letter-spacing: -.012em;
+    /* The reference breaks this over two lines with the script riding the lower one; the narrower
+       measure reproduces that break instead of leaving it to the exact metrics of one typeface. */
+    max-width: 86%; margin: 0 auto; text-wrap: balance;
+  }
+  /* The reference lets the script line ride over the last serif line. Reproduced with a negative
+     offset that scales with the page, so the relationship holds at every width. The overlap is
+     eased slightly against the original so both lines stay readable when the page is not moving. */
+  .rsvp-script {
+    position: relative; z-index: 2;
+    font-family: 'Lobster Two', 'Yellowtail', cursive;
+    font-weight: 700; font-style: italic;
+    font-size: clamp(30px, calc(var(--pw) * .118), 104px);
+    line-height: 1.1;
+    margin-top: calc(var(--pw) * -.036);
+    overflow-wrap: anywhere;
+  }
+  .greeting {
+    text-align: center; font-weight: 700; font-style: italic;
+    font-size: clamp(18px, calc(var(--pw) * .056), 50px);
+    line-height: 1.25;
+    padding: calc(var(--pw) * .038) 0 calc(var(--pw) * .018);
+    overflow-wrap: anywhere;
+  }
+  .rsvp-note {
+    text-align: center; font-weight: 700;
+    font-size: max(11px, calc(var(--pw) * .0305));
+    line-height: 1.45; max-width: 92%;
+    margin: 0 auto; text-wrap: balance;
+  }
+  .rsvp-deadline {
+    text-align: center; color: var(--ink-soft);
+    font-size: max(10px, calc(var(--pw) * .0245));
+    font-style: italic;
+    padding-top: calc(var(--pw) * .016);
+  }
+  .rsvp-form { padding-top: calc(var(--pw) * .045); }
+  .rsvp-question { text-align: center; padding-bottom: calc(var(--pw) * .022); }
+  .pills {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: calc(var(--pw) * .028);
+  }
+  .pill {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    min-height: max(44px, calc(var(--pw) * .094));
+    border: max(2px, calc(var(--pw) * .0033)) solid var(--ink);
+    border-radius: 999px; cursor: pointer;
+    font-size: max(11px, calc(var(--pw) * .028));
+    letter-spacing: .12em; font-weight: 500;
+    background: transparent; color: var(--ink);
+    transition: background .25s ease, color .25s ease;
+    text-align: center; padding: .4em .6em;
+  }
+  .pill input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .pill.on { background: var(--ink); color: var(--paper); }
+  .pill:focus-within { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .field { padding-top: calc(var(--pw) * .032); }
+  .field-label {
+    display: block;
+    font-size: max(9px, calc(var(--pw) * .0215));
+    text-transform: uppercase; letter-spacing: .18em;
+    color: var(--ink-soft);
+    padding-bottom: calc(var(--pw) * .008);
+  }
+  .rsvp-form input[type="text"], .rsvp-form select, .rsvp-form textarea {
+    width: 100%; padding: calc(var(--pw) * .018) 0;
+    background: transparent; border: none;
+    border-bottom: 1px solid var(--rule);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: max(14px, calc(var(--pw) * .032));
+    color: var(--ink);
+  }
+  .rsvp-form textarea { resize: none; }
+  .rsvp-form input:focus, .rsvp-form select:focus, .rsvp-form textarea:focus { outline: none; border-bottom-width: 2px; }
+  .rsvp-form input[readonly] { border-bottom-style: dashed; }
+  .rsvp-form select option { background: var(--paper); color: var(--ink); }
+  .btn-send {
+    width: 100%; margin-top: calc(var(--pw) * .045);
+    min-height: max(46px, calc(var(--pw) * .094));
+    background: var(--ink); color: var(--paper);
+    border: none; border-radius: 999px; cursor: pointer;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: max(11px, calc(var(--pw) * .028));
+    text-transform: uppercase; letter-spacing: .16em;
+    transition: opacity .25s ease;
+  }
+  .btn-send:hover { opacity: .85; }
+  .btn-send:disabled { opacity: .5; cursor: default; }
+  .stop-press {
+    display: none; margin-top: calc(var(--pw) * .035);
+    border: max(2px, calc(var(--pw) * .0033)) solid var(--ink);
+    padding: calc(var(--pw) * .045);
+    text-align: center;
+  }
+  .stop-press .sp-label {
+    font-size: max(9px, calc(var(--pw) * .0215));
+    text-transform: uppercase; letter-spacing: .22em;
+    color: var(--ink-soft);
+    padding-bottom: calc(var(--pw) * .014);
+  }
+  .stop-press .sp-body {
+    font-weight: 700; font-style: italic;
+    font-size: max(13px, calc(var(--pw) * .034));
+    line-height: 1.4;
+  }
+
+  /* ── PICTURE DESK (gallery) ───────────────────────────── */
+  .picture-desk { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--pw) * .026); }
+  .picture-desk .cell-wide { grid-column: span 2; }
+  /* Each plate keeps its own height rather than being stretched to match its neighbour, which is
+     what a grid item does by default — stretching would override the frame's aspect ratio and
+     reintroduce the distortion the ratio exists to prevent. */
+  .picture-desk figure { align-self: start; }
+
+  /* ── CLASSIFIEDS (gifts / memories) ───────────────────── */
+  .classified + .classified { padding-top: calc(var(--pw) * .045); }
+  .classified-title {
+    font-weight: 700; font-style: italic;
+    font-size: clamp(18px, calc(var(--pw) * .056), 50px);
+    line-height: 1.2;
+  }
+  .classified-desc {
+    font-size: max(11px, calc(var(--pw) * .0285));
+    line-height: 1.55; color: var(--ink-soft);
+    padding-top: calc(var(--pw) * .014);
+  }
+  .account {
+    display: flex; align-items: baseline; flex-wrap: wrap;
+    gap: .5em;
+    font-weight: 700;
+    font-size: max(11px, calc(var(--pw) * .0305));
+    padding-top: calc(var(--pw) * .022);
+  }
+  .account .acc-num { font-weight: 500; letter-spacing: .04em; }
+  .copy-btn {
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
+    border-radius: 999px; cursor: pointer;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: max(9px, calc(var(--pw) * .0205));
+    text-transform: uppercase; letter-spacing: .12em;
+    padding: .35em 1em; min-height: 28px;
+    transition: background .25s ease, color .25s ease;
+  }
+  .copy-btn:hover { background: var(--ink); color: var(--paper); }
+  .notice {
+    border: max(1px, calc(var(--pw) * .002)) solid var(--ink);
+    padding: calc(var(--pw) * .045);
+    text-align: center;
+    margin-top: calc(var(--pw) * .04);
+  }
+  .btn-link {
+    display: inline-block; margin-top: calc(var(--pw) * .022);
+    padding: .7em 1.6em; border-radius: 999px;
+    background: var(--ink); color: var(--paper); text-decoration: none;
+    font-size: max(10px, calc(var(--pw) * .0245));
+    text-transform: uppercase; letter-spacing: .14em;
+  }
+
+  /* ── COLOPHON ─────────────────────────────────────────── */
+  .colophon {
+    text-align: center; color: var(--ink-soft);
+    font-size: max(9px, calc(var(--pw) * .0215));
+    font-style: italic;
+    padding: calc(var(--pw) * .045) 0 calc(var(--pw) * .07);
+  }
+
+  /* ── WIPE REVEAL ──────────────────────────────────────────
+     The reference's signature motion is a left-to-right wipe. The generous negative insets stop
+     script descenders and italic overhangs being clipped once the element has settled. */
+  .rv { clip-path: inset(-14% -14% -14% 100%); }
+  .rv.in { clip-path: inset(-14% -14% -14% -14%); transition: clip-path .95s cubic-bezier(.22,.61,.36,1); }
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .rv.in { clip-path: none; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* iOS Safari zooms the page in when a focused control is under 16px. */
+  @media (max-width: 640px) {
+    .rsvp-form input[type="text"], .rsvp-form select, .rsvp-form textarea { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+
+<div class="paper">
+  <header class="masthead" id="masthead"></header>
+  <main id="main"></main>
+</div>
+
+<script>
+// ── API CONFIG ─────────────────────────────────────────
+const API_BASE = (typeof window !== 'undefined' && window.API_BASE)
+  ? window.API_BASE.replace(/\/$/, '')
+  : '';
+
+let CURRENT_SLUG = null;
+// Set when opened through a personal guest-list link (?g=<token>)
+let CURRENT_GUEST = null;
+
+// ── DEFAULT DATA ───────────────────────────────────────
+const DEFAULT_DATA = {
+  template: 'wedding-daily',
+  title: 'Name 1 & Name 2',
+  cover: {
+    enabled: true,
+    mastheadTitle: 'The Wedding Daily',
+    editionLabel: 'Special Edition',
+    headline: 'Top Story of the Year',
+    eventLabel: '',
+    names: 'Name 1 & Name 2',
+    tagline: 'Two hearts are becoming one and one important question remains...',
+    greeting: 'Dear',
+    hostIntro: '', hostOutro: '', hostText: '',
+    image: '/assets/wedding-daily/lead.jpg', video: '', buttonText: ''
+  },
+  countdown: { enabled: true, label: 'The Big Day', date: '', time: '', tzOffset: null, description: '', image: '/assets/wedding-daily/couple.jpg' },
+  families:  { enabled: true, label: 'Together with their families', title: '', items: [] },
+  locations: { enabled: true, label: '', title: '', image: '', items: [] },
+  timeline:  { enabled: true, label: 'Running order', title: 'Order of the Day', items: [] },
+  gallery:   { enabled: true, label: '', title: '', items: [] },
+  gifts:     { enabled: false, label: 'Classifieds', title: 'Send the Newlyweds a Whish', description: '', items: [] },
+  rsvp:      {
+    enabled: true, label: 'Will You Attend', title: 'Our Wedding?',
+    description: 'Having you beside us on our wedding day would make this chapter even more meaningful.',
+    question: 'Coming?', deadline: '', maxPeople: 10, buttonText: 'Send Reply',
+    allowWishes: true, image: '/assets/wedding-daily/laughing.jpg'
+  },
+  memories:  { enabled: false, title: 'Share Your Memories', description: '', url: '', buttonText: 'Share Memories' },
+  music:     { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+// ── HELPERS ────────────────────────────────────────────
+function decodeData(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(s))));
+}
+function mergeDefaults(data) {
+  const out = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  for (const k of Object.keys(data || {})) {
+    if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && out[k]) {
+      out[k] = Object.assign({}, out[k], data[k]);
+    } else {
+      out[k] = data[k];
+    }
+  }
+  return out;
+}
+function parseQuery() {
+  const raw = window.location.search.replace(/^\?/, '').replace(/\?/g, '&');
+  return new URLSearchParams(raw);
+}
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+// Resolve API-relative uploaded media (/api/public/media/<id>) against API_BASE.
+const mediaSrc = u => u && /^\/api\//.test(u) ? (API_BASE || '') + u : (u || '');
+
+/** yyyy-MM-dd (or any parseable date string) as a Date, or null. */
+function toDate(s) {
+  if (!s) return null;
+  const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + 'T00:00:00' : s);
+  return isNaN(d) ? null : d;
+}
+/** The date style the reference sets in the details block: 11.11.2029. */
+function newsDate(s) {
+  const d = toDate(s);
+  if (!d) return '';
+  const p = n => String(n).padStart(2, '0');
+  return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear();
+}
+/** Month name for the masthead bar — always derived from the event date, never written in copy. */
+function monthOf(s) {
+  const d = toDate(s);
+  return d ? d.toLocaleDateString('en-US', { month: 'long' }) : '';
+}
+function fmtDate(s) {
+  const d = toDate(s);
+  return d ? d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : (s || '');
+}
+/** "Layla & Elias" → ["Layla", "Elias"]; a single name stays a single entry. */
+function splitNames(s) {
+  return String(s || '').split(/\s*(?:&|\band\b|\+)\s*/i).map(x => x.trim()).filter(Boolean);
+}
+
+// The six-armed newspaper asterisk, drawn rather than typed so it never depends on an emoji font.
+const ASTERISK = (function () {
+  const arm = '<polygon points="12,1.7 12.95,10.5 12,12 11.05,10.5"/>';
+  const arms = [0, 60, 120, 180, 240, 300]
+    .map(a => a ? arm.replace('/>', ' transform="rotate(' + a + ' 12 12)"/>') : arm)
+    .join('');
+  return '<svg class="ast" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+       + '<g fill="currentColor">' + arms + '</g></svg>';
+})();
+
+/**
+ * The API sends the invitation's event date next to the section data, and it is the same wedding
+ * day. Older invitations — and any whose Date & Countdown section was never created — carry the
+ * date only at that top level, with an empty `countdown.date`, and the countdown would then find
+ * nothing to run to. Take the top-level date as the fallback so the counter works off whichever
+ * of the two the invitation actually has.
+ */
+function withEventDate(data, eventDate) {
+  data.countdown = data.countdown || {};
+  if (!data.countdown.date && eventDate) data.countdown.date = String(eventDate).slice(0, 10);
+  return data;
+}
+
+// ── DATA LOADING ───────────────────────────────────────
+async function loadData() {
+  const params = parseQuery();
+
+  // ?demo=<key> renders the built-in sample invitation (sales/preview mode, no API call).
+  if (window.getDemoData) {
+    const demo = window.getDemoData(window.location.search);
+    if (demo) return mergeDefaults(demo);
+  }
+
+  const enc = params.get('d');
+  if (enc) {
+    try { return mergeDefaults(decodeData(enc)); }
+    catch (e) { console.warn('Bad ?d payload:', e); }
+  }
+
+  // Personal guest-list link (?g=<token>)
+  const token = params.get('g');
+  if (token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/public/guest/${encodeURIComponent(token)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        CURRENT_SLUG  = body.slug;
+        CURRENT_GUEST = Object.assign({ token }, body.guest || {});
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('Guest API returned', res.status);
+    } catch (e) { console.warn('Guest API fetch failed:', e); }
+  }
+
+  const id = params.get('id');
+  if (id) {
+    CURRENT_SLUG = id;
+    try {
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(id)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('API returned', res.status);
+    } catch (e) { console.warn('API fetch failed:', e); }
+    try {
+      const all = JSON.parse(localStorage.getItem('ic_people') || '{}');
+      if (all[id]) return mergeDefaults(all[id].data);
+    } catch { /* ignore */ }
+  }
+
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+// ── URL PERSONALIZATION ────────────────────────────────
+// Supports both the reference style (?name=&spouse=&max=) and the platform style (?gn=&np=).
+// Guest-list links (?g=) win over both.
+function getGuestName() {
+  if (CURRENT_GUEST && CURRENT_GUEST.name) return CURRENT_GUEST.name;
+  const p = parseQuery();
+  const gn = p.get('gn');
+  if (gn && gn.trim()) return gn.trim();
+  const name = (p.get('name') || '').trim();
+  const spouse = (p.get('spouse') || '').trim();
+  if (!name) return null;
+  return spouse && spouse !== 'null' ? `${name} & ${spouse}` : name;
+}
+function getMaxOverride() {
+  if (CURRENT_GUEST && CURRENT_GUEST.maxAttendees) return CURRENT_GUEST.maxAttendees;
+  const p = parseQuery();
+  const v = parseInt(p.get('np') || p.get('max'));
+  return v > 0 ? v : null;
+}
+
+/**
+ * The emoji for a step: the one the admin picked, otherwise one read from what the step is — groom,
+ * bride, church or venue — so a plain "Bride's House" still gets its icon. The admin editor's
+ * placeholder "✦" counts as not chosen.
+ */
+function stepIcon(x) {
+  const own = String((x && x.icon) || '').trim();
+  if (own && own !== '✦') return own;
+  const t = `${x.title || x.label || ''} ${x.subtitle || x.name || ''}`.toLowerCase();
+  if (/groom/.test(t)) return '🤵';
+  if (/bride/.test(t)) return '👰';
+  if (/mosque/.test(t)) return '🕌';
+  if (/church|chapel|cathedral|ceremony|mass/.test(t)) return '⛪';
+  if (/venue|reception|party|dinner|celebration|hall|cocktail/.test(t)) return '🥂';
+  return '';
+}
+/** A map link: a real URL as-is; anything else typed into the field is searched on Google Maps. */
+function mapHref(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  return /^https?:\/\//i.test(u) ? u : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(u);
+}
+
+// ── RENDERERS ──────────────────────────────────────────
+const doubleRule = () => '<div class="rule-thick rule-double"><i></i></div>';
+const sheetEnd   = () => `<div class="sheet-end">${doubleRule()}</div>`;
+
+function renderMasthead(data) {
+  const c = data.cover || {};
+  const title   = c.mastheadTitle || DEFAULT_DATA.cover.mastheadTitle;
+  const edition = c.editionLabel  || DEFAULT_DATA.cover.editionLabel;
+  // The middle slot is the wedding month, so no month is ever hardcoded into the copy.
+  const middle = monthOf((data.countdown || {}).date) || c.eventLabel || '';
+  return `
+    ${doubleRule()}
+    <h1 class="masthead-title">${esc(title)}</h1>
+    <div class="rule"></div>
+    <div class="masthead-bar">
+      <span>${esc(edition)}</span>
+      ${middle ? `${ASTERISK}<span class="mb-mid">${esc(middle)}</span>${ASTERISK}` : ASTERISK}
+      <span>${esc(edition)}</span>
+    </div>
+    <div class="rule"></div>`;
+}
+
+/*
+ * How much a slot is allowed to change shape to suit the picture it is given, as min:max of
+ * width/height. Inside this band the frame simply becomes the picture's own shape and nothing is
+ * cropped; outside it the frame stops at the limit and cover trims the excess, which is what keeps
+ * the page from turning into a column of extreme panoramas or letterbox slots.
+ */
+const FIT = {
+  'frame-lead':   '0.70:1.60',   // front-page lead — portrait through landscape
+  'frame-couple': '0.80:2.30',   // the wide band under the names
+  'frame-venue':  '0.72:1.70',   // square-ish in the design
+  'frame-rsvp':   '0.80:1.90',
+  'frame-wide':   '0.85:1.90',
+  'frame-half':   '0.80:1.50'    // narrower band so the two plates in a row stay comparable
+};
+
+/** A framed plate. Takes an uploaded video when there is one, and the image otherwise. */
+function renderMedia(image, video, frameClass, alt) {
+  const img = mediaSrc(image || '');
+  // Older invitations sometimes stored a video in `image`; uploaded media has no extension
+  // (/api/public/media/<id>), so the dedicated video field is what normally answers here.
+  const legacy = /\.(mp4|webm|ogg)(\?|$)/i.test(img) ? img : '';
+  const vid = mediaSrc(video || '') || legacy;
+  const poster = vid === img ? '' : img;
+  if (!vid && !img) return '';
+  const fit = FIT[frameClass] ? ` data-fit="${FIT[frameClass]}"` : '';
+  return `<div class="frame ${frameClass} rv"${fit}>
+    ${vid
+      ? `<video data-bg-video autoplay loop muted playsinline preload="metadata" ${poster ? `poster="${esc(poster)}"` : ''} src="${esc(vid)}"></video>`
+      : `<img src="${esc(img)}" alt="${esc(alt || '')}" loading="lazy" decoding="async">`}
+  </div>`;
+}
+
+function renderFrontPage(data) {
+  const c = data.cover || {};
+  const headline = c.headline || DEFAULT_DATA.cover.headline;
+  const lead = renderMedia(c.image, c.video, 'frame-lead', c.names || data.title || 'The couple');
+  if (!headline && !c.tagline && !lead) return '';
+  return `
+  <section class="sheet">
+    ${headline ? `<h2 class="headline rv">${esc(headline)}</h2>` : ''}
+    ${c.tagline ? `<p class="standfirst rv">${nl2br(c.tagline)}</p>` : ''}
+    ${lead ? `<div class="rule" style="margin-bottom:calc(var(--pw) * .03)"></div>${lead}` : ''}
+  </section>
+  ${sheetEnd()}`;
+}
+
+function renderCouple(data) {
+  const c  = data.cover || {};
+  const cd = data.countdown || {};
+  const f  = data.families || {};
+
+  const parts = splitNames(c.names || data.title || '');
+  let namesHtml;
+  if (parts.length >= 2) {
+    const rest = parts.slice(1).join(' & ');
+    namesHtml = `<span class="n n1">${esc(parts[0])}</span>`
+              + `<span class="amp">&amp;</span>`
+              + `<span class="n n2">${esc(rest)}</span>`;
+  } else {
+    namesHtml = `<span class="n">${esc(parts[0] || '')}</span>`;
+  }
+
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const famHtml = fams.length ? `
+    <p class="byline rv">
+      ${f.label ? `${esc(f.label)}<br>` : ''}
+      ${fams.map(x => `<span class="byline-row">${x.label ? esc(x.label) + ' ' : ''}<b>${esc(x.names || '')}</b></span>`).join('')}
+    </p>` : '';
+
+  const photo = cd.enabled !== false
+    ? renderMedia(cd.image, '', 'frame-couple', c.names || 'The couple')
+    : '';
+  // The date, the venue line and the counter now have their own Save the Date section below.
+  if (!namesHtml && !famHtml && !photo) return '';
+  return `
+  <section class="sheet">
+    <div class="names rv"><span class="names-inner">${namesHtml}</span></div>
+    ${famHtml}
+    ${photo}
+  </section>
+  ${sheetEnd()}`;
+}
+
+/**
+ * The instant the countdown runs to, in epoch milliseconds, or null when no date is configured.
+ *
+ * `date` and `time` are what the admin typed (yyyy-MM-dd and HH:mm). On their own they are only a
+ * wall-clock reading — 17:30 on 12 June is a different moment in Beirut than in London — so when
+ * the admin's timezone offset for that date was recorded, it is used to pin them to a real instant
+ * that every guest counts down to identically, wherever they open the invitation. Without it (an
+ * invitation saved before the time field existed) the pair is read in the viewer's own timezone,
+ * which is the behaviour those invitations already had.
+ */
+function weddingInstant(cd) {
+  // Tolerant of a full ISO timestamp as well as a plain yyyy-MM-dd: the event date is a DateTime
+  // server-side, so a value like "2027-06-12T00:00:00" can reach the template.
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((cd && cd.date) || '');
+  if (!m) return null;
+  const [, y, mo, d] = m.map(Number);
+  const [hh, mi] = /^\d{1,2}:\d{2}/.test(cd.time || '')
+    ? cd.time.split(':').map(Number)
+    : [0, 0];
+  if (!y || !mo || !d) return null;
+  // A placeholder date left over from an unset DateTime column (0001-01-01, or a 1970 epoch
+  // default) is "no date configured", not a wedding that happened long ago.
+  if (y < 2000) return null;
+
+  const t = typeof cd.tzOffset === 'number'
+    ? Date.UTC(y, mo - 1, d, hh, mi) + cd.tzOffset * 60000
+    : new Date(y, mo - 1, d, hh, mi).getTime();
+  return isNaN(t) ? null : t;
+}
+
+/** "17:30" → "5:30 PM". Empty when no time has been configured. */
+function fmtClock(t) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t || '');
+  if (!m) return '';
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+
+/**
+ * The Save the Date section — the equivalent of Serene Beige's calendar card and the date line in
+ * Elegant Noir's hero, in this template's own newspaper idiom.
+ *
+ * The date and the counter are rendered as two separate things on purpose. The counter is replaced
+ * by a message once the wedding has happened; the date above it is not, so a guest opening the
+ * invitation at any point still sees which day it is (or was). Everything comes from the date and
+ * time the admin configured — no day is written into this file.
+ */
+function renderDateSection(cd) {
+  if (!cd || cd.enabled === false) return '';
+
+  const parts  = /^(\d{4})-(\d{2})-(\d{2})/.exec(cd.date || '');
+  const target = weddingInstant(cd);
+  const label  = cd.label ? `<p class="kicker rv">${esc(cd.label)}</p>` : '';
+
+  // No usable date yet: say so plainly rather than rendering an empty or broken counter.
+  if (!parts || target === null) {
+    if (!cd.label && !cd.description) return '';
+    return `
+    <section class="sheet">
+      ${label}
+      <div class="countdown-empty rv">The date is being set — we will announce it here soon</div>
+    </section>
+    ${sheetEnd()}`;
+  }
+
+  // Read the day straight from what was typed, not from the instant: converting the instant would
+  // show a guest abroad the date as it falls in THEIR timezone, which can be the day before.
+  const [, y, mo, d] = parts.map(Number);
+  const pad2 = n => String(n).padStart(2, '0');
+  const weekday = new Date(y, mo - 1, d).toLocaleDateString(undefined, { weekday: 'long' });
+  const clock = fmtClock(cd.time);
+
+  const cell = (k, t) =>
+    `<div class="cd-cell"><span class="cd-num" data-cd="${k}">–</span><span class="cd-label">${t}</span></div>`;
+
+  return `
+  <section class="sheet">
+    ${label}
+    <div class="datepanel rv">
+      <div class="dp-weekday">${esc(weekday)}</div>
+      <div class="dp-date">${pad2(d)}.${pad2(mo)}.${y}</div>
+      ${clock ? `<div class="dp-time">Ceremony at ${esc(clock)}</div>` : ''}
+    </div>
+    ${cd.description ? `<p class="dateline rv">${esc(cd.description)}</p>` : ''}
+    <div class="countdown rv" data-countdown="${target}">
+      ${cell('d', 'Days')}${cell('h', 'Hours')}${cell('m', 'Minutes')}${cell('s', 'Seconds')}
+    </div>
+  </section>
+  ${sheetEnd()}`;
+}
+
+/** A stylised newsprint map tile, linked to the location's Maps URL when one is set. */
+function mapTile(loc, eventDate) {
+  const label = loc.name || loc.label || '';
+  const sub   = loc.addr || '';
+  const inner = `
+    <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect width="400" height="300" fill="#e9e6e0"/>
+      <path d="M0 212 L400 178 L400 300 L0 300 Z" fill="#dde5ea"/>
+      <rect x="232" y="24" width="96" height="70" fill="#dfe6d6"/>
+      <rect x="36" y="128" width="70" height="52" fill="#e3e0d8"/>
+      <g stroke="#fbfaf8" stroke-width="13" fill="none">
+        <path d="M-10 96 L410 78"/><path d="M-10 196 L410 168"/>
+        <path d="M128 -10 L150 310"/><path d="M296 -10 L318 310"/>
+      </g>
+      <g stroke="#d9d5cc" stroke-width="2" fill="none">
+        <path d="M-10 46 L410 32"/><path d="M-10 142 L410 124"/>
+        <path d="M62 -10 L78 310"/><path d="M214 -10 L232 310"/><path d="M366 -10 L386 310"/>
+      </g>
+      <g transform="translate(200 132)">
+        <path d="M0 34 C0 34 17 12 17 -1 A17 17 0 1 0 -17 -1 C-17 12 0 34 0 34 Z" fill="#b23b2e"/>
+        <circle cx="0" cy="-1" r="6" fill="#fbfaf8"/>
+      </g>
+    </svg>
+    ${label ? `<div class="map-head"><b>${esc(label)}</b>${sub ? ' &middot; ' + esc(sub) : ''}</div>` : ''}
+    <div class="map-foot">${loc.url ? 'View on the map' : (esc(newsDate(eventDate)) || 'Location')}</div>`;
+  return loc.url
+    ? `<a class="map rv" href="${esc(mapHref(loc.url))}" target="_blank" rel="noopener">${inner}</a>`
+    : `<div class="map rv">${inner}</div>`;
+}
+
+function renderDetails(data) {
+  const l = data.locations || {};
+  const items = (l.items || []).filter(x => x && (x.name || x.label || x.addr));
+  if (!items.length) return '';
+  const eventDate = (data.countdown || {}).date;
+  const bigDate = newsDate(eventDate);
+
+  const blocks = items.map((loc, i) => `
+    <div class="detail">
+      ${renderMedia(loc.img, '', 'frame-venue', loc.name || loc.label || 'Venue')}
+      <div class="detail-row ${i % 2 ? 'flip' : ''}">
+        <div class="detail-text">
+          ${bigDate ? `<div class="detail-date rv">${esc(bigDate)}</div>` : ''}
+          ${loc.label ? `<div class="detail-label rv">${esc(loc.label)}</div>` : ''}
+          ${loc.name  ? `<div class="detail-venue rv">${esc(loc.name)}</div>` : ''}
+          ${loc.addr  ? `<div class="detail-addr rv">${nl2br(loc.addr)}</div>` : ''}
+          ${loc.time  ? `<div class="detail-time rv">${esc(loc.time)}</div>` : ''}
+        </div>
+        ${mapTile(loc, eventDate)}
+      </div>
+    </div>`).join('');
+
+  return `
+  <section class="sheet">
+    ${l.label ? `<p class="kicker rv">${esc(l.label)}</p>` : ''}
+    ${l.title ? `<h2 class="sec-title rv">${esc(l.title)}</h2>` : ''}
+    ${blocks}
+  </section>
+  ${sheetEnd()}`;
+}
+
+function renderAgenda(t) {
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (!items.length) return '';
+  const rows = items.map(x => `
+    <div class="agenda-row rv">
+      <div class="agenda-time">${esc(x.time || '')}</div>
+      <div>
+        ${x.title ? `<div class="agenda-title">${stepIcon(x) ? `<span class="agenda-ico" aria-hidden="true">${esc(stepIcon(x))}</span>` : ''}${esc(x.title)}</div>` : ''}
+        ${x.subtitle ? `<div class="agenda-sub">${esc(x.subtitle)}</div>` : ''}
+        ${x.url ? `<a class="agenda-link" href="${esc(mapHref(x.url))}" target="_blank" rel="noopener">Location</a>` : ''}
+      </div>
+    </div>`).join('');
+  return `
+  <section class="sheet">
+    ${t.label ? `<p class="kicker rv">${esc(t.label)}</p>` : ''}
+    ${t.title ? `<h2 class="sec-title rv">${esc(t.title)}</h2>` : ''}
+    <div class="agenda">${rows}</div>
+  </section>
+  ${sheetEnd()}`;
+}
+
+function renderArticle(s) {
+  if (!s.title && !s.body && !s.image) return '';
+  return `
+  <section class="sheet">
+    ${s.label ? `<p class="kicker rv">${esc(s.label)}</p>` : ''}
+    ${s.title ? `<h2 class="sec-title rv">${esc(s.title)}</h2>` : ''}
+    ${s.image ? renderMedia(s.image, '', 'frame-wide', s.title || '') : ''}
+    ${s.body ? `<p class="article-body rv" style="padding-top:calc(var(--pw) * .028)">${nl2br(s.body)}</p>` : ''}
+  </section>
+  ${sheetEnd()}`;
+}
+
+function renderRsvp(r, maxPeople, guestName, greeting) {
+  const opts = ['<option value="" disabled selected>How many of you?</option>'];
+  for (let i = 1; i <= maxPeople; i++) opts.push(`<option value="${i}">${i}</option>`);
+  const dear = guestName ? `${greeting || 'Dear'} ${guestName}` : '';
+
+  return `
+  <section class="sheet">
+    <div class="rsvp-head">
+      ${r.label ? `<div class="rsvp-kicker rv">${esc(r.label)}</div>` : ''}
+      ${r.title ? `<div class="rsvp-script rv">${esc(r.title)}</div>` : ''}
+    </div>
+    ${renderMedia(r.image, '', 'frame-rsvp', 'The couple')}
+    ${dear ? `<p class="greeting rv">${esc(dear)}</p>` : ''}
+    ${r.description ? `<p class="rsvp-note rv">${nl2br(r.description)}</p>` : ''}
+    ${r.deadline ? `<p class="rsvp-deadline rv">Kindly reply before ${esc(fmtDate(r.deadline))}</p>` : ''}
+    ${guestName ? `<p class="rsvp-deadline rv">Reserved for up to ${maxPeople} ${maxPeople === 1 ? 'guest' : 'guests'}</p>` : ''}
+
+    <form class="rsvp-form" data-rsvp>
+      ${r.question ? `<div class="sec-title sec-title-script rsvp-question rv">${esc(r.question)}</div>` : ''}
+      <div class="pills">
+        <label class="pill" data-pill><input type="radio" name="attending" value="yes"><span>Yes!</span></label>
+        <label class="pill" data-pill><input type="radio" name="attending" value="no"><span>No</span></label>
+      </div>
+
+      <div class="field">
+        <span class="field-label">${guestName ? 'Invitation issued to' : 'Your name(s)'}</span>
+        ${guestName
+          // Personal link: shown for confirmation but locked. The server also ignores any
+          // submitted name for a known guest.
+          ? `<input type="text" data-guest-name value="${esc(guestName)}" readonly aria-readonly="true" tabindex="-1">`
+          : `<input type="text" data-guest-name placeholder="Write your name here">`}
+      </div>
+
+      <div class="field" data-count-field hidden>
+        <span class="field-label">Party size</span>
+        <select data-guest-count>${opts.join('')}</select>
+      </div>
+
+      ${r.allowWishes !== false ? `
+      <div class="field">
+        <span class="field-label">A word for the couple (optional)</span>
+        <textarea data-wishes rows="3" maxlength="200" placeholder="Send your wishes to press..."></textarea>
+      </div>` : ''}
+
+      <button type="submit" class="btn-send">${esc(r.buttonText || 'Send Reply')}</button>
+    </form>
+
+    <div class="stop-press" data-rsvp-success
+         data-accept="${esc(r.acceptMessage || "Thank you! We can't wait to celebrate with you.")}"
+         data-decline="${esc(r.declineMessage || 'Thank you for letting us know. You will be missed.')}">
+      <div class="sp-label">Stop Press</div>
+      <div class="sp-body"></div>
+    </div>
+  </section>
+  ${sheetEnd()}`;
+}
+
+function renderPictureDesk(g) {
+  const items = (g.items || []).filter(x => x && x.url);
+  if (!items.length) return '';
+  // The reference alternates one full-width plate with a pair of half-width ones.
+  const cells = items.map((x, i) => {
+    const wide = i % 3 === 0;
+    return `<figure class="${wide ? 'cell-wide' : ''}">
+      <div class="frame ${wide ? 'frame-wide' : 'frame-half'} rv" data-fit="${wide ? FIT['frame-wide'] : FIT['frame-half']}">
+        <img src="${esc(mediaSrc(x.url))}" alt="${esc(x.caption || 'Photograph')}" loading="lazy" decoding="async">
+      </div>
+      ${x.caption ? `<figcaption class="caption rv">${esc(x.caption)}</figcaption>` : ''}
+    </figure>`;
+  }).join('');
+  return `
+  <section class="sheet">
+    ${g.label ? `<p class="kicker rv">${esc(g.label)}</p>` : ''}
+    ${g.title ? `<h2 class="sec-title rv">${esc(g.title)}</h2>` : ''}
+    <div class="picture-desk">${cells}</div>
+  </section>
+  ${sheetEnd()}`;
+}
+
+function renderClassifieds(data) {
+  const blocks = [];
+
+  const g = data.gifts;
+  if (g && g.enabled !== false && ((g.items || []).length || g.description)) {
+    const accounts = (g.items || []).filter(x => x && x.account).map(x => `
+      <div class="account rv">
+        <span>${esc(x.bank || 'Account')}:</span>
+        <span class="acc-num">${esc(x.account)}</span>
+        <button type="button" class="copy-btn" data-copy="${esc(x.account)}">Copy</button>
+      </div>`).join('');
+    blocks.push(`
+      <div class="classified">
+        ${g.label ? `<p class="kicker rv" style="text-align:left">${esc(g.label)}</p>` : ''}
+        ${g.title ? `<h3 class="classified-title rv">${esc(g.title)}</h3>` : ''}
+        ${g.description ? `<p class="classified-desc rv">${nl2br(g.description)}</p>` : ''}
+        ${accounts}
+      </div>`);
+  }
+
+  const m = data.memories;
+  if (m && m.enabled !== false && m.url) {
+    blocks.push(`
+      <div class="notice rv">
+        ${m.title ? `<h3 class="classified-title">${esc(m.title)}</h3>` : ''}
+        ${m.description ? `<p class="classified-desc">${nl2br(m.description)}</p>` : ''}
+        <a class="btn-link" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.buttonText || 'Share Memories')}</a>
+      </div>`);
+  }
+
+  if (!blocks.length) return '';
+  return `<section class="sheet">${blocks.join('')}</section>${sheetEnd()}`;
+}
+
+// ── BUILD ──────────────────────────────────────────────
+function build(data) {
+  const guestName = getGuestName();
+  const maxPeople = getMaxOverride() || (data.rsvp && data.rsvp.maxPeople) || 10;
+
+  document.getElementById('masthead').innerHTML = renderMasthead(data);
+
+  const parts = [];
+  if (data.cover && data.cover.enabled !== false) parts.push(renderFrontPage(data));
+  parts.push(renderCouple(data));
+  parts.push(renderDateSection(data.countdown));
+  if (data.locations && data.locations.enabled !== false) parts.push(renderDetails(data));
+  if (data.timeline  && data.timeline.enabled  !== false) parts.push(renderAgenda(data.timeline));
+  (data.customSections || []).forEach(s => { if (s && s.enabled !== false) parts.push(renderArticle(s)); });
+  if (data.rsvp && data.rsvp.enabled !== false) {
+    parts.push(renderRsvp(data.rsvp, maxPeople, guestName, (data.cover || {}).greeting));
+  }
+  if (data.gallery && data.gallery.enabled !== false) parts.push(renderPictureDesk(data.gallery));
+  parts.push(renderClassifieds(data));
+  parts.push('<p class="colophon">Printed with love for one day only</p>');
+
+  document.getElementById('main').innerHTML = parts.join('');
+  document.title = (data.title || (data.cover && data.cover.names) || 'Invitation') + ' — Wedding Invitation';
+
+  fitNames();
+  // Web fonts land after the first measure, and the script face is much wider than the fallback,
+  // so measure again once they are ready.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitNames).catch(() => {});
+
+  fitFrames();
+  setupReveal();
+  startCountdown();
+  startBackgroundVideos();
+  if (window.InvitationMusic) InvitationMusic.init(data.music, API_BASE);
+}
+
+// ── AUTOMATIC PHOTO FITTING ────────────────────────────
+// Reshapes each frame to the aspect ratio of the picture actually uploaded into it, clamped to the
+// slot's data-fit band. The couple never has to crop anything before uploading: a portrait, a
+// landscape and a square all land in a frame the right shape for them, and object-fit:cover in the
+// stylesheet handles whatever the clamp still leaves over — without stretching or letterboxing.
+function fitFrame(frame) {
+  const media = frame.querySelector('img, video');
+  if (!media || !frame.dataset.fit) return;
+
+  const apply = () => {
+    const w = media.naturalWidth  || media.videoWidth;
+    const h = media.naturalHeight || media.videoHeight;
+    if (!w || !h) return;                        // not decoded yet, or an SVG with no intrinsic size
+    const [min, max] = frame.dataset.fit.split(':').map(Number);
+    frame.style.aspectRatio = String(Math.min(max, Math.max(min, w / h)));
+  };
+
+  if (media.tagName === 'VIDEO') {
+    if (media.readyState >= 1) apply();
+    else media.addEventListener('loadedmetadata', apply, { once: true });
+  } else if (media.complete && media.naturalWidth) {
+    apply();
+  } else {
+    // `complete` alone is not enough: a lazily-loaded photo that the browser has deferred reports
+    // complete with a naturalWidth of 0, so the ratio has to be picked up when it actually decodes.
+    // A photo that never loads simply keeps the slot's default ratio instead of collapsing.
+    media.addEventListener('load', apply, { once: true });
+  }
+}
+function fitFrames(root) {
+  (root || document).querySelectorAll('.frame[data-fit]').forEach(fitFrame);
+}
+
+// ── COUNTDOWN ──────────────────────────────────────────
+let countdownTimer = null;
+function startCountdown() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+
+  const node = document.querySelector('[data-countdown]');
+  if (!node) return;
+  // An absolute instant in epoch ms, worked out once by weddingInstant(). Because the remaining
+  // time is derived from it against the clock on every tick — never counted down from a stored
+  // number — reloading the page, sleeping the phone or leaving the tab cannot drift or reset it.
+  const target = Number(node.dataset.countdown);
+  if (!Number.isFinite(target)) return;
+
+  const cells = node.querySelectorAll('[data-cd]');
+  const pad = n => String(n).padStart(2, '0');
+
+  const tick = () => {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      // Never show negative or all-zero values once the moment has passed. Within the first day
+      // the wedding is happening now; after that it has been and gone, and saying "today" would be
+      // plainly wrong to anyone reopening the invitation later.
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      node.innerHTML = diff > -86400000
+        ? '<p class="cd-past">Today is the day</p>'
+        : '<p class="cd-past">Thank you for celebrating with us</p>';
+      return;
+    }
+    const v = {
+      d: String(Math.floor(diff / 86400000)),          // uncapped: a wedding can be years away
+      h: pad(Math.floor(diff / 3600000) % 24),         // 00–23
+      m: pad(Math.floor(diff / 60000) % 60),           // 00–59
+      s: pad(Math.floor(diff / 1000) % 60)             // 00–59
+    };
+    cells.forEach(e => {
+      const next = v[e.dataset.cd];
+      if (e.textContent !== next) e.textContent = next;   // don't dirty the DOM for unchanged cells
+    });
+  };
+
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+// Background tabs throttle timers, so a phone coming out of sleep can be up to a minute stale.
+// Recomputing on wake keeps the displayed time honest without a faster interval.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) startCountdown(); });
+
+// ── NAMES FIT ──────────────────────────────────────────
+// The couple's names run the full measure of the page in the reference. Text width scales linearly
+// with font size, so one measurement is enough to work out the multiplier — no search loop.
+const NAMES_MEASURE = .88;   // share of the measure the names should occupy
+const NAMES_MIN_ONE_LINE = .62;  // below this, one line would be too small to read — stack instead
+function fitNames() {
+  const row = document.querySelector('.names');
+  const inner = row && row.querySelector('.names-inner');
+  if (!inner) return;
+
+  row.style.setProperty('--names-scale', '1');
+  inner.classList.remove('wrapped');
+
+  // Measure at max-content: an inline-flex box shrinks to the space available, so both the
+  // max-width and the shrink-to-fit have to be lifted or the "natural" width is just the column.
+  const avail = row.clientWidth;
+  inner.style.maxWidth = 'none';
+  inner.style.width = 'max-content';
+  const natural = inner.getBoundingClientRect().width;
+  const kidW    = [...inner.children].map(c => c.getBoundingClientRect().width);
+  inner.style.maxWidth = '';
+  inner.style.width = '';
+  if (!avail || !natural) return;
+
+  let scale = (avail * NAMES_MEASURE) / natural;
+  if (scale < NAMES_MIN_ONE_LINE) {
+    // A long pair of names on one line would either shrink to nothing or break mid-word. Give
+    // each name its own line and size to the widest, the way a masthead would set them.
+    inner.classList.add('wrapped');
+    const widest = Math.max(...kidW);
+    if (widest) scale = (avail * NAMES_MEASURE) / widest;
+  }
+  row.style.setProperty('--names-scale', Math.max(.34, Math.min(1.9, scale)).toFixed(3));
+}
+
+let fitTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(fitNames, 150);
+}, { passive: true });
+
+// ── BACKGROUND VIDEO ───────────────────────────────────
+// A <video> injected via innerHTML doesn't always pick up the muted PROPERTY from its attribute,
+// and browsers refuse autoplay for anything not muted. Set it explicitly, then start playback —
+// a rejection (e.g. iOS Low Power Mode) is fine: the poster image remains visible.
+function startBackgroundVideos() {
+  document.querySelectorAll('[data-bg-video]').forEach(v => {
+    v.muted = true;
+    v.defaultMuted = true;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  });
+}
+
+// ── WIPE REVEAL ────────────────────────────────────────
+// Everything on the page starts clipped, so a reveal that never runs would leave the invitation
+// blank. The observer drives it, but revealInView() is a synchronous belt-and-braces pass for the
+// cases where the observer has nothing to deliver — most of all a page that loads in a background
+// tab, where no callback arrives until the reader actually looks at it.
+function revealInView() {
+  const pending = document.querySelectorAll('.rv:not(.in)');
+  if (!pending.length) return;          // nothing left to measure — skip the layout flush entirely
+  const h = window.innerHeight;
+  pending.forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.top < h && r.bottom > 0) el.classList.add('in');
+  });
+}
+
+function setupReveal() {
+  const els = document.querySelectorAll('.rv');
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0, rootMargin: '0px 0px -8% 0px' });
+  els.forEach(el => io.observe(el));
+
+  revealInView();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) revealInView();
+  });
+}
+
+// ── STICKY MASTHEAD ────────────────────────────────────
+// The reveal safety net runs only once scrolling has STOPPED. Measuring element positions forces
+// the browser to flush layout, so doing it on every frame — as this used to — added a full-page
+// layout to each scroll frame. The observer covers the live case; this only catches anything it
+// somehow missed, and by then the frame budget is free.
+let idleSweep = null;
+window.addEventListener('scroll', () => {
+  clearTimeout(idleSweep);
+  idleSweep = setTimeout(revealInView, 160);
+}, { passive: true });
+
+// ── EVENTS ─────────────────────────────────────────────
+document.addEventListener('click', e => {
+  const copy = e.target.closest('[data-copy]');
+  if (!copy) return;
+  navigator.clipboard?.writeText(copy.dataset.copy).then(() => {
+    const orig = copy.textContent;
+    copy.textContent = 'Copied';
+    setTimeout(() => { copy.textContent = orig; }, 2000);
+  });
+});
+
+// The accept/decline pills are radio inputs behind a styled label — reflect the choice, and
+// only ask for a party size once the guest has said yes.
+document.addEventListener('change', e => {
+  if (!e.target.matches('input[name="attending"]')) return;
+  const form = e.target.closest('[data-rsvp]');
+  form.querySelectorAll('[data-pill]').forEach(p => p.classList.toggle('on', p.contains(e.target)));
+  const field = form.querySelector('[data-count-field]');
+  if (field) field.hidden = e.target.value !== 'yes';
+});
+
+document.addEventListener('submit', async e => {
+  const form = e.target.closest('[data-rsvp]');
+  if (!form) return;
+  e.preventDefault();
+
+  const att       = form.querySelector('input[name="attending"]:checked');
+  const countEl   = form.querySelector('[data-guest-count]');
+  const nameInput = form.querySelector('[data-guest-name]');
+  const wishes    = form.querySelector('[data-wishes]');
+  const name      = getGuestName() || (nameInput ? nameInput.value.trim() : '');
+
+  if (!att) return alert('Please choose Yes or No.');
+  const attending = att.value === 'yes';
+  const count = countEl ? countEl.value : '';
+  if (!name) return alert('Please enter your name.');
+  if (attending && !count) return alert('Please choose how many of you are coming.');
+
+  const btn = form.querySelector('.btn-send');
+  const original = btn.textContent;
+
+  if (CURRENT_SLUG) {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    try {
+      const guestNames = attending
+        ? name.split(/\s*(?:&|,| and )\s*/i).map(s => s.trim()).filter(Boolean)
+        : [];
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(CURRENT_SLUG)}/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          response: attending ? 'yes' : 'no',
+          partySize: attending ? parseInt(count) : 0,
+          contactName: name,
+          message: wishes ? (wishes.value.trim() || null) : null,
+          guests: guestNames.map(n => ({ fullName: n })),
+          guestToken: CURRENT_GUEST ? CURRENT_GUEST.token : null
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        btn.disabled = false;
+        btn.textContent = original;
+        return alert(err.error || `Submission failed (${res.status}). Please try again.`);
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = original;
+      return alert('Network error. Please check your connection and try again.');
+    }
+  }
+
+  form.style.display = 'none';
+  const box = form.parentElement.querySelector('[data-rsvp-success]');
+  box.querySelector('.sp-body').innerHTML = nl2br(attending ? box.dataset.accept : box.dataset.decline);
+  box.style.display = 'block';
+});
+
+// ── INIT ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    build(await loadData());
+  } catch (e) {
+    console.error('Failed to load invitation data:', e);
+    build(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  }
+});
+</script>
+</body>
+</html>

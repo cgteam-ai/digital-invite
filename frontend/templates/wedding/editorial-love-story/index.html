@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#15130f">
+<title>Wedding Invitation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Bodoni Moda is the fashion-magazine Didone for everything large; its optical-size axis keeps
+     the hairlines from vanishing at display sizes. Manrope carries labels and body copy, and stays
+     comfortably readable on a phone. -->
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..600&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<style>
+  /*
+   * EDITORIAL LOVE STORY — a wedding invitation read like a fashion-magazine story.
+   *
+   * Every section is a full-screen slide in one horizontal scroller. Native scroll-snap does the
+   * swiping — a finger, a trackpad, a flick with momentum — so it feels exactly like the phone's
+   * own gestures; a mouse can drag, and a mouse wheel turns one slide per notch. Content that is
+   * taller than the screen scrolls inside its own slide, so nothing is ever cropped away.
+   * While slides move, only transform and opacity change, on the slides next to the one in view.
+   */
+  :root {
+    --ivory:     #f6f1e8;
+    --paper:     #fbf8f2;
+    --champagne: #ede3d1;
+    --beige:     #d9c8ad;
+    --ink:       #15130f;
+    --ink-2:     #3a342c;
+    --soft:      rgba(21,19,15,.58);
+    --gold:      #a8844d;
+    --gold-2:    #d7be8e;
+    --stage:     #d0c6b8;                /* greige: the one ground of the reading pages */
+    --on-stage:  #15130f;
+    --on-stage-2: rgba(21,19,15,.76);
+    --on-stage-3: rgba(21,19,15,.7);
+    --line:      rgba(21,19,15,.2);
+    --bronze:    #6a4d28;                /* the gold accent, deepened to read on greige */
+    --serif: 'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
+    --sans:  'Manrope', 'Helvetica Neue', Arial, sans-serif;
+    --top:   calc(env(safe-area-inset-top) + 44px);
+    --bot:   calc(env(safe-area-inset-bottom) + 34px);
+    --pad-x: clamp(22px, 6vw, 88px);
+    --ease:  cubic-bezier(.2,.7,.2,1);
+    /* A faint paper grain for the light pages, drawn once from an SVG noise tile. */
+    --grain-lt: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .95 0 0 0 0 .88 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .15 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  /* The page itself never scrolls — only the deck (sideways) and a tall slide (inside itself) do.
+     That is what keeps a sideways swipe from also dragging the page up or down. */
+  body {
+    overflow: hidden; overscroll-behavior: none;
+    background: var(--ink); color: var(--ink);
+    font-family: var(--sans); font-weight: 400;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  img, video { display: block; max-width: 100%; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: inherit; }
+
+  /* ── THE DECK ─────────────────────────────────────────── */
+  .deck {
+    position: fixed; inset: 0;
+    display: flex;
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    opacity: 0; transition: opacity .9s var(--ease);
+  }
+  .deck::-webkit-scrollbar { display: none; }
+  body.ready .deck { opacity: 1; }
+  @media (hover: hover) and (pointer: fine) { .deck { cursor: grab; } }
+  .deck.dragging { cursor: grabbing; scroll-snap-type: none; user-select: none; -webkit-user-select: none; }
+
+  .slide {
+    --p: 0; --pa: 0;     /* set by the script: where the slide sits, -1 … 0 (in view) … 1 */
+    position: relative; flex: 0 0 100%; width: 100%; height: 100%;
+    overflow: hidden; isolation: isolate;
+    scroll-snap-align: start; scroll-snap-stop: always;
+    background: var(--ivory);
+  }
+  /* A slide dims a little as it slides away — depth, without moving anything but opacity. */
+  .slide::after {
+    content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none;
+    background: #0b0a08; opacity: calc(var(--pa) * .45);
+  }
+  .slide.near::after { will-change: opacity; }
+
+  /* Each slide's content column. It scrolls vertically only when it has to (a long timeline, the
+     RSVP form on a small phone); the auto margins on .content centre it when it doesn't. */
+  .inner {
+    position: relative; z-index: 2;
+    height: 100%; min-height: 0;
+    display: flex; flex-direction: column;
+    overflow-x: hidden; overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding: var(--top) var(--pad-x) var(--bot);
+    scrollbar-width: thin;
+  }
+  .content { margin: auto 0; width: 100%; }
+  .content.narrow { margin: auto; max-width: 660px; }
+  .content.wide   { margin: auto; max-width: 1180px; }
+  .center { text-align: center; }
+
+  /* Full-bleed photography. Photos drift a little slower than their slide as it moves — parallax
+     that only ever uncovers an edge while that edge is off-screen. */
+  .media { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: var(--ink); margin: 0; }
+  .media img, .media video { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); }
+  .slide.near .media img, .slide.near .media video {
+    transform: translate3d(calc(var(--p) * -24%), 0, 0) scale(1.06);
+    will-change: transform;
+  }
+  .shade { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+
+  /* ── TYPE ─────────────────────────────────────────────── */
+  .chapter {
+    font-size: .64rem; font-weight: 600;
+    letter-spacing: .36em; text-transform: uppercase;
+    color: var(--gold);
+  }
+  .title {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(2.2rem, min(9vw, 11vh), 4.8rem);
+    line-height: .98; letter-spacing: -.015em;
+    margin-top: 16px;
+    overflow-wrap: break-word;
+  }
+  .title i { font-style: italic; font-weight: 400; }
+  .rule { display: block; width: 56px; height: 1px; background: var(--gold); margin: 26px 0; }
+  .center .rule { margin-inline: auto; }
+  .body-copy { font-size: clamp(.95rem, 3.6vw, 1.05rem); line-height: 1.75; color: var(--ink-2); font-weight: 300; }
+  .center .body-copy { max-width: 46ch; margin-inline: auto; }
+
+  /* Reveal: a slide's words rise into place, one after another, each time it comes into view. */
+  .rv { opacity: 0; transform: translate3d(0, 26px, 0); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+  .slide.is-active .rv {
+    opacity: 1; transform: none;
+    transition: opacity 1s var(--ease) calc(var(--i, 0) * 90ms + 140ms),
+                transform 1.1s var(--ease) calc(var(--i, 0) * 90ms + 140ms);
+  }
+  /* The largest type slides a touch faster than its page — the editorial "drift". */
+  .slide.near .drift { translate: calc(var(--p) * 12vw) 0; will-change: translate; }
+
+
+  /* "Swipe" hint on the cover, gone after the first turn. */
+  .swipe-hint {
+    position: absolute; z-index: 3; right: var(--pad-x); bottom: var(--bot);
+    display: flex; align-items: center; gap: 12px;
+    color: #fff; font-size: .62rem; letter-spacing: .34em; text-transform: uppercase;
+    transition: opacity .6s var(--ease);
+  }
+  .swipe-hint .line { width: 46px; height: 1px; background: currentColor; transform-origin: left; animation: hint 2.4s var(--ease) infinite; }
+  @keyframes hint { 0% { transform: scaleX(0); } 55% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+  .swipe-hint .t-mouse { display: none; }
+  @media (hover: hover) and (pointer: fine) { .swipe-hint .t-mouse { display: inline; } .swipe-hint .t-touch { display: none; } }
+  body.swiped .swipe-hint { opacity: 0; }
+
+  /* ── COVER ────────────────────────────────────────────── */
+  /* On a phone the cover reads like a magazine cover: the title across the top of the photograph,
+     over a dark fade, so the couple in the lower part of the picture stays in view. */
+  .s-cover { background: var(--ink); }
+  .s-cover .shade {
+    background: linear-gradient(180deg, rgba(12,10,8,.78) 0%, rgba(12,10,8,.5) 32%,
+                rgba(12,10,8,0) 58%, rgba(12,10,8,0) 76%, rgba(12,10,8,.45) 100%);
+  }
+  .s-cover .inner { color: #fbf7ef; }
+  .s-cover .content { margin: 0 0 auto; }
+  .issue {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+    font-size: .64rem; font-weight: 600; letter-spacing: .34em; text-transform: uppercase;
+    color: var(--gold-2);
+  }
+  .issue .sep { width: 22px; height: 1px; background: currentColor; opacity: .7; }
+  .names {
+    --fit: 1;
+    font-family: var(--serif); font-weight: 500; text-transform: uppercase;
+    font-size: calc(clamp(3rem, min(16.5vw, 16vh), 9.6rem) * var(--fit));
+    line-height: .9; letter-spacing: -.015em;
+    margin: 18px 0 20px;
+  }
+  .names > span { display: block; white-space: nowrap; }
+  .names .amp { font-style: italic; font-weight: 400; text-transform: none; color: var(--gold-2); font-size: .72em; margin-right: .1em; }
+  .cover-tag { font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 4.2vw, 1.5rem); line-height: 1.35; max-width: 28ch; opacity: .94; }
+  .cover-meta {
+    display: flex; flex-wrap: wrap; gap: 8px 0; margin-top: 24px;
+    font-size: .66rem; letter-spacing: .3em; text-transform: uppercase; font-weight: 500;
+  }
+  .cover-meta span + span::before {
+    content: ''; display: inline-block; width: 26px; height: 1px; background: currentColor;
+    opacity: .6; vertical-align: middle; margin: 0 16px;
+  }
+
+  /* ── INVITATION ───────────────────────────────────────── */
+  /* Page 2 is a photograph: the invitation is set in ivory over a soft dark veil that is deepest
+     behind the words, so it stays readable over any picture. */
+  .s-invite { background: var(--ink); color: #f6f0e6; }
+  .s-invite .shade { background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(12,10,8,.72), rgba(12,10,8,.5)); }
+  .s-invite .inner { text-shadow: 0 1px 18px rgba(0,0,0,.35); }
+  .s-invite .chapter, .s-invite .fam-and, .s-invite .inv-names i { color: var(--gold-2); }
+  .s-invite .rule { background: var(--gold-2); }
+  .s-invite .lede-it, .s-invite .body-copy { color: rgba(246,240,230,.88); }
+  .s-invite .fam-l, .s-invite .fams-label, .s-invite .outro { color: rgba(246,240,230,.68); }
+  .dear { font-family: var(--serif); font-style: italic; font-size: clamp(1.2rem, 4.6vw, 1.6rem); margin-top: 22px; }
+  .lede-it { font-family: var(--serif); font-style: italic; font-size: clamp(1.3rem, min(5vw, 5vh), 2.1rem); line-height: 1.35; color: var(--ink-2); margin-top: 22px; }
+  .fams { display: grid; gap: 16px; margin: 6px 0 26px; }
+  @media (min-width: 700px) { .fams { grid-template-columns: 1fr auto 1fr; align-items: center; gap: 26px; } }
+  .fam-l { display: block; font-size: .6rem; letter-spacing: .3em; text-transform: uppercase; color: var(--soft); margin-bottom: 8px; font-weight: 600; }
+  .fam-n { font-family: var(--serif); font-size: clamp(1.1rem, 4.2vw, 1.45rem); }
+  .fam-and { font-family: var(--serif); font-style: italic; color: var(--gold); font-size: 1.6rem; }
+  .fams-label { font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; color: var(--soft); margin-bottom: 18px; font-weight: 600; }
+  .inv-names { font-family: var(--serif); font-weight: 500; font-size: clamp(2.3rem, min(10vw, 9vh), 4.6rem); line-height: 1.02; margin: 24px 0 8px; overflow-wrap: break-word; }
+  .inv-names i { font-style: italic; font-weight: 400; color: var(--gold); }
+  .outro { font-size: .66rem; letter-spacing: .3em; text-transform: uppercase; color: var(--soft); margin-top: 18px; font-weight: 600; }
+
+  /* ── SPLIT SLIDES (photo + words) ─────────────────────── */
+  .split { display: grid; grid-template-rows: minmax(0, 42%) minmax(0, 1fr); }
+  .split-media { position: relative; overflow: hidden; background: var(--ink); margin: 0; }
+  .split-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.1); }
+  .slide.near .split-media img { transform: translate3d(calc(var(--p) * -8%), 0, 0) scale(1.1); will-change: transform; }
+  .split .inner { height: auto; padding-top: 30px; }
+
+  /* ── SAVE THE DATE ────────────────────────────────────── */
+  .date-hero { display: flex; align-items: flex-end; gap: 18px; margin: 18px 0 10px; }
+  .d-num { font-family: var(--serif); font-weight: 500; font-size: clamp(5.2rem, min(30vw, 22vh), 11rem); line-height: .78; letter-spacing: -.04em; }
+  .d-meta { display: flex; flex-direction: column; gap: 6px; padding-bottom: .5em; font-size: .64rem; letter-spacing: .3em; text-transform: uppercase; font-weight: 600; color: var(--soft); }
+  .d-meta b { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.6rem; letter-spacing: 0; text-transform: none; color: var(--ink); }
+  .d-line { font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 4vw, 1.3rem); color: var(--ink-2); margin-top: 6px; }
+  .d-place { font-size: .7rem; letter-spacing: .26em; text-transform: uppercase; color: var(--soft); margin-top: 10px; font-weight: 500; }
+  .cd {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid rgba(21,19,15,.18); border-bottom: 1px solid rgba(21,19,15,.18);
+    margin-top: 26px; max-width: 520px;
+  }
+  .cd > div { padding: 16px 2px 14px; text-align: center; min-width: 0; }
+  .cd > div + div { border-left: 1px solid rgba(21,19,15,.12); }
+  .cd b {
+    display: block; font-family: var(--serif); font-weight: 500;
+    font-size: clamp(1.45rem, 7.5vw, 2.8rem); line-height: 1;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .cd small { display: block; margin-top: 8px; font-size: .56rem; letter-spacing: .24em; text-transform: uppercase; color: var(--soft); font-weight: 600; }
+  .cd-note { grid-column: 1 / -1; padding: 18px 0; text-align: center; font-family: var(--serif); font-style: italic; font-size: 1.3rem; }
+
+  /* ── WHERE ────────────────────────────────────────────── */
+  .venues { display: grid; gap: 38px; margin-top: 30px; }
+  @media (min-width: 760px) { .venues { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: clamp(24px, 4vw, 60px); } }
+  .venue figure { aspect-ratio: 4 / 3; overflow: hidden; background: var(--beige); margin: 0 0 18px; }
+  .venue img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ease); }
+  .venue:hover img { transform: scale(1.04); }
+  .v-label { font-size: .62rem; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+  .v-name { font-family: var(--serif); font-weight: 500; font-size: clamp(1.5rem, 5.5vw, 2.1rem); line-height: 1.1; margin-top: 8px; }
+  .v-addr { font-size: .95rem; color: var(--ink-2); margin-top: 8px; line-height: 1.55; font-weight: 300; }
+  .v-time { font-family: var(--serif); font-style: italic; font-size: 1.15rem; margin-top: 10px; }
+
+  /* Page 4 always fits one screen. The list takes the height left under the heading, split evenly
+     between the venues, and each photograph takes what its card has left after the words — so on
+     a shorter screen the photos shrink instead of pushing the page into a scroll. */
+  .s-venues .content { flex: 1 1 auto; min-height: 0; margin: 0 auto; display: flex; flex-direction: column; }
+  .s-venues .title { font-size: clamp(1.9rem, min(8.5vw, 7vh), 4.4rem); }
+  .s-venues .venues {
+    flex: 1 1 auto; min-height: 0;
+    margin-top: clamp(14px, 3vh, 30px);
+    grid-auto-rows: minmax(0, 1fr);
+    gap: clamp(14px, 3vh, 40px);
+  }
+  .s-venues .venue { display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+  .s-venues .venue figure {
+    position: relative; flex: 1 1 auto; min-height: 0; max-height: 52vh;
+    aspect-ratio: auto; height: auto; margin-bottom: clamp(8px, 1.8vh, 18px);
+  }
+  .s-venues .venue figure img { position: absolute; inset: 0; }
+  .s-venues .v-name { margin-top: clamp(4px, .8vh, 8px); }
+  @media (max-height: 700px) {
+    .s-venues .v-name { font-size: clamp(1.2rem, 4.8vw, 1.6rem); }
+    .s-venues .v-addr { font-size: .86rem; margin-top: 4px; line-height: 1.4; }
+    .s-venues .v-time { font-size: 1rem; margin-top: 4px; }
+    .s-venues .link-line { margin-top: 4px; min-height: 30px; }
+  }
+  .link-line {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 14px; min-height: 36px;
+    font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; font-weight: 600;
+    text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 2px;
+  }
+
+  /* ── THE DAY ──────────────────────────────────────────── */
+  .steps { list-style: none; margin-top: 30px; border-top: 1px solid rgba(243,236,224,.16); }
+  .step {
+    display: grid; grid-template-columns: minmax(88px, 28%) 1fr; gap: 18px;
+    padding: 20px 0; border-bottom: 1px solid rgba(243,236,224,.16); align-items: baseline;
+  }
+  .st-time { font-family: var(--serif); font-size: clamp(1.25rem, 5vw, 2rem); line-height: 1.1; }
+  .st-title { font-size: .76rem; letter-spacing: .22em; text-transform: uppercase; font-weight: 600; }
+  .st-ico { font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; margin-right: .5em; }
+  .st-sub { font-family: var(--serif); font-style: italic; color: rgba(243,236,224,.62); margin-top: 6px; font-size: 1.02rem; }
+  .s-day .link-line { color: var(--gold-2); margin-top: 8px; }
+
+  /* ── FEATURE (custom sections) ────────────────────────── */
+  .quote { font-family: var(--serif); font-style: italic; font-size: clamp(1.5rem, min(6vw, 5.5vh), 2.6rem); line-height: 1.32; margin-top: 26px; }
+  .quote-ref { font-size: .64rem; letter-spacing: .32em; text-transform: uppercase; color: var(--gold); margin-top: 22px; font-weight: 600; }
+  .article { font-size: 1.02rem; line-height: 1.8; color: var(--ink-2); font-weight: 300; margin-top: 24px; max-width: 62ch; }
+  .article::first-letter { float: left; font-family: var(--serif); font-size: 3.6em; line-height: .8; padding: .08em .12em 0 0; color: var(--gold); }
+
+  /* ── PORTFOLIO (gallery) ──────────────────────────────── */
+  .folio { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 46vw; gap: 8px; margin-top: 26px; }
+  .folio figure { position: relative; overflow: hidden; background: var(--beige); margin: 0; }
+  .folio figure.wide { grid-column: span 2; }
+  .folio img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ease); }
+  .folio figure:hover img { transform: scale(1.04); }
+  .folio figcaption {
+    position: absolute; left: 12px; bottom: 10px; right: 12px;
+    color: #fff; font-size: .58rem; letter-spacing: .26em; text-transform: uppercase; font-weight: 600;
+    text-shadow: 0 1px 10px rgba(0,0,0,.55);
+  }
+  @media (min-width: 700px) { .folio { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 27vw; } }
+
+  /* ── GIFTS ────────────────────────────────────────────── */
+  .accounts { margin-top: 24px; border-top: 1px solid rgba(21,19,15,.16); max-width: 520px; }
+  .acct {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 16px 0; border-bottom: 1px solid rgba(21,19,15,.16);
+  }
+  .acct b { display: block; font-size: .62rem; letter-spacing: .28em; text-transform: uppercase; color: var(--soft); font-weight: 600; }
+  .acct span { font-family: var(--serif); font-size: 1.2rem; letter-spacing: .02em; }
+  .copy-btn {
+    border: 1px solid var(--ink); background: transparent; cursor: pointer; min-height: 38px;
+    padding: 0 16px; font-size: .6rem; letter-spacing: .26em; text-transform: uppercase; font-weight: 600;
+    transition: background .25s var(--ease), color .25s var(--ease);
+  }
+  .copy-btn:hover { background: var(--ink); color: var(--paper); }
+
+  /* ── RSVP ─────────────────────────────────────────────── */
+  .s-rsvp { background: var(--ink); }
+  .s-rsvp .shade { background: linear-gradient(180deg, rgba(12,10,8,.4), rgba(12,10,8,.12) 45%, rgba(12,10,8,.5)); }
+  /* The photograph holds still here while the page turns, so the glass above it is not re-blurred
+     on every frame of the swipe. */
+  .slide.near.s-rsvp .media img, .slide.near.s-rsvp .media video { transform: scale(1.06); }
+  /* The panel is the photograph itself, heavily blurred behind a thin veil — part of the picture
+     rather than a box on top of it. Without backdrop-filter it falls back to a deeper tint. */
+  .rsvp-card {
+    max-width: 520px; margin: 0 auto;
+    color: #f6f0e6;
+    padding: clamp(24px, 6vw, 46px);
+    background: rgba(24,20,17,.74);
+    border: 1px solid rgba(255,255,255,.16);
+    box-shadow: 0 30px 80px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .rsvp-card {
+      background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03)), rgba(22,19,16,.34);
+      -webkit-backdrop-filter: blur(26px) saturate(1.15);
+      backdrop-filter: blur(26px) saturate(1.15);
+    }
+  }
+  .rsvp-card .chapter { color: var(--gold-2); }
+  .rsvp-card .title { font-size: clamp(2rem, min(8vw, 8vh), 3.4rem); }
+  .rsvp-note { font-size: .98rem; line-height: 1.7; color: rgba(246,240,230,.86); margin-top: 14px; font-weight: 300; }
+  .rsvp-small { font-size: .66rem; letter-spacing: .22em; text-transform: uppercase; color: rgba(246,240,230,.66); margin-top: 12px; font-weight: 600; }
+  .rsvp-dear { font-family: var(--serif); font-style: italic; font-size: 1.25rem; margin-top: 14px; }
+  .rsvp-form { margin-top: 24px; display: grid; gap: 18px; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice {
+    position: relative; display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 52px; padding: 10px; cursor: pointer;
+    border: 1px solid rgba(246,240,230,.4);
+    font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; font-weight: 600;
+    transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice:hover { border-color: rgba(246,240,230,.75); }
+  .choice.on { background: #f6f0e6; color: var(--ink); border-color: #f6f0e6; }
+  .choice:focus-within { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+  .field { display: block; }
+  .f-label { display: block; font-size: .6rem; letter-spacing: .28em; text-transform: uppercase; color: rgba(246,240,230,.7); font-weight: 600; margin-bottom: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 0; border: 0; border-bottom: 1px solid rgba(246,240,230,.42);
+    background: transparent; font-size: 16px; font-family: var(--serif); border-radius: 0;
+  }
+  .field textarea { resize: none; }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(246,240,230,.55); }
+  .field select option { color: var(--ink); background: var(--paper); }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-bottom-color: var(--gold-2); }
+  .field input[readonly] { border-bottom-style: dashed; }
+  .btn-send {
+    min-height: 54px; border: 0; cursor: pointer; margin-top: 4px;
+    background: #f6f0e6; color: var(--ink);
+    font-size: .68rem; letter-spacing: .32em; text-transform: uppercase; font-weight: 600;
+    transition: opacity .25s var(--ease);
+  }
+  .btn-send:hover { opacity: .86; }
+  .btn-send:disabled { opacity: .5; cursor: default; }
+  .rsvp-done { margin-top: 24px; }
+  .done-body { font-family: var(--serif); font-style: italic; font-size: 1.35rem; line-height: 1.45; margin-top: 12px; }
+
+  /* ── CLOSING ──────────────────────────────────────────── */
+  .close-kicker { font-family: var(--serif); font-style: italic; font-size: clamp(1.2rem, 4.6vw, 1.6rem); color: rgba(243,236,224,.75); margin-top: 26px; }
+  .close-names { font-family: var(--serif); font-weight: 500; font-size: clamp(2.6rem, min(12vw, 12vh), 6.5rem); line-height: 1; margin-top: 14px; overflow-wrap: break-word; }
+  .close-names i { font-style: italic; font-weight: 400; color: var(--gold-2); }
+  .close-date { font-size: .7rem; letter-spacing: .34em; text-transform: uppercase; margin-top: 22px; color: rgba(243,236,224,.7); font-weight: 500; }
+  .close-note { font-size: .95rem; line-height: 1.7; color: rgba(243,236,224,.72); margin: 30px auto 0; max-width: 42ch; font-weight: 300; }
+  .btn-line {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 26px;
+    padding: 0 26px; border: 1px solid rgba(243,236,224,.45); background: transparent; cursor: pointer;
+    color: #f3ece0; text-decoration: none;
+    font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; font-weight: 600;
+    transition: background .25s var(--ease), color .25s var(--ease);
+  }
+  .btn-line:hover { background: #f3ece0; color: var(--ink); }
+
+  /* ── THE READING PAGES (3–8 and 10) ───────────────────────
+     Every page between the photographs sits on exactly the same ground — a warm charcoal with a
+     faint grain — so the story reads as one bound issue. Type, rules and controls are set in
+     ivory and champagne gold on it. */
+  .stage { background: var(--stage) var(--grain); color: var(--on-stage); }
+  .stage .chapter, .stage .v-label, .stage .quote-ref, .stage .link-line { color: var(--bronze); }
+  .stage .body-copy, .stage .d-line, .stage .v-addr, .stage .article, .stage .st-sub { color: var(--on-stage-2); }
+  .stage .d-meta, .stage .d-place, .stage .cd small, .stage .acct b { color: var(--on-stage-3); }
+  .stage .d-meta b { color: var(--on-stage); }
+  .stage .article::first-letter, .stage .close-names i { color: var(--bronze); }
+  .stage .cd { border-color: var(--line); }
+  .stage .cd > div + div { border-left-color: rgba(21,19,15,.12); }
+  .stage .steps, .stage .step, .stage .accounts, .stage .acct { border-color: var(--line); }
+  .stage .venue figure, .stage .folio figure { background: rgba(21,19,15,.08); }
+  .stage .copy-btn { border-color: rgba(21,19,15,.5); }
+  .stage .copy-btn:hover { background: var(--ink); color: var(--stage); }
+  .stage .close-kicker, .stage .close-date, .stage .close-note { color: var(--on-stage-2); }
+  .stage .btn-line { color: var(--ink); border-color: rgba(21,19,15,.45); }
+  .stage .btn-line:hover { background: var(--ink); color: var(--stage); }
+
+  /* ── ONE SCREEN PER PAGE ─────────────────────────────────
+     Each page is laid out to fit the screen it is shown on, so reading it needs no scrolling:
+     lists and photo grids take the height left under their heading and share it, photos take
+     what the words leave, and spacing tightens on shorter screens. A page only scrolls inside
+     itself as a last resort, where the content cannot physically fit (a phone on its side). */
+  .s-gallery .content { flex: 1 1 auto; min-height: 0; margin: 0 auto; display: flex; flex-direction: column; }
+  .s-gallery .folio { flex: 1 1 auto; min-height: 0; grid-auto-rows: minmax(0, 1fr); margin-top: clamp(14px, 3vh, 26px); }
+  .s-gallery .title, .s-day .title, .s-gifts .title { font-size: clamp(1.9rem, min(8.5vw, 7vh), 4.4rem); }
+  .s-day .steps { margin-top: clamp(14px, 3vh, 30px); }
+  .s-day .step { padding: clamp(9px, 1.8vh, 20px) 0; }
+  .s-day .st-time { font-size: clamp(1.1rem, min(5vw, 3.4vh), 2rem); }
+  .accounts { margin-top: clamp(12px, 2.6vh, 24px); }
+  .acct { padding: clamp(8px, 1.6vh, 16px) 0; }
+  /* Photo-and-words pages on a shorter phone: a slightly smaller photo band. */
+  @media (max-height: 760px) and (max-aspect-ratio: 5/4) {
+    .split { grid-template-rows: minmax(0, 36%) minmax(0, 1fr); }
+    .split .inner { padding-top: 22px; }
+  }
+  /* RSVP: a tighter rhythm on shorter screens so the whole form stays on the page. */
+  .rsvp-card { padding: clamp(18px, 3.6vh, 46px) clamp(20px, 6vw, 46px); }
+  .rsvp-card .title { font-size: clamp(1.8rem, min(8vw, 6vh), 3.4rem); }
+  .rsvp-form { gap: clamp(10px, 2vh, 18px); margin-top: clamp(14px, 2.8vh, 24px); }
+  .choice { min-height: clamp(42px, 6vh, 52px); }
+  .btn-send { min-height: clamp(44px, 6.2vh, 54px); }
+  .field input, .field select, .field textarea { padding: clamp(6px, 1.2vh, 10px) 0; }
+
+  /* ── WIDE SCREENS: tablets on their side, laptops, phones held landscape ──
+     Photo and words sit side by side instead of stacked. */
+  @media (min-aspect-ratio: 5/4) and (min-width: 640px) {
+    .s-cover { background: var(--ivory) var(--grain); }
+    .s-cover .media { left: 46%; }
+    .slide.near.s-cover .media img, .slide.near.s-cover .media video {
+      transform: translate3d(calc(var(--p) * -8%), 0, 0) scale(1.1);
+    }
+    .s-cover .media img, .s-cover .media video { transform: scale(1.1); }
+    .s-cover .shade { left: 46%; background: linear-gradient(0deg, rgba(12,10,8,.5), rgba(12,10,8,0) 38%); }
+    .s-cover .inner { position: absolute; left: 0; top: 0; bottom: 0; width: 46%; color: var(--ink); }
+    .s-cover .content { margin: auto 0; }
+    .s-cover .issue { color: var(--gold); }
+    .s-cover .names { font-size: calc(clamp(3rem, min(7.6vw, 15vh), 9rem) * var(--fit)); }
+    .s-cover .names .amp { color: var(--gold); }
+
+    .split { grid-template-rows: 100%; grid-template-columns: 1fr 1fr; }
+    .split.flip .split-media { order: 2; }
+    .split .inner { padding-top: var(--top); }
+
+    .folio { grid-template-columns: repeat(4, 1fr); grid-auto-rows: max(150px, calc((100vh - 330px) / 2)); }
+    .folio figure.big { grid-column: span 2; grid-row: span 2; }
+    .venue figure { aspect-ratio: auto; height: max(160px, min(34vh, 360px)); }
+
+    /* The day: heading on the left, running order on the right, so a full day fits one screen. */
+    .s-day .content.narrow {
+      max-width: 1180px;
+      display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+      gap: clamp(32px, 6vw, 96px); align-items: start;
+    }
+    .s-day .steps { margin-top: 0; }
+    .s-day .step { padding: 14px 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .slide.is-active .rv { opacity: 1; transform: none; transition: none; }
+    .slide.near .media img, .slide.near .media video, .slide.near .split-media img { transform: scale(1.06); }
+    .slide.near .drift { translate: none; }
+    .slide::after { opacity: 0; }
+    .swipe-hint .line { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+
+<main class="deck" id="deck" aria-label="Wedding invitation. Swipe, drag or use the arrow keys to move between pages."></main>
+
+<script>
+// ── API CONFIG ─────────────────────────────────────────
+const API_BASE = (typeof window !== 'undefined' && window.API_BASE)
+  ? window.API_BASE.replace(/\/$/, '')
+  : '';
+
+let CURRENT_SLUG = null;
+// Set when opened through a personal guest-list link (?g=<token>)
+let CURRENT_GUEST = null;
+
+// ── DEFAULT DATA ───────────────────────────────────────
+const ASSET = '/assets/editorial-love-story/';
+const DEFAULT_DATA = {
+  template: 'editorial-love-story',
+  title: 'Name & Name',
+  cover: {
+    enabled: true, headline: 'The Wedding Issue', eventLabel: '',
+    names: 'Name & Name', tagline: 'A love story, in the making',
+    greeting: 'Dear', hostIntro: '', hostOutro: '', hostText: '',
+    image: ASSET + 'cover.jpg', video: '', buttonText: ''
+  },
+  countdown: { enabled: true, label: 'Save the Date', date: '', time: '', tzOffset: null, description: '', image: ASSET + 'countdown.jpg' },
+  families:  { enabled: true, label: 'Together with their families', title: '', image: ASSET + 'invitation.jpg', items: [] },
+  locations: { enabled: true, label: 'Where', title: 'The Celebration', image: '', items: [
+    { label: 'The Ceremony',  time: '', name: '', addr: '', url: '', img: ASSET + 'ceremony.jpg' },
+    { label: 'The Reception', time: '', name: '', addr: '', url: '', img: ASSET + 'reception.jpg' }
+  ] },
+  timeline:  { enabled: true, label: 'The Day', title: 'Order of the Day', items: [] },
+  gallery:   { enabled: true, label: 'Portfolio', title: 'Moments', items: [1, 2, 3, 4].map(i => ({ url: `${ASSET}gallery-${i}.jpg`, caption: '' })) },
+  gifts:     { enabled: false, label: 'With Gratitude', title: 'Gift Registry', description: 'Your presence is the most beautiful gift. For those who wish, a registry is available below.', image: ASSET + 'gifts.jpg', items: [] },
+  rsvp:      {
+    enabled: true, label: 'Répondez s’il vous plaît', title: 'Will you join us?',
+    description: '', deadline: '', maxPeople: 10, buttonText: 'Send Reply',
+    allowWishes: true, image: ASSET + 'rsvp.jpg'
+  },
+  memories:  { enabled: false, title: 'Share Your Memories', description: '', url: '', buttonText: 'Share Memories' },
+  music:     { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+// ── HELPERS ────────────────────────────────────────────
+function decodeData(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(s))));
+}
+function mergeDefaults(data) {
+  const out = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  for (const k of Object.keys(data || {})) {
+    if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && out[k]) {
+      out[k] = Object.assign({}, out[k], data[k]);
+    } else {
+      out[k] = data[k];
+    }
+  }
+  return out;
+}
+function parseQuery() {
+  const raw = window.location.search.replace(/^\?/, '').replace(/\?/g, '&');
+  return new URLSearchParams(raw);
+}
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+// Resolve API-relative uploaded media (/api/public/media/<id>) against API_BASE.
+const mediaSrc = u => u && /^\/api\//.test(u) ? (API_BASE || '') + u : (u || '');
+const pad2 = n => String(n).padStart(2, '0');
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI'];
+
+function fmtDate(s) {
+  if (!s) return '';
+  const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + 'T00:00:00' : s);
+  return isNaN(d) ? s : d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+/** "Layla & Elias" → ["Layla", "Elias"]; a single name stays a single entry. */
+function splitNames(s) {
+  return String(s || '').split(/\s*(?:&|\band\b|\+)\s*/i).map(x => x.trim()).filter(Boolean);
+}
+/** The day as typed (yyyy-MM-dd), never shifted into the viewer's timezone. */
+function dateParts(cd) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((cd && cd.date) || '');
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], d = +m[3];
+  if (y < 2000) return null;
+  const dt = new Date(y, mo - 1, d);
+  return {
+    y, mo, d,
+    weekday: dt.toLocaleDateString('en-US', { weekday: 'long' }),
+    month:   dt.toLocaleDateString('en-US', { month: 'long' })
+  };
+}
+/**
+ * The instant the countdown runs to (epoch ms), or null. When the admin saved a wedding time and
+ * their timezone offset, every guest counts down to the same real moment wherever they are.
+ */
+function weddingInstant(cd) {
+  const p = dateParts(cd);
+  if (!p) return null;
+  const [hh, mi] = /^\d{1,2}:\d{2}/.test(cd.time || '') ? cd.time.split(':').map(Number) : [0, 0];
+  const t = typeof cd.tzOffset === 'number'
+    ? Date.UTC(p.y, p.mo - 1, p.d, hh, mi) + cd.tzOffset * 60000
+    : new Date(p.y, p.mo - 1, p.d, hh, mi).getTime();
+  return isNaN(t) ? null : t;
+}
+/** "17:30" → "5:30 PM". Empty when no time has been configured. */
+function fmtClock(t) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t || '');
+  if (!m) return '';
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+/** The emoji for a step: the admin's own, otherwise one read from what the step is. */
+function stepIcon(x) {
+  const own = String((x && x.icon) || '').trim();
+  if (own && own !== '✦') return own;
+  const t = `${x.title || x.label || ''} ${x.subtitle || x.name || ''}`.toLowerCase();
+  if (/groom/.test(t)) return '🤵';
+  if (/bride/.test(t)) return '👰';
+  if (/mosque/.test(t)) return '🕌';
+  if (/church|chapel|cathedral|ceremony|mass/.test(t)) return '⛪';
+  if (/venue|reception|party|dinner|celebration|hall|cocktail/.test(t)) return '🥂';
+  return '';
+}
+/** A map link: a real URL as-is; anything else typed into the field is searched on Google Maps. */
+function mapHref(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  return /^https?:\/\//i.test(u) ? u : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(u);
+}
+/** A photo. Only the cover loads straight away; the rest are fetched as their slide comes near. */
+function photo(src, alt, eager) {
+  return `<img src="${esc(mediaSrc(src))}" alt="${esc(alt || '')}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+}
+/** A cover video when one is set (muted, looping, the photo as its poster), otherwise the photo. */
+function coverMedia(c) {
+  const vid = mediaSrc(c.video || ''), img = mediaSrc(c.image || '');
+  if (vid) return `<figure class="media"><video data-bg-video autoplay loop muted playsinline preload="metadata" ${img ? `poster="${esc(img)}"` : ''} src="${esc(vid)}"></video></figure>`;
+  return img ? `<figure class="media">${photo(img, c.names, true)}</figure>` : '';
+}
+const rv = (i, cls) => `class="${cls ? cls + ' ' : ''}rv" style="--i:${i}"`;
+
+/**
+ * The API sends the invitation's event date next to the section data. Invitations whose Date &
+ * Countdown section never got its own date carry it only there, so use it as the fallback.
+ */
+function withEventDate(data, eventDate) {
+  data.countdown = data.countdown || {};
+  if (!data.countdown.date && eventDate) data.countdown.date = String(eventDate).slice(0, 10);
+  return data;
+}
+
+// ── DATA LOADING ───────────────────────────────────────
+async function loadData() {
+  const params = parseQuery();
+
+  // ?demo=<key> renders the built-in sample invitation (sales/preview mode, no API call).
+  if (window.getDemoData) {
+    const demo = window.getDemoData(window.location.search);
+    if (demo) return mergeDefaults(demo);
+  }
+
+  const enc = params.get('d');
+  if (enc) {
+    try { return mergeDefaults(decodeData(enc)); }
+    catch (e) { console.warn('Bad ?d payload:', e); }
+  }
+
+  // Personal guest-list link (?g=<token>)
+  const token = params.get('g');
+  if (token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/public/guest/${encodeURIComponent(token)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        CURRENT_SLUG  = body.slug;
+        CURRENT_GUEST = Object.assign({ token }, body.guest || {});
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('Guest API returned', res.status);
+    } catch (e) { console.warn('Guest API fetch failed:', e); }
+  }
+
+  const id = params.get('id');
+  if (id) {
+    CURRENT_SLUG = id;
+    try {
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(id)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        return withEventDate(mergeDefaults(body.data || {}), body.eventDate);
+      }
+      console.warn('API returned', res.status);
+    } catch (e) { console.warn('API fetch failed:', e); }
+    try {
+      const all = JSON.parse(localStorage.getItem('ic_people') || '{}');
+      if (all[id]) return mergeDefaults(all[id].data);
+    } catch { /* ignore */ }
+  }
+
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+// ── URL PERSONALIZATION ────────────────────────────────
+// Supports both the reference style (?name=&spouse=&max=) and the platform style (?gn=&np=).
+// Guest-list links (?g=) win over both.
+function getGuestName() {
+  if (CURRENT_GUEST && CURRENT_GUEST.name) return CURRENT_GUEST.name;
+  const p = parseQuery();
+  const gn = p.get('gn');
+  if (gn && gn.trim()) return gn.trim();
+  const name = (p.get('name') || '').trim();
+  const spouse = (p.get('spouse') || '').trim();
+  if (!name) return null;
+  return spouse && spouse !== 'null' ? `${name} & ${spouse}` : name;
+}
+function getMaxOverride() {
+  if (CURRENT_GUEST && CURRENT_GUEST.maxAttendees) return CURRENT_GUEST.maxAttendees;
+  const p = parseQuery();
+  const v = parseInt(p.get('np') || p.get('max'));
+  return v > 0 ? v : null;
+}
+
+// ── SLIDES ─────────────────────────────────────────────
+// Each returns the inner HTML of one full-screen slide, or '' when it has nothing to show.
+// `ch` is the chapter numeral, worked out from where the slide lands in the story.
+
+function slideCover(data) {
+  const c = data.cover || {}, cd = data.countdown || {};
+  const parts = splitNames(c.names || data.title || '');
+  const dp = dateParts(cd);
+  const issue = [c.headline || 'The Wedding Issue', dp ? `${dp.month} ${dp.y}` : ''].filter(Boolean);
+  const meta = [dp ? `${pad2(dp.d)} · ${pad2(dp.mo)} · ${dp.y}` : '', cd.description || c.eventLabel || ''].filter(Boolean);
+  return `
+    ${coverMedia(c)}
+    <div class="shade"></div>
+    <div class="inner"><div class="content">
+      <p ${rv(0, 'issue')}>${issue.map(esc).join('<span class="sep"></span>')}</p>
+      <h1 class="names drift" data-fit>
+        <span ${rv(1)}>${esc(parts[0] || '')}</span>
+        ${parts.length > 1 ? `<span ${rv(2)}><i class="amp">&amp;</i>${esc(parts.slice(1).join(' & '))}</span>` : ''}
+      </h1>
+      ${c.tagline ? `<p ${rv(3, 'cover-tag')}>${esc(c.tagline)}</p>` : ''}
+      ${meta.length ? `<p ${rv(4, 'cover-meta')}>${meta.map(m => `<span>${esc(m)}</span>`).join('')}</p>` : ''}
+    </div></div>
+    <p class="swipe-hint" aria-hidden="true"><span class="t-touch">Swipe</span><span class="t-mouse">Drag or scroll</span><span class="line"></span></p>`;
+}
+
+function slideInvite(data, ch, guestName) {
+  const c = data.cover || {}, f = data.families || {};
+  const fams = (f.enabled !== false ? (f.items || []) : []).filter(x => x && (x.names || x.label));
+  const parts = splitNames(c.names || data.title || '');
+  let i = 0;
+  const famHtml = fams.length ? `
+    ${f.label ? `<p ${rv(i++, 'fams-label')}>${esc(f.label)}</p>` : ''}
+    <div ${rv(i++, 'fams')}>
+      ${fams.map((x, k) => `
+        ${k > 0 ? '<span class="fam-and">&amp;</span>' : ''}
+        <div>${x.label ? `<span class="fam-l">${esc(x.label)}</span>` : ''}<span class="fam-n">${esc(x.names || '')}</span></div>`).join('')}
+    </div>` : '';
+  const hostText = c.hostText || (fams.length ? 'request the pleasure of your company at the marriage of' : '');
+  return `
+    ${f.image ? `<figure class="media">${photo(f.image, '')}</figure>` : ''}
+    <div class="shade"></div>
+    <div class="inner"><div class="content narrow center">
+      <p ${rv(i++, 'chapter')}>Chapter ${ch} — The Invitation</p>
+      ${guestName ? `<p ${rv(i++, 'dear')}>${esc(c.greeting || 'Dear')} ${esc(guestName)},</p>` : ''}
+      ${c.hostIntro ? `<p ${rv(i++, 'lede-it')}>${nl2br(c.hostIntro)}</p>` : ''}
+      <span ${rv(i++, 'rule')}></span>
+      ${famHtml}
+      ${hostText ? `<p ${rv(i++, 'body-copy')}>${nl2br(hostText)}</p>` : ''}
+      <p ${rv(i++, 'inv-names')}>${parts.map(esc).join(' <i>&amp;</i> ')}</p>
+      ${c.hostOutro ? `<p ${rv(i++, 'outro')}>${esc(c.hostOutro)}</p>` : ''}
+    </div></div>`;
+}
+
+function slideDate(cd, ch) {
+  if (!cd || cd.enabled === false) return '';
+  const dp = dateParts(cd);
+  const target = weddingInstant(cd);
+  const clock = fmtClock(cd.time);
+  const cell = (k, t) => `<div><b data-cd="${k}">–</b><small>${t}</small></div>`;
+  return `
+    ${cd.image ? `<figure class="split-media">${photo(cd.image, '')}</figure>` : '<div class="split-media"></div>'}
+    <div class="inner"><div class="content">
+      <p ${rv(0, 'chapter')}>Chapter ${ch} — ${esc(cd.label || 'Save the Date')}</p>
+      ${dp ? `
+        <div ${rv(1, 'date-hero')}>
+          <span class="d-num drift">${pad2(dp.d)}</span>
+          <span class="d-meta"><span>${esc(dp.weekday)}</span><b>${esc(dp.month)}</b><span>${dp.y}</span></span>
+        </div>
+        ${clock ? `<p ${rv(2, 'd-line')}>The ceremony begins at ${esc(clock)}</p>` : ''}
+        ${cd.description ? `<p ${rv(3, 'd-place')}>${esc(cd.description)}</p>` : ''}
+        ${target !== null ? `
+          <div ${rv(4, 'cd')} data-countdown="${target}">
+            ${cell('d', 'Days')}${cell('h', 'Hours')}${cell('m', 'Minutes')}${cell('s', 'Seconds')}
+          </div>` : ''}`
+      : `<p ${rv(1, 'd-line')}>The date will be announced here soon.</p>`}
+    </div></div>`;
+}
+
+function slideVenues(l, ch) {
+  const items = (l.items || []).filter(x => x && (x.name || x.label || x.addr));
+  if (!items.length) return '';
+  return `
+    <div class="inner"><div class="content wide">
+      <p ${rv(0, 'chapter')}>Chapter ${ch} — ${esc(l.label || 'Where')}</p>
+      ${l.title ? `<h2 ${rv(1, 'title')}>${esc(l.title)}</h2>` : ''}
+      <div class="venues">
+        ${items.map((x, k) => `
+          <article ${rv(2 + k, 'venue')}>
+            ${x.img ? `<figure>${photo(x.img, x.name || x.label)}</figure>` : ''}
+            ${x.label ? `<p class="v-label">${esc(x.label)}</p>` : ''}
+            ${x.name ? `<h3 class="v-name">${esc(x.name)}</h3>` : ''}
+            ${x.addr ? `<p class="v-addr">${nl2br(x.addr)}</p>` : ''}
+            ${x.time ? `<p class="v-time">${esc(x.time)}</p>` : ''}
+            ${x.url ? `<a class="link-line" href="${esc(mapHref(x.url))}" target="_blank" rel="noopener">View the map <span aria-hidden="true">↗</span></a>` : ''}
+          </article>`).join('')}
+      </div>
+    </div></div>`;
+}
+
+function slideDay(t, ch) {
+  const items = (t.items || []).filter(x => x && (x.time || x.title));
+  if (!items.length) return '';
+  return `
+    <div class="inner"><div class="content narrow">
+      <div class="day-head">
+        <p ${rv(0, 'chapter')}>Chapter ${ch} — ${esc(t.label || 'The Day')}</p>
+        ${t.title ? `<h2 ${rv(1, 'title')}>${esc(t.title)}</h2>` : ''}
+      </div>
+      <ol class="steps">
+        ${items.map((x, k) => {
+          const icon = stepIcon(x);
+          return `
+          <li ${rv(2 + Math.min(k, 8), 'step')}>
+            <span class="st-time">${esc(x.time || '')}</span>
+            <span>
+              <span class="st-title">${icon ? `<span class="st-ico" aria-hidden="true">${esc(icon)}</span>` : ''}${esc(x.title || '')}</span>
+              ${x.subtitle ? `<span class="st-sub" style="display:block">${esc(x.subtitle)}</span>` : ''}
+              ${x.url ? `<a class="link-line" href="${esc(mapHref(x.url))}" target="_blank" rel="noopener">Location <span aria-hidden="true">↗</span></a>` : ''}
+            </span>
+          </li>`;
+        }).join('')}
+      </ol>
+    </div></div>`;
+}
+
+function slideArticle(s, ch) {
+  if (!s.title && !s.body) return '';
+  // A short text reads as a pull quote; a longer one as a magazine column with a drop cap.
+  const short = (s.body || '').length < 240;
+  return `
+    <div class="inner"><div class="content narrow${short ? ' center' : ''}">
+      <p ${rv(0, 'chapter')}>Chapter ${ch}${short || !s.label ? '' : ' — ' + esc(s.label)}</p>
+      ${s.title ? `<h2 ${rv(1, 'title')}>${esc(s.title)}</h2>` : ''}
+      ${s.body ? `<p ${rv(2, short ? 'quote' : 'article')}>${nl2br(s.body)}</p>` : ''}
+      ${short && s.label ? `<p ${rv(3, 'quote-ref')}>${esc(s.label)}</p>` : ''}
+    </div></div>`;
+}
+
+function slideGallery(g, ch) {
+  const items = (g.items || []).filter(x => x && x.url).slice(0, 12);
+  if (!items.length) return '';
+  return `
+    <div class="inner"><div class="content wide">
+      <p ${rv(0, 'chapter')}>Chapter ${ch} — ${esc(g.label || 'Portfolio')}</p>
+      ${g.title ? `<h2 ${rv(1, 'title')}>${esc(g.title)}</h2>` : ''}
+      <div class="folio">
+        ${items.map((x, k) => `
+          <figure ${rv(2 + Math.min(k, 6), [k === 0 ? 'big' : '', k % 3 === 0 ? 'wide' : ''].filter(Boolean).join(' '))}>
+            ${photo(x.url, x.caption || 'Photograph')}
+            ${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ''}
+          </figure>`).join('')}
+      </div>
+    </div></div>`;
+}
+
+function slideGifts(g, ch) {
+  if (!g || g.enabled === false) return '';
+  const accounts = (g.items || []).filter(x => x && x.account);
+  if (!accounts.length && !g.description) return '';
+  return `
+    ${g.image ? `<figure class="split-media">${photo(g.image, '')}</figure>` : '<div class="split-media"></div>'}
+    <div class="inner"><div class="content">
+      <p ${rv(0, 'chapter')}>Chapter ${ch} — ${esc(g.label || 'With Gratitude')}</p>
+      ${g.title ? `<h2 ${rv(1, 'title')}>${esc(g.title)}</h2>` : ''}
+      ${g.description ? `<p ${rv(2, 'body-copy')} style="margin-top:18px;--i:2">${nl2br(g.description)}</p>` : ''}
+      ${accounts.length ? `
+        <div ${rv(3, 'accounts')}>
+          ${accounts.map(x => `
+            <div class="acct">
+              <div><b>${esc(x.bank || 'Account')}</b><span>${esc(x.account)}</span></div>
+              <button type="button" class="copy-btn" data-copy="${esc(x.account)}">Copy</button>
+            </div>`).join('')}
+        </div>` : ''}
+    </div></div>`;
+}
+
+function slideRsvp(r, ch, maxPeople, guestName, greeting) {
+  const opts = ['<option value="" disabled selected>How many of you?</option>'];
+  for (let n = 1; n <= maxPeople; n++) opts.push(`<option value="${n}">${n}</option>`);
+  return `
+    ${r.image ? `<figure class="media">${photo(r.image, '')}</figure>` : ''}
+    <div class="shade"></div>
+    <div class="inner"><div class="content">
+      <div class="rsvp-card">
+        <p ${rv(0, 'chapter')}>Chapter ${ch} — ${esc(r.label || 'RSVP')}</p>
+        <h2 ${rv(1, 'title')}>${esc(r.title || 'Will you join us?')}</h2>
+        ${guestName ? `<p ${rv(2, 'rsvp-dear')}>${esc(greeting || 'Dear')} ${esc(guestName)}</p>` : ''}
+        ${r.description ? `<p ${rv(2, 'rsvp-note')}>${nl2br(r.description)}</p>` : ''}
+        ${r.deadline ? `<p ${rv(3, 'rsvp-small')}>Kindly reply before ${esc(fmtDate(r.deadline))}</p>` : ''}
+        ${guestName ? `<p ${rv(3, 'rsvp-small')}>Reserved for up to ${maxPeople} ${maxPeople === 1 ? 'guest' : 'guests'}</p>` : ''}
+
+        <form ${rv(4, 'rsvp-form')} data-rsvp novalidate>
+          <div class="choices" role="radiogroup" aria-label="Will you attend?">
+            <label class="choice" data-choice><input type="radio" name="attending" value="yes"><span>Joyfully accepts</span></label>
+            <label class="choice" data-choice><input type="radio" name="attending" value="no"><span>Regretfully declines</span></label>
+          </div>
+          <label class="field">
+            <span class="f-label">${guestName ? 'Invitation issued to' : 'Your name(s)'}</span>
+            ${guestName
+              // Personal link: shown for confirmation but locked. The server also ignores any
+              // submitted name for a known guest.
+              ? `<input type="text" data-guest-name value="${esc(guestName)}" readonly aria-readonly="true" tabindex="-1">`
+              : `<input type="text" data-guest-name placeholder="First and last name" autocomplete="name">`}
+          </label>
+          <label class="field" data-count-field hidden>
+            <span class="f-label">Number of guests</span>
+            <select data-guest-count>${opts.join('')}</select>
+          </label>
+          ${r.allowWishes !== false ? `
+          <label class="field">
+            <span class="f-label">A note for the couple (optional)</span>
+            <textarea data-wishes rows="2" maxlength="200" placeholder="Write your wishes…"></textarea>
+          </label>` : ''}
+          <button type="submit" class="btn-send">${esc(r.buttonText || 'Send Reply')}</button>
+        </form>
+
+        <div class="rsvp-done" data-rsvp-success hidden
+             data-accept="${esc(r.acceptMessage || "Thank you! We can't wait to celebrate with you.")}"
+             data-decline="${esc(r.declineMessage || 'Thank you for letting us know. You will be missed.')}">
+          <p class="chapter">Received with thanks</p>
+          <p class="done-body"></p>
+        </div>
+      </div>
+    </div></div>`;
+}
+
+function slideClose(data, ch) {
+  const c = data.cover || {}, cd = data.countdown || {}, m = data.memories || {};
+  const parts = splitNames(c.names || data.title || '');
+  const dp = dateParts(cd);
+  const memories = m.enabled !== false && m.url;
+  return `
+    <div class="inner"><div class="content narrow center">
+      <p ${rv(0, 'chapter')}>Chapter ${ch} — With Love</p>
+      <p ${rv(1, 'close-kicker')}>Until then,</p>
+      <h2 ${rv(2, 'close-names')}>${parts.map(esc).join(' <i>&amp;</i> ')}</h2>
+      ${dp ? `<p ${rv(3, 'close-date')}>${pad2(dp.d)} · ${pad2(dp.mo)} · ${dp.y}</p>` : ''}
+      ${memories ? `
+        <div ${rv(4)}>
+          ${m.description ? `<p class="close-note">${nl2br(m.description)}</p>` : ''}
+          <a class="btn-line" href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.buttonText || 'Share Memories')}</a>
+        </div>` : ''}
+      <div ${rv(5)}><button type="button" class="btn-line" data-go="0">Back to the cover</button></div>
+    </div></div>`;
+}
+
+// ── BUILD ──────────────────────────────────────────────
+function build(data) {
+  const guestName = getGuestName();
+  const maxPeople = getMaxOverride() || (data.rsvp && data.rsvp.maxPeople) || 10;
+  const c = data.cover || {};
+
+  // The story, in order. A slide with nothing to show is left out, and chapters are numbered
+  // from the slides that remain, so the numerals never skip.
+  const defs = [];
+  const add = (cls, title, fn) => defs.push({ cls, title, fn });
+  if (c.enabled !== false) add('s-cover', 'Cover', () => slideCover(data));
+  add('s-invite', 'The Invitation', ch => slideInvite(data, ch, guestName));
+  if (data.countdown && data.countdown.enabled !== false) add('s-date split stage', data.countdown.label || 'Save the Date', ch => slideDate(data.countdown, ch));
+  if (data.locations && data.locations.enabled !== false) add('s-venues stage', data.locations.title || data.locations.label || 'Where', ch => slideVenues(data.locations, ch));
+  if (data.timeline && data.timeline.enabled !== false) add('s-day stage', data.timeline.title || 'The Day', ch => slideDay(data.timeline, ch));
+  (data.customSections || []).forEach(s => {
+    if (s && s.enabled !== false) add('s-article stage', s.title || s.label || 'Feature', ch => slideArticle(s, ch));
+  });
+  if (data.gallery && data.gallery.enabled !== false) add('s-gallery stage', data.gallery.title || 'Portfolio', ch => slideGallery(data.gallery, ch));
+  add('s-gifts split flip stage', (data.gifts && data.gifts.title) || 'Gifts', ch => slideGifts(data.gifts, ch));
+  if (data.rsvp && data.rsvp.enabled !== false) add('s-rsvp', 'RSVP', ch => slideRsvp(data.rsvp, ch, maxPeople, guestName, c.greeting));
+  add('s-close stage', 'With Love', ch => slideClose(data, ch));
+
+  const slides = [];
+  let chapter = 0;
+  defs.forEach(d => {
+    const isCover = d.cls === 's-cover';
+    const html = d.fn(isCover ? '' : (ROMAN[chapter] || String(chapter + 1)));
+    if (!html || !html.trim()) return;
+    if (!isCover) chapter++;
+    slides.push({ cls: d.cls, title: d.title, html });
+  });
+
+  const n = slides.length;
+  document.getElementById('deck').innerHTML = slides.map((s, i) => `
+    <section class="slide ${s.cls}" data-title="${esc(s.title)}" aria-roledescription="slide" aria-label="${i + 1} of ${n}: ${esc(s.title)}">
+      ${s.html}
+    </section>`).join('');
+
+  document.title = (data.title || c.names || 'Invitation') + ' — Wedding Invitation';
+
+  fitDisplay();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitDisplay).catch(() => {});
+  setupDeck();
+  startCountdown();
+  startBackgroundVideos();
+  if (window.InvitationMusic) InvitationMusic.init(data.music, API_BASE);
+
+  // Show the deck, then let the first slide's words rise in on the next frame.
+  requestAnimationFrame(() => {
+    document.body.classList.add('ready');
+    requestAnimationFrame(() => activate(Deck.index, true));
+  });
+}
+
+// ── DISPLAY TYPE FIT ───────────────────────────────────
+// The couple's names are set as large as the column allows, one name per line. A long name would
+// run off the edge, so each line is measured and the whole block scaled down to the widest.
+function fitDisplay() {
+  document.querySelectorAll('[data-fit]').forEach(el => {
+    el.style.setProperty('--fit', '1');
+    const avail = el.clientWidth;
+    const widest = Math.max(0, ...[...el.children].map(k => k.scrollWidth));
+    if (avail && widest > avail) el.style.setProperty('--fit', (avail / widest * .98).toFixed(3));
+  });
+}
+
+// ── THE SWIPE DECK ─────────────────────────────────────
+// Touch and trackpads scroll the deck natively; scroll-snap lands each gesture on a slide and
+// scroll-snap-stop keeps a hard flick to one slide at a time. On top of that: a mouse can drag,
+// a mouse wheel turns one slide per notch (after letting a tall slide scroll to its end), and the
+// arrow keys work. Controls inside a slide — buttons, links, form fields — are never a drag.
+const INTERACTIVE = 'a, button, input, select, textarea, label, summary, [contenteditable], [data-no-swipe]';
+const reducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+const Deck = {
+  el: null, slides: [], index: 0, raf: 0, settleTimer: 0,
+  drag: null, suppressClick: false, wheelAcc: 0, wheelLock: 0, wheelTimer: 0, width: 0
+};
+
+function setupDeck() {
+  const el = document.getElementById('deck');
+  Deck.el = el;
+  Deck.slides = [...el.querySelectorAll('.slide')];
+  Deck.width = el.clientWidth;
+
+  el.addEventListener('scroll', () => {
+    if (!Deck.raf) Deck.raf = requestAnimationFrame(paint);
+    clearTimeout(Deck.settleTimer);
+    Deck.settleTimer = setTimeout(settle, 150);
+  }, { passive: true });
+  if ('onscrollend' in window) el.addEventListener('scrollend', settle);
+
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('pointermove', onPointerMove);
+  el.addEventListener('pointerup', onPointerUp);
+  el.addEventListener('pointercancel', onPointerUp);
+  // A drag that moved the deck must not also count as a click on whatever it started over.
+  el.addEventListener('click', e => {
+    if (!Deck.suppressClick) return;
+    Deck.suppressClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+  el.addEventListener('wheel', onWheel, { passive: false });
+  document.addEventListener('keydown', onKey);
+
+  // Rotating a phone or resizing a window: stay on the same slide.
+  window.addEventListener('resize', () => {
+    if (!Deck.el || Deck.el.clientWidth === Deck.width) return;
+    Deck.width = Deck.el.clientWidth;
+    jump(Deck.index);
+    Deck.slides.forEach(s => { s._p = null; });
+    paint();
+    fitDisplay();
+  }, { passive: true });
+
+  paint();
+}
+
+/** Once per frame while the deck moves: each nearby slide's position, and which slide is in
+ *  view. Only slides beside the one in view are touched. */
+function paint() {
+  Deck.raf = 0;
+  const w = Deck.el.clientWidth;
+  if (!w) return;
+  const pos = Deck.el.scrollLeft / w;
+  Deck.slides.forEach((s, i) => {
+    const raw = i - pos;
+    const near = Math.abs(raw) < 1.2;
+    if (s._near !== near) { s._near = near; s.classList.toggle('near', near); }
+    if (!near) return;
+    const key = Math.max(-1, Math.min(1, raw)).toFixed(3);
+    if (s._p === key) return;
+    s._p = key;
+    s.style.setProperty('--p', key);
+    s.style.setProperty('--pa', Math.abs(+key).toFixed(3));
+  });
+  const idx = Math.max(0, Math.min(Deck.slides.length - 1, Math.round(pos)));
+  if (idx !== Deck.index) activate(idx);
+}
+
+function activate(i, first) {
+  Deck.index = i;
+  Deck.slides.forEach((s, k) => s.classList.toggle('is-active', k === i));
+  if (!first && i > 0) document.body.classList.add('swiped');
+  // Fetch this slide's photos (it may have been reached in one jump) and those either side, so
+  // they are already there when the reader arrives.
+  [i, i - 1, i + 1, i + 2].forEach(k => {
+    const near = Deck.slides[k];
+    if (near) near.querySelectorAll('img[loading="lazy"]').forEach(img => { img.loading = 'eager'; });
+  });
+}
+
+function goTo(i) {
+  const n = Deck.slides.length;
+  if (!n) return;
+  i = Math.max(0, Math.min(n - 1, i));
+  Deck.el.scrollTo({ left: i * Deck.el.clientWidth, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+  // No scroll event follows when the deck is already there, so settle anyway.
+  clearTimeout(Deck.settleTimer);
+  Deck.settleTimer = setTimeout(settle, 900);
+}
+function jump(i) {
+  const el = Deck.el;
+  el.style.scrollBehavior = 'auto';
+  el.scrollLeft = i * el.clientWidth;
+  el.style.scrollBehavior = '';
+}
+function settle() {
+  clearTimeout(Deck.settleTimer);
+  if (Deck.drag) return;
+  Deck.el.classList.remove('dragging');
+}
+
+// Mouse drag. Touch screens and trackpads already swipe the deck natively.
+function onPointerDown(e) {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return;
+  if (e.target.closest(INTERACTIVE)) return;
+  Deck.drag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: Deck.el.scrollLeft,
+                t: performance.now(), from: Deck.index, moved: false };
+}
+function onPointerMove(e) {
+  const d = Deck.drag;
+  if (!d || e.pointerId !== d.id) return;
+  const dx = e.clientX - d.x, dy = e.clientY - d.y;
+  if (!d.moved) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { Deck.drag = null; return; }  // selecting text
+    if (Math.abs(dx) < 6) return;
+    d.moved = true;
+    Deck.el.classList.add('dragging');
+    void Deck.el.offsetWidth;            // switch snapping off before the first move, or it snaps back
+    try { Deck.el.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+    const sel = window.getSelection && window.getSelection();
+    if (sel) sel.removeAllRanges();
+  }
+  Deck.el.scrollLeft = d.left - dx;
+}
+function onPointerUp(e) {
+  const d = Deck.drag;
+  if (!d || e.pointerId !== d.id) return;
+  Deck.drag = null;
+  if (!d.moved) return;
+  const dx = e.clientX - d.x, v = dx / Math.max(1, performance.now() - d.t);
+  const w = Deck.el.clientWidth;
+  let to = d.from;
+  if (dx < -w * .16 || v < -.45) to = d.from + 1;
+  else if (dx > w * .16 || v > .45) to = d.from - 1;
+  Deck.suppressClick = true;
+  setTimeout(() => { Deck.suppressClick = false; }, 60);
+  goTo(to);                // snapping stays off (.dragging) until the glide has settled
+}
+
+// A vertical mouse wheel turns the page — but a slide that can still scroll gets the wheel first.
+function onWheel(e) {
+  if (e.ctrlKey) return;                                    // trackpad pinch-zoom
+  if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;     // sideways: the deck scrolls natively
+  const box = e.target.closest('.inner');
+  if (box && box.scrollHeight > box.clientHeight + 1) {
+    const up = e.deltaY < 0;
+    const atTop = box.scrollTop <= 0;
+    const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 1;
+    if ((up && !atTop) || (!up && !atEnd)) return;
+  }
+  e.preventDefault();
+  const now = performance.now();
+  // While a turn is under way (and a trackpad's momentum is still arriving) ignore the wheel.
+  if (now < Deck.wheelLock) { Deck.wheelLock = now + 260; return; }
+  Deck.wheelAcc += e.deltaY;
+  clearTimeout(Deck.wheelTimer);
+  Deck.wheelTimer = setTimeout(() => { Deck.wheelAcc = 0; }, 220);
+  if (Math.abs(Deck.wheelAcc) >= 40) {
+    goTo(Deck.index + Math.sign(Deck.wheelAcc));
+    Deck.wheelAcc = 0;
+    Deck.wheelLock = now + 700;
+  }
+}
+
+function onKey(e) {
+  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
+  const map = { ArrowRight: 1, PageDown: 1, ArrowLeft: -1, PageUp: -1 };
+  if (e.key in map) { e.preventDefault(); goTo(Deck.index + map[e.key]); }
+  else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  else if (e.key === 'End')  { e.preventDefault(); goTo(Deck.slides.length - 1); }
+}
+
+// ── COUNTDOWN ──────────────────────────────────────────
+let countdownTimer = null;
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdownTimer = null;
+  const node = document.querySelector('[data-countdown]');
+  if (!node) return;
+  // An absolute instant: the remaining time is worked out against the clock on every tick, so a
+  // reload, a sleeping phone or a background tab cannot make it drift.
+  const target = Number(node.dataset.countdown);
+  if (!Number.isFinite(target)) return;
+  const cells = node.querySelectorAll('[data-cd]');
+  const tick = () => {
+    const diff = target - Date.now();
+    if (diff <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      node.innerHTML = `<p class="cd-note">${diff > -86400000 ? 'Today is the day' : 'Thank you for celebrating with us'}</p>`;
+      return;
+    }
+    const v = {
+      d: String(Math.floor(diff / 86400000)),     // uncapped: a wedding can be years away
+      h: pad2(Math.floor(diff / 3600000) % 24),
+      m: pad2(Math.floor(diff / 60000) % 60),
+      s: pad2(Math.floor(diff / 1000) % 60)
+    };
+    cells.forEach(el => { if (el.textContent !== v[el.dataset.cd]) el.textContent = v[el.dataset.cd]; });
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+// Timers are throttled in a background tab; recompute as soon as the page is visible again.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) startCountdown(); });
+
+// ── BACKGROUND VIDEO ───────────────────────────────────
+// A <video> injected via innerHTML doesn't always pick up the muted PROPERTY from its attribute,
+// and browsers refuse autoplay for anything not muted. Set it explicitly, then start playback —
+// a rejection (e.g. iOS Low Power Mode) is fine: the poster image remains visible.
+function startBackgroundVideos() {
+  document.querySelectorAll('[data-bg-video]').forEach(v => {
+    v.muted = true;
+    v.defaultMuted = true;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  });
+}
+
+// ── EVENTS ─────────────────────────────────────────────
+document.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]');
+  if (go) { goTo(Number(go.dataset.go)); return; }
+
+  const copy = e.target.closest('[data-copy]');
+  if (copy) {
+    navigator.clipboard?.writeText(copy.dataset.copy).then(() => {
+      const orig = copy.textContent;
+      copy.textContent = 'Copied';
+      setTimeout(() => { copy.textContent = orig; }, 2000);
+    });
+  }
+});
+
+// The accept/decline choices are radio inputs behind a styled label — reflect the choice, and
+// only ask for a party size once the guest has said yes.
+document.addEventListener('change', e => {
+  if (!e.target.matches('input[name="attending"]')) return;
+  const form = e.target.closest('[data-rsvp]');
+  form.querySelectorAll('[data-choice]').forEach(p => p.classList.toggle('on', p.contains(e.target)));
+  const field = form.querySelector('[data-count-field]');
+  if (field) field.hidden = e.target.value !== 'yes';
+});
+
+document.addEventListener('submit', async e => {
+  const form = e.target.closest('[data-rsvp]');
+  if (!form) return;
+  e.preventDefault();
+
+  const att       = form.querySelector('input[name="attending"]:checked');
+  const countEl   = form.querySelector('[data-guest-count]');
+  const nameInput = form.querySelector('[data-guest-name]');
+  const wishes    = form.querySelector('[data-wishes]');
+  const name      = getGuestName() || (nameInput ? nameInput.value.trim() : '');
+
+  if (!att) return alert('Please let us know whether you can attend.');
+  const attending = att.value === 'yes';
+  const count = countEl ? countEl.value : '';
+  if (!name) return alert('Please enter your name.');
+  if (attending && !count) return alert('Please choose how many of you are coming.');
+
+  const btn = form.querySelector('.btn-send');
+  const original = btn.textContent;
+
+  if (CURRENT_SLUG) {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    try {
+      const guestNames = attending
+        ? name.split(/\s*(?:&|,| and )\s*/i).map(s => s.trim()).filter(Boolean)
+        : [];
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(CURRENT_SLUG)}/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          response: attending ? 'yes' : 'no',
+          partySize: attending ? parseInt(count) : 0,
+          contactName: name,
+          message: wishes ? (wishes.value.trim() || null) : null,
+          guests: guestNames.map(n => ({ fullName: n })),
+          guestToken: CURRENT_GUEST ? CURRENT_GUEST.token : null
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        btn.disabled = false;
+        btn.textContent = original;
+        return alert(err.error || `Submission failed (${res.status}). Please try again.`);
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = original;
+      return alert('Network error. Please check your connection and try again.');
+    }
+  }
+
+  form.hidden = true;
+  const box = form.parentElement.querySelector('[data-rsvp-success]');
+  box.querySelector('.done-body').innerHTML = nl2br(attending ? box.dataset.accept : box.dataset.decline);
+  box.hidden = false;
+});
+
+// ── INIT ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    build(await loadData());
+  } catch (e) {
+    console.error('Failed to load invitation data:', e);
+    build(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  }
+});
+</script>
+</body>
+</html>
