@@ -92,7 +92,13 @@ jobs:
             echo "-> backing up to ~/backups/pre-deploy-${STAMP}.sql.gz"
             # POSTGRES_USER and POSTGRES_DB are already set inside the db container by compose,
             # so read them there rather than guessing them out here.
-            $COMPOSE exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            #
+            # "< /dev/null" is what keeps the REST of this script alive. The script arrives on the
+            # server as the stdin of "bash -s", and "compose exec -T" reads stdin too — without the
+            # redirect it swallows every line below, bash reaches EOF and exits 0 right after the
+            # backup, and the deploy reports success having pulled nothing. Any command added here
+            # that reads stdin needs the same redirect.
+            $COMPOSE exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < /dev/null \
               | gzip > ~/backups/"pre-deploy-${STAMP}.sql.gz"
             # Keep the newest 10 so a small boot volume cannot fill up silently.
             ls -1t ~/backups/pre-deploy-*.sql.gz 2>/dev/null | tail -n +11 | xargs -r rm --
