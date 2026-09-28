@@ -27,7 +27,15 @@ WORKDIR /app
 
 # curl is only here so Docker's HEALTHCHECK can hit /health — that status is what
 # Docker Desktop shows next to the container and what the web container waits on.
-RUN apt-get update \
+#
+# By-Hash=no: apt normally fetches package indices from a content-addressed
+# /by-hash/SHA256/<digest> path. Where anything between the build and the mirror serves a
+# stale copy of one — a transparent ISP cache, a corporate proxy — the digest no longer
+# matches and apt aborts with "Hash Sum mismatch", failing the build on a network fault
+# that has nothing to do with this image. Fetching the index by its plain path instead is
+# immune to that. It costs nothing on a healthy network and makes the build reproducible
+# on an unhealthy one.
+RUN apt-get -o Acquire::By-Hash=no update \
  && apt-get install -y --no-install-recommends curl \
  && rm -rf /var/lib/apt/lists/*
 
