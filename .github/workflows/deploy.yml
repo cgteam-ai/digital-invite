@@ -121,6 +121,32 @@ jobs:
           $COMPOSE pull
           $COMPOSE up -d --remove-orphans
 
+          # ── Reload Caddy's configuration ──────────────────────────────────
+          # The Caddyfile is BIND-MOUNTED (see docker-compose.prod.yml), not baked into an
+          # image, and Caddy parses it once at startup and keeps the result in memory. Compose
+          # decides whether to recreate a container from the service definition and the image
+          # id — the CONTENTS of a mounted file are not part of that decision — so the git
+          # checkout above writes the new Caddyfile to disk and "up -d" leaves caddy serving
+          # the config it read at its last start. Without this step, a change to a security
+          # header, a redirect or the TLS host list lands on the server and is silently never
+          # applied: no error, no warning, a perfectly healthy container.
+          #
+          # "reload" swaps the config in place with no dropped connections, unlike "restart".
+          # A malformed Caddyfile fails the reload and the OLD config keeps serving, so a typo
+          # cannot take the site down — but the deploy must not then claim success, hence the
+          # explicit failure below.
+          #
+          # "< /dev/null" is the same stdin guard the backup step documents: this script is the
+          # stdin of "bash -s", and "compose exec -T" would otherwise swallow the lines after it.
+          echo "-> reloading caddy configuration"
+          if $COMPOSE exec -T caddy caddy reload --config /etc/caddy/Caddyfile < /dev/null; then
+            echo "-> caddy reloaded"
+          else
+            echo "!! caddy reload FAILED — it is still serving the PREVIOUS configuration." >&2
+            echo "!! The site is up, but your Caddyfile change has NOT been applied." >&2
+            exit 1
+          fi
+
           # ── Wait for the API to report healthy ────────────────────────────
           # Migrations and seeding run before it listens, so this is the real readiness signal.
           echo "-> waiting for the api container to become healthy"
