@@ -48,7 +48,17 @@
 	# All routing — static files, the /api proxy, /invite rewrites — lives in the web
 	# container's nginx.conf, so it stays identical between local and production. Caddy is
 	# only the TLS edge and deliberately duplicates none of it.
-	reverse_proxy web:80
+	# Addressed by CONTAINER name, not the compose service name "web".
+	#
+	# This matters the moment a second stack exists on this host. Compose adds the service name
+	# as a DNS alias on EVERY network the service joins, and this Caddy sits on two: the prod
+	# network and the shared edge. A beta stack whose service was also called "web" put a second
+	# "web" alias on the edge — and Docker resolved it in preference to production's, so every
+	# request to digital-invite.net was answered by the beta container, against the beta
+	# database. Measured 8 out of 8 before this change.
+	#
+	# Container names are unique across the whole daemon, so they cannot collide this way.
+	reverse_proxy invitation-prod-web:80
 
 	log {
 		output stdout
