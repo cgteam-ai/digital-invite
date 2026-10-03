@@ -228,7 +228,8 @@ public record InvitationFull(
     Guid Id, string Slug, string Title, string Status,
     string? EventType, DateTime? EventDate, int MaxAttendees,
     Guid? TemplateId, DateTime UpdatedAt, InvitationData Data,
-    string? PublicToken = null);
+    string? PublicToken = null,
+    bool SeatingEnabled = false);
 
 public record CreateInvitationRequest(
     string Title, string Slug, Guid? TemplateId,
@@ -236,7 +237,11 @@ public record CreateInvitationRequest(
 
 public record UpdateInvitationRequest(
     string Title, string Slug, string? EventType,
-    DateTime? EventDate, int MaxAttendees, InvitationData Data);
+    DateTime? EventDate, int MaxAttendees, InvitationData Data,
+    // Nullable and defaulted so "absent" means "leave as it is", following
+    // UpdateClientCredentialsRequest. A plain bool would default to false and silently switch
+    // seating OFF on every save from a client that does not send the field.
+    bool? SeatingEnabled = null);
 
 // ── TEMPLATE ───────────────────────────────────────────────
 public record TemplateDto(
@@ -318,4 +323,41 @@ public record DashboardSummary(
     Guid InvitationId, string Slug, string Title,
     DateTime? EventDate, int MaxAttendees,
     int TotalRsvps, int Attending, int Declined,
-    int TotalSeats, double AcceptRate);
+    int TotalSeats, double AcceptRate,
+    // Lets the dashboard decide whether to show the Seating tab without a second request.
+    bool SeatingEnabled = false);
+
+// ── GUEST SEATING ──────────────────────────────────────────
+// One seat = one person. Seat 1 is the invitee named on the guest list; seats 2..N are the rest of
+// their party, who exist nowhere else in the data (see GuestSeat's class comment), so each carries
+// an optional Label the couple can fill in.
+
+public record SeatDto(int SeatIndex, string? Label, int? TableNumber);
+
+public record SeatingGuestDto(
+    Guid GuestId, string Name, string Status,
+    int SelectedAttendees, int MaxAttendees, List<SeatDto> Seats);
+
+/// <summary>Everything the seating tab needs, in one round trip.</summary>
+public record SeatingPlanDto(
+    bool Enabled, int TableCount, string SeatingToken,
+    List<SeatingGuestDto> Guests,
+    int TotalSeats, int SeatedCount,
+    // Accepted RSVPs with no guest-list row behind them (someone replied through the generic
+    // link). They cannot be seated, because a seat hangs off a Guest, so the UI surfaces the
+    // count and offers to add them to the list.
+    int UnlistedRsvpCount);
+
+public record UpdateSeatingSettingsRequest(int TableCount);
+
+public record SeatAssignment(int SeatIndex, string? Label, int? TableNumber);
+public record UpdateGuestSeatsRequest(List<SeatAssignment> Seats);
+
+/// <summary>Bulk move behind the "seat the whole party together" shortcut.</summary>
+public record AssignPartyRequest(Guid GuestId, int? TableNumber);
+
+// ── PUBLIC "find my table" lookup ──────────────────────────
+// Reached by an anonymous guest through the QR code. Deliberately thin: names and table numbers
+// only, never contact details, and only for guests who accepted.
+public record SeatingLookupResult(string Name, int? TableNumber);
+public record SeatingTableDto(int TableNumber, List<string> Names);

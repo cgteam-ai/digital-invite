@@ -151,6 +151,30 @@ internal static class TestSupport
         var ok = Assert.IsType<OkObjectResult>(result);
         return Assert.IsType<T>(ok.Value!);
     }
+
+    public static ClientSeatingController NewClientSeatingController(AppDbContext db, Guid invitationId)
+    {
+        var identity = new ClaimsIdentity(new[]
+        {
+            new Claim("invitation_id", invitationId.ToString()),
+            new Claim(ClaimTypes.Role, "Client")
+        }, "TestAuth");
+
+        return new ClientSeatingController(db)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+            }
+        };
+    }
+
+    public static PublicSeatingController NewPublicSeatingController(AppDbContext db) =>
+        new(db)
+        {
+            // The controller writes cache/robots response headers, so it needs a real HttpContext.
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
 }
 
 /// <summary>In-memory <see cref="IFileStorage"/> for tests — no disk touched.</summary>

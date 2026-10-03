@@ -24,12 +24,23 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
         b.Property(e => e.EventType).HasColumnName("event_type").HasMaxLength(128);
         b.Property(e => e.EventDate).HasColumnName("event_date");
         b.Property(e => e.MaxAttendees).HasColumnName("max_attendees").HasDefaultValue(10);
+        b.Property(e => e.SeatingEnabled).HasColumnName("seating_enabled").HasDefaultValue(false);
+        b.Property(e => e.TableCount).HasColumnName("table_count").HasDefaultValue(0);
+        // Defaults to '' rather than null so existing rows need no backfill; a token is minted
+        // lazily the first time the couple opens the seating tab.
+        b.Property(e => e.SeatingToken).HasColumnName("seating_token").HasMaxLength(128)
+         .IsRequired().HasDefaultValue("");
         b.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("now()");
         b.Property(e => e.UpdatedAt).HasColumnName("updated_at").HasDefaultValueSql("now()");
         b.Property(e => e.PublishedAt).HasColumnName("published_at");
 
         b.HasIndex(e => e.Slug).IsUnique();
         b.HasIndex(e => e.PublicToken).IsUnique();
+        // PARTIAL unique index. A plain UNIQUE would collide on the '' default that every
+        // existing row carries — the same trap that forced guests.slug to settle for a
+        // non-unique index plus app-level checks. Excluding '' gives database-enforced
+        // uniqueness for the tokens that exist, with no backfill migration.
+        b.HasIndex(e => e.SeatingToken).IsUnique().HasFilter("seating_token <> ''");
         b.HasIndex(e => e.Status);
         b.HasIndex(e => e.EventDate);
 

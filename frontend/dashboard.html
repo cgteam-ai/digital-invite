@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="./shared/config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -145,34 +146,167 @@
   .gl-input:focus { border-color: var(--gold); }
   .gl-max { width: 4.5rem; min-width: 0; text-align: center; }
   .gl-selected { text-align: center; color: var(--text); font-variant-numeric: tabular-nums; }
-  .gl-linkcell { min-width: 200px; }
+  /* 200px here pushed the table 58px past its container, which clipped the delete button off the
+     right edge. The link is the column that can afford to shrink — there is a Copy button beside
+     it, so the full URL never needs to be readable in place. */
+  .gl-linkcell { min-width: 140px; max-width: 200px; }
+  #glTable th:nth-child(2), #glTable th:nth-child(3) { width: 1%; white-space: nowrap; }
+  .gl-actions { flex-wrap: wrap; }
   .gl-link { width: 100%; padding: .5rem .7rem; background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 4px; color: var(--gold-light); font-family: monospace; font-size: .72rem; outline: none; cursor: pointer; }
   .gl-link:focus { border-color: var(--gold); }
-  .gl-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .gl-actions .btn-sm { padding: .35rem .7rem; font-size: .64rem; }
-  .gl-actions .btn-sm.danger { border-color: rgba(217,102,102,.4); color: var(--danger); }
-  .gl-actions .btn-sm.danger:hover { background: rgba(217,102,102,.1); border-color: var(--danger); }
-  .gl-actions .btn-sm.save { border-color: var(--gold); color: var(--gold); }
+  /* Row actions. Sized as real targets rather than the old .64rem buttons that wrapped into a
+     cramped block: 36px tall clears the usual minimum for a fingertip. */
+  .gl-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+  .gl-act { min-height: 36px; min-width: 36px; padding: 0 .75rem; display: inline-flex;
+            align-items: center; justify-content: center; white-space: nowrap;
+            background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 5px;
+            color: var(--text); font-family: inherit; font-size: .7rem; letter-spacing: .5px;
+            cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+  .gl-act:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,.08); }
+  .gl-act.icon { padding: 0; font-size: .95rem; line-height: 1; }
+  .gl-act.danger { color: var(--danger); border-color: rgba(217,102,102,.35); }
+  .gl-act.danger:hover { background: rgba(217,102,102,.12); border-color: var(--danger); color: var(--danger); }
+  .gl-act.save { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,.12); }
+
+  /* Name cell: the caret sits with the name it discloses. */
+  .gl-namecell { display: flex; align-items: center; gap: .35rem; }
+  .gl-namecell .gl-input { flex: 1; }
   .badge-pending { background: rgba(255,255,255,.06); color: var(--muted); }
   .gl-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-  @media (max-width: 600px) {
+  /* This file never defined a generic .hidden, yet both empty states ship with it and are
+     toggled through classList — so "No RSVPs found." and "No guests yet" have been permanently
+     visible. admin.html has the rule; adding it here fixes those too. */
+  .hidden { display: none !important; }
+
+  /* ── Seating ─────────────────────────────────────────────────────────── */
+  /* .btn-sm.danger is defined only as a descendant of .gl-actions, so it does not reach the
+     Regenerate button here. Scoped the same way rather than widening the original rule. */
+  #tab-seating .btn-sm.danger { border-color: var(--danger); color: var(--danger); }
+  .seat-toolbar { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.4rem; }
+  .seat-count-field { display: flex; flex-direction: column; gap: .3rem; }
+  .seat-count-field label { font-size: .62rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+  .seat-count-field input { width: 90px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); padding: .5rem .6rem; border-radius: 4px; font-family: inherit; }
+  .seat-progress { font-size: .78rem; color: var(--muted); }
+  .seat-progress strong { color: var(--gold-light); font-weight: 400; }
+
+  .seat-warn { border: 1px solid var(--warn); background: rgba(224,185,110,.08); color: var(--warn);
+               padding: .7rem .9rem; border-radius: 6px; font-size: .78rem; margin-bottom: 1.2rem; }
+
+  /* QR card */
+  .seat-qr-card { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap;
+                  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin-bottom: 1.6rem; }
+  .seat-qr-box { background: #fff; padding: 10px; border-radius: 6px; line-height: 0; }
+  .seat-qr-box svg { display: block; }
+  .seat-qr-side { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: .7rem; }
+
+  /* Seating controls, which live in the Guest List table. The per-person editor cannot be a
+     child of the guest's <tr> (a row cannot contain a row), so it is a sibling row whose single
+     cell spans every column, toggled with [hidden]. */
+  .seat-sub-label { font-size: .62rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
+  .gl-table-wrap { display: flex; align-items: center; gap: .35rem; }
+  .gl-table-na { color: var(--muted); font-size: .78rem; }
+  .gl-input.over-cap { border-color: var(--danger); color: var(--danger); }
+  .seat-caret { background: none; border: none; color: var(--gold); cursor: pointer; font-size: .9rem;
+                width: 22px; height: 22px; padding: 0; transition: transform .18s; flex-shrink: 0; }
+  .seat-caret.open { transform: rotate(90deg); }
+  .seat-caret-spacer { width: 22px; flex-shrink: 0; }
+  .gl-seats-row > td { background: var(--panel-2); border-bottom: 1px solid var(--border); }
+  .seat-hint { font-size: .68rem; color: var(--muted); margin: .5rem 0 0; }
+  .seat-select { background: var(--panel); border: 1px solid var(--border); color: var(--text);
+                 padding: .35rem .5rem; border-radius: 4px; font-family: inherit; font-size: .78rem; min-width: 110px; }
+  .seat-select.unseated { border-color: var(--warn); color: var(--warn); }
+  .seat-body { padding: .5rem .4rem .6rem 1.6rem; }
+  .seat-row { display: flex; align-items: center; gap: .6rem; padding: .3rem 0; flex-wrap: wrap; }
+  .seat-row-idx { font-size: .68rem; color: var(--muted); width: 70px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .seat-locked { flex: 1; min-width: 140px; font-size: .78rem; }
+  .seat-row input.seat-label { flex: 1; min-width: 140px; background: var(--panel); border: 1px solid var(--border);
+                               color: var(--text); padding: .3rem .5rem; border-radius: 4px; font-family: inherit; font-size: .78rem; }
+  .seat-row .seat-locked { flex: 1; min-width: 140px; font-size: .78rem; color: var(--muted); }
+
+  /* By-table filter */
+  .seat-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .8rem; }
+  .seat-table-card { border: 1px solid var(--border); border-radius: 6px; padding: .8rem; background: var(--panel-2); }
+  .seat-table-card h4 { font-family: 'Cormorant Garamond', serif; font-weight: 300; color: var(--gold-light);
+                        margin: 0 0 .5rem; font-size: 1rem; }
+  .seat-table-card.empty { opacity: .45; }
+  .seat-table-card ul { list-style: none; margin: 0; padding: 0; }
+  .seat-table-card li { font-size: .78rem; padding: .16rem 0; color: var(--text); }
+  .seat-table-card .cap { font-size: .66rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+  /* ── Phone layout ──────────────────────────────────────────────────────
+     A seven-column guest table cannot fit a phone, and sideways-scrolling a table to reach the
+     actions is miserable. Below 760px each ROW becomes a card and each CELL becomes a labelled
+     line, using the data-label already on every <td>. No JS involved, so the desktop table and
+     the phone cards stay the same markup. */
+  @media (max-width: 760px) {
+    #glTable thead, #rsvpTable thead { display: none; }
+    #glTable, #glTable tbody, #rsvpTable, #rsvpTable tbody { display: block; width: 100%; }
+    .table-wrap { overflow-x: visible; }
+
+    #glTable tbody tr, #rsvpTable tbody tr {
+      display: block; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--panel-2); padding: .5rem .8rem; margin-bottom: .7rem;
+    }
+    #glTable tbody tr:hover, #rsvpTable tbody tr:hover { background: var(--panel-2); }
+
+    #glTable td, #rsvpTable td {
+      display: flex; align-items: center; justify-content: space-between; gap: .9rem;
+      padding: .4rem 0; border: none; width: 100%;
+    }
+    #glTable td + td, #rsvpTable td + td { border-top: 1px solid rgba(201,169,110,.08); }
+    #glTable td::before, #rsvpTable td::before {
+      content: attr(data-label); flex-shrink: 0;
+      font-size: .6rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted);
+    }
+    /* The label keeps its intrinsic width and the control takes the rest. (A ::before cannot be
+       written inside :not(), so the content side is targeted directly.) */
+    #glTable td::before, #rsvpTable td::before { flex: 0 0 auto; }
+    #glTable td > input, #glTable td > select,
+    #glTable td > .gl-namecell, #glTable td > .gl-actions { flex: 1 1 auto; min-width: 0; }
+    .gl-input, .gl-link, .gl-namecell { width: 100%; min-width: 0; }
+    /* The desktop cap that stops the link column pushing the table wide is wrong here — a card
+       row has the full width to give it. */
+    .gl-linkcell { max-width: none; min-width: 0; }
+    /* Short numeric fields read better compact than stretched across the card. */
+    #glTable td > .gl-max { flex: 0 0 5.5rem; text-align: center; }
+    .gl-actions { flex-wrap: wrap; justify-content: flex-end; }
+
+    /* The expanded party editor spans the whole card and needs no label. */
+    #glTable tr.gl-seats-row { padding: 0; margin-top: -.7rem; margin-bottom: .7rem;
+                               border-top-left-radius: 0; border-top-right-radius: 0; }
+    #glTable tr.gl-seats-row td { display: block; padding: .2rem; }
+    #glTable tr.gl-seats-row td::before { content: none; }
+    .seat-body { padding: .6rem .7rem; }
+    .seat-row { align-items: stretch; flex-direction: column; gap: .35rem; }
+    .seat-row-idx { width: auto; }
+    .seat-row .seat-select, .seat-row input.seat-label { width: 100%; }
+
     main { padding: 1.2rem .9rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .inv-banner { flex-direction: column; align-items: flex-start; }
+    .inv-banner { flex-direction: column; align-items: flex-start; gap: .8rem; }
     .inv-banner .actions, .btn-view { width: 100%; text-align: center; }
     .edit-grid { grid-template-columns: 1fr; }
-    /* Full-width, wrapping tab bar instead of a row that overflows off-screen. */
-    .tabs-nav { flex-wrap: wrap; }
-    .tab-btn { padding: .6rem 1rem; }
-    /* 16px form controls stop iOS Safari zooming in on focus; keep a 44px touch target. */
+    .section-header { flex-direction: column; align-items: flex-start; gap: .6rem; }
+    /* Horizontally scrollable tab strip beats a wrapped one that pushes content down. */
+    .tabs-nav { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tabs-nav::-webkit-scrollbar { display: none; }
+    .tab-btn { padding: .6rem .9rem; white-space: nowrap; flex-shrink: 0; }
+    /* 16px form controls stop iOS Safari zooming in on focus. */
     .card input, .search-bar input, .edit-field input, .edit-field textarea,
-    .gl-input, .gl-link, select, input, textarea { font-size: 16px; }
-    .btn-sm { padding: .5rem .9rem; }
-    .gl-actions .btn-sm { padding: .5rem .8rem; font-size: .7rem; }
+    .gl-input, .gl-link, .seat-select, .seat-label, select, input, textarea { font-size: 16px; }
+    .search-bar input { max-width: none; }
+    .btn-sm { padding: .55rem .9rem; min-height: 40px; }
+    .gl-act { min-height: 40px; font-size: .72rem; }
+
+    /* QR card stacks, and the code stays big enough to scan off the screen. */
+    .seat-qr-card { flex-direction: column; }
+    .seat-qr-side { width: 100%; min-width: 0; }
+    .seat-tables { grid-template-columns: 1fr; }
+    .url-row { flex-direction: column; align-items: stretch; gap: .4rem; }
   }
   /* Never let a wide element push the whole page sideways on a phone. */
-  @media (max-width: 600px) { html, body { overflow-x: hidden; } }
+  @media (max-width: 760px) { html, body { overflow-x: hidden; } }
 </style>
 </head>
 <body>
@@ -231,6 +365,8 @@
     <div class="tabs-nav">
       <button class="tab-btn active" data-tab="guests" onclick="switchTab('guests',this)">RSVPs</button>
       <button class="tab-btn" data-tab="guestlist" onclick="switchTab('guestlist',this)">Guest List</button>
+      <!-- Hidden until the plan reports the feature on; a Super Admin owns that switch. -->
+      <button class="tab-btn hidden" id="seatingTabBtn" data-tab="seating" onclick="switchTab('seating',this)">Seating</button>
       <button class="tab-btn" data-tab="edit" onclick="switchTab('edit',this)">Edit Invitation</button>
       <button class="tab-btn" data-tab="account" onclick="switchTab('account',this)">Account</button>
     </div>
@@ -316,7 +452,11 @@
               <th style="cursor:pointer" onclick="sortGuestList('name')">Name ⇅</th>
               <th style="cursor:pointer" onclick="sortGuestList('maxAttendees')">Max ⇅</th>
               <th style="cursor:pointer" onclick="sortGuestList('selectedAttendees')">Selected ⇅</th>
-              <th style="cursor:pointer" onclick="sortGuestList('status')">RSVP Status ⇅</th>
+              <th style="cursor:pointer" onclick="sortGuestList('status')">RSVP ⇅</th>
+              <!-- Shown only when a Super Admin enabled seating. Everything to do with a guest
+                   lives on this row so the couple never has to change tab to name a companion
+                   or pick a table. -->
+              <th id="glTableHead" class="hidden">Table</th>
               <th>Invitation Link</th>
               <th>Actions</th>
             </tr>
@@ -360,6 +500,78 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ══ SEATING ══════════════════════════════════════════════════════ -->
+    <div id="tab-seating" style="display:none">
+
+      <div id="seatWarn" class="seat-warn hidden"></div>
+
+      <!-- This tab is now setup + overview only. Everything that edits a GUEST — naming a
+           companion, choosing their table — lives on the Guest List row, so the couple never
+           changes tab mid-task. -->
+      <div class="section-header" style="margin-bottom:1rem;">
+        <h3>Set up seating</h3>
+        <div class="seat-progress" id="seatProgress"></div>
+      </div>
+
+      <div class="seat-qr-card">
+        <div class="seat-qr-box" id="seatQrBox"></div>
+
+        <div class="seat-qr-side">
+          <div class="seat-count-field">
+            <label for="seatTableCount">How many tables does your venue have?</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="seatTableCount" type="number" min="0" max="500" step="1">
+              <button class="btn-sm" onclick="saveTableCount()">Save</button>
+            </div>
+            <p class="seat-hint" style="margin:.4rem 0 0;">
+              Guests are then assigned to tables 1 to this number, from the
+              <strong>Guest List</strong> tab.
+            </p>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border); margin:.3rem 0;">
+
+          <label class="seat-sub-label">Find-my-table code</label>
+          <p class="seat-hint" style="margin:0;">
+            Print this and stand it at the entrance. A guest scans it, types their name and sees
+            their table.
+          </p>
+          <div class="url-row">
+            <input id="seatUrl" readonly onclick="this.select()">
+            <button class="btn-sm" onclick="copyLink(this, document.getElementById('seatUrl').value)">Copy</button>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-sm" onclick="openSeatingLink()">Open</button>
+            <button class="btn-sm" onclick="downloadSeatingQr()">Download PNG</button>
+            <button class="btn-sm danger" onclick="regenerateSeatingLink()">Regenerate</button>
+          </div>
+          <p class="seat-hint" style="margin:0;">
+            Anyone holding this link can see the seating plan. Regenerating breaks every printed
+            copy of the old code.
+          </p>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top:2.2rem;">
+        <h3>Who is at each table</h3>
+        <button class="btn-sm" onclick="exportSeatingExcel()">Export to Excel</button>
+      </div>
+      <div class="seat-toolbar">
+        <div class="seat-count-field">
+          <label for="seatTableFilter">Show</label>
+          <select id="seatTableFilter" class="seat-select" onchange="renderSeatingTables()" style="min-width:150px;">
+            <option value="">All tables</option>
+          </select>
+        </div>
+        <label style="display:flex; align-items:center; gap:.4rem; font-size:.75rem; color:var(--muted);">
+          <input type="checkbox" id="seatHideEmpty" onchange="renderSeatingTables()"> Hide empty tables
+        </label>
+      </div>
+      <div class="seat-tables" id="seatTables"></div>
+      <div id="seatTablesEmpty" class="empty-state hidden">Set the number of tables to begin.</div>
+
     </div>
 
   </main>
@@ -553,6 +765,14 @@ async function loadDashboard() {
     document.getElementById('statRate').textContent  = summary.totalRsvps
       ? summary.acceptRate + '%' : '—';
 
+    // The Seating tab exists only when a Super Admin switched the feature on for this invitation.
+    seatingEnabledForInvitation = !!summary.seatingEnabled;
+    document.getElementById('seatingTabBtn').classList.toggle('hidden', !seatingEnabledForInvitation);
+
+    // The per-guest allowance can never exceed the invitation's own cap — the server enforces
+    // this, and mirroring it here stops the couple typing a number that will be rejected.
+    invMaxAttendees = summary.maxAttendees || 0;
+
     // Invite links — one generic URL only. Per-guest personalized links (with the
     // guest's name in the URL) live in the Guest List tab.
     const linksEl = document.getElementById('inviteLinks');
@@ -642,13 +862,13 @@ function renderTable() {
       : (r.contactName ? `<div class="guest-row">${escHtml(r.contactName)}</div>` : '');
 
     return `<tr>
-      <td>
+      <td data-label="Guests">
         ${guestNames || '<span style="color:var(--muted)">—</span>'}
       </td>
-      <td><span class="badge ${badgeCls}">${escHtml(responseLabel(r.response))}</span></td>
-      <td style="color:var(--muted)">${r.partySize ?? '—'}</td>
-      <td style="font-size:.78rem;color:var(--muted)">${escHtml(r.contactPhone || '—')}</td>
-      <td style="white-space:nowrap;color:var(--muted);font-size:.75rem">${date}</td>
+      <td data-label="Response"><span class="badge ${badgeCls}">${escHtml(responseLabel(r.response))}</span></td>
+      <td data-label="Party" style="color:var(--muted)">${r.partySize ?? '—'}</td>
+      <td data-label="Phone" style="font-size:.78rem;color:var(--muted)">${escHtml(r.contactPhone || '—')}</td>
+      <td data-label="Date" style="white-space:nowrap;color:var(--muted);font-size:.75rem">${date}</td>
     </tr>`;
   }).join('');
 }
@@ -657,12 +877,14 @@ function renderTable() {
 function switchTab(tab, el) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('tab-guests').style.display    = tab === 'guests'    ? '' : 'none';
-  document.getElementById('tab-guestlist').style.display = tab === 'guestlist' ? '' : 'none';
-  document.getElementById('tab-edit').style.display      = tab === 'edit'      ? '' : 'none';
-  document.getElementById('tab-account').style.display   = tab === 'account'   ? '' : 'none';
+  // Data-driven rather than one hardcoded line per panel, so adding a tab is one list entry.
+  ['guests', 'guestlist', 'seating', 'edit', 'account'].forEach(t => {
+    const panel = document.getElementById('tab-' + t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+  });
   if (tab === 'edit' && !invEditData) loadEditForm();
   if (tab === 'guestlist' && !guestListLoaded) loadGuestList();
+  if (tab === 'seating') loadSeating();
 }
 
 // ── Edit form state ──────────────────────────────────────────────
@@ -907,6 +1129,10 @@ async function saveInvitation() {
 let allGuests = [];
 let guestListLoaded = false;
 let glSort = { key: 'name', dir: 1 };
+/** From the dashboard summary — whether a Super Admin turned seating on for this invitation. */
+let seatingEnabledForInvitation = false;
+/** The invitation's own "max attendees per RSVP", which caps every guest's allowance. */
+let invMaxAttendees = 0;
 
 // Personal link now carries the guest's NAME as a slug: /invite/charbel-nahhas
 // (falls back to the legacy token only if a slug hasn't been assigned yet).
@@ -916,10 +1142,17 @@ const statusLabel = s => s === 'NotAccepted' ? 'Declined' : s;
 
 async function loadGuestList() {
   try {
-    allGuests = await api('GET', '/api/client/guests') || [];
+    // The seating plan is fetched alongside the guests because the Table column and the
+    // per-person editor live on this row now — the couple should never change tab to seat someone.
+    const [guests, plan] = await Promise.all([
+      api('GET', '/api/client/guests'),
+      seatingEnabledForInvitation ? api('GET', '/api/client/seating').catch(() => null) : Promise.resolve(null)
+    ]);
+    allGuests = guests || [];
+    if (plan) seatPlan = plan;
     guestListLoaded = true;
     renderGuestList();
-  } catch (e) { toast(e.message, 'error'); }
+  } catch (e) { toast(e.message, 'err'); }
 }
 
 function sortGuestList(key) {
@@ -941,26 +1174,113 @@ function renderGuestList() {
   const body = document.getElementById('glBody');
   document.getElementById('glEmpty').classList.toggle('hidden', allGuests.length > 0);
 
+  const seating = seatingOn();
+  document.getElementById('glTableHead').classList.toggle('hidden', !seating);
+  // The expanded seat editor is a full-width row beneath its guest, so its colspan has to track
+  // whether the Table column is present.
+  const colCount = seating ? 7 : 6;
+  const maxCap = invMaxAttendees || 100;
+
   body.innerHTML = rows.map(g => {
     const link = guestLink(g);
     const badge = g.status === 'Accepted' ? 'badge-yes' : g.status === 'NotAccepted' ? 'badge-no' : 'badge-pending';
-    return `<tr data-gid="${g.id}">
-      <td><input class="gl-input gl-name" value="${escHtml(g.name)}" aria-label="Guest name" oninput="markGuestDirty('${g.id}')"></td>
-      <td><input class="gl-input gl-max" type="number" min="1" max="100" value="${g.maxAttendees}" aria-label="Maximum attendees" oninput="markGuestDirty('${g.id}')"></td>
-      <td class="gl-selected">${g.selectedAttendees}</td>
-      <td><span class="badge ${badge}">${escHtml(statusLabel(g.status))}</span></td>
-      <td class="gl-linkcell"><input class="gl-link" readonly value="${escHtml(link)}" aria-label="Invitation link" onclick="this.select()"></td>
-      <td>
-        <div class="gl-actions">
-          <button class="btn-sm" onclick="copyLink(this,'${escHtml(link)}')">Copy</button>
-          <button class="btn-sm" onclick="window.open('${escHtml(link)}','_blank')">Open</button>
-          <button class="btn-sm save gl-save" style="display:none" onclick="saveGuest('${g.id}')">Save</button>
-          <button class="btn-sm" onclick="regenGuestLink('${g.id}')" title="Issue a new link; the old one stops working">↻</button>
-          <button class="btn-sm danger" onclick="deleteGuest('${g.id}')" title="Delete guest">✕</button>
+    const seats = seating ? seatsFor(g.id) : [];
+    // The caret belongs beside the NAME, not in the Table column: it discloses this guest's
+    // party, and a disclosure control floating mid-row reads as unrelated to either neighbour.
+    const canExpand = seating && seats.length > 1;
+    return `<tr data-gid="${escHtml(g.id)}">
+      <td data-label="Name">
+        <div class="gl-namecell">
+          ${canExpand
+            ? `<button class="seat-caret ${seatOpen.has(g.id) ? 'open' : ''}" data-act="toggle"
+                       aria-expanded="${seatOpen.has(g.id) ? 'true' : 'false'}"
+                       title="Name each person in this party and seat them separately">&#9656;</button>`
+            : '<span class="seat-caret-spacer"></span>'}
+          <input class="gl-input gl-name" value="${escHtml(g.name)}" aria-label="Guest name" oninput="markGuestDirty('${g.id}')">
         </div>
       </td>
-    </tr>`;
+      <!-- Rows created before the invitation cap was enforced can still hold a larger number.
+           The server now refuses to save them, so flag it here rather than letting the couple
+           hit an error with no idea which row caused it. -->
+      <td data-label="Max"><input class="gl-input gl-max ${g.maxAttendees > maxCap ? 'over-cap' : ''}" type="number"
+                 min="1" max="${maxCap}" value="${g.maxAttendees}" aria-label="Maximum attendees"
+                 ${g.maxAttendees > maxCap ? `title="Over the invitation limit of ${maxCap} — lower it to save this guest"` : ''}
+                 oninput="markGuestDirty('${g.id}')"></td>
+      <td class="gl-selected" data-label="Selected">${g.selectedAttendees}</td>
+      <td data-label="RSVP"><span class="badge ${badge}">${escHtml(statusLabel(g.status))}</span></td>
+      ${seating ? `<td class="gl-tablecell" data-label="Table">${tableCellHtml(g, seats)}</td>` : ''}
+      <td class="gl-linkcell" data-label="Link"><input class="gl-link" readonly value="${escHtml(link)}" aria-label="Invitation link" onclick="this.select()"></td>
+      <!-- Five buttons at .64rem wrapped into a cramped 2x2 block. They are now one row of
+           equal-sized targets (36px minimum, so they are tappable), with Save appearing inline
+           only when the row is dirty. -->
+      <td data-label="Actions">
+        <div class="gl-actions">
+          <button class="gl-act save gl-save" style="display:none" onclick="saveGuest('${g.id}')" title="Save changes">Save</button>
+          <button class="gl-act" onclick="copyLink(this,'${escHtml(link)}')" title="Copy invitation link">Copy</button>
+          <button class="gl-act" onclick="window.open('${escHtml(link)}','_blank')" title="Open invitation">Open</button>
+          <button class="gl-act icon" onclick="regenGuestLink('${g.id}')" title="Issue a new link; the old one stops working" aria-label="Regenerate link">&#8635;</button>
+          <button class="gl-act icon danger" onclick="deleteGuest('${g.id}')" title="Delete guest" aria-label="Delete guest">&#10005;</button>
+        </div>
+      </td>
+    </tr>${seating && seats.length > 1 ? seatEditorRowHtml(g, seats, colCount) : ''}`;
   }).join('');
+}
+
+/** Seats for one guest from the cached plan; empty when seating is off or they have not accepted. */
+function seatsFor(guestId) {
+  if (!seatPlan || !seatPlan.enabled) return [];
+  const g = (seatPlan.guests || []).find(x => x.guestId === guestId);
+  return g ? g.seats : [];
+}
+
+function seatingOn() {
+  return !!(seatPlan && seatPlan.enabled);
+}
+
+/** The Table cell: just the party-wide dropdown. The caret lives beside the name. */
+function tableCellHtml(g, seats) {
+  if (!seats.length) {
+    return '<span class="gl-table-na" title="Only guests who accepted can be seated">—</span>';
+  }
+  if (!seatPlan.tableCount) {
+    return '<span class="gl-table-na">Set tables first</span>';
+  }
+  // Normalise to null first: the API omits a null tableNumber entirely (WhenWritingNull), so an
+  // unseated seat arrives as undefined — which is also the value used to mean "mixed".
+  const distinct = [...new Set(seats.map(s => s.tableNumber == null ? null : s.tableNumber))];
+  const common = distinct.length === 1 ? distinct[0] : undefined;
+
+  return `<select class="seat-select ${common === null ? 'unseated' : ''}" data-act="party"
+            aria-label="Table for ${escHtml(g.name)}">
+      ${common === undefined ? '<option value="__mixed" selected>Mixed</option>' : ''}
+      ${tableOptions(common === undefined ? -1 : common)}
+    </select>`;
+}
+
+/** The expandable row: one line per person, with an editable name and its own table. */
+function seatEditorRowHtml(g, seats, colCount) {
+  const rows = seats.map(s => {
+    const nameCell = s.seatIndex === 1
+      ? `<span class="seat-locked">${escHtml(g.name)} <span style="opacity:.5">(from the guest list)</span></span>`
+      : `<input class="seat-label" data-act="label" placeholder="Guest ${s.seatIndex} (optional)"
+                value="${escHtml(s.label || '')}" maxlength="256" aria-label="Name of guest ${s.seatIndex}">`;
+    return `<div class="seat-row" data-seat="${s.seatIndex}">
+      <span class="seat-row-idx">Person ${s.seatIndex}</span>
+      ${nameCell}
+      <select class="seat-select ${s.tableNumber == null ? 'unseated' : ''}" data-act="seat"
+              aria-label="Table for person ${s.seatIndex}">${tableOptions(s.tableNumber)}</select>
+    </div>`;
+  }).join('');
+
+  return `<tr class="gl-seats-row" data-gid="${escHtml(g.id)}" ${seatOpen.has(g.id) ? '' : 'hidden'}>
+    <td colspan="${colCount}">
+      <div class="seat-body">
+        ${rows}
+        <p class="seat-hint">Leave a name blank and guests see &ldquo;Guest of ${escHtml(g.name)}&rdquo;.
+           Give people different tables to split the party.</p>
+      </div>
+    </td>
+  </tr>`;
 }
 
 function markGuestDirty(id) {
@@ -1084,13 +1404,45 @@ function showImportSummary(res) {
 // ── Excel export ─────────────────────────────────────────────────
 async function exportGuestList() {
   try { await loadGuestList(); } catch { /* export what we have */ }
-  if (!allGuests.length) return toast('No guests to export', 'error');
-  const rows = [['Name', 'Maximum Allowed Attendees', 'Personalized Invitation Link', 'Selected Attendees', 'RSVP Status']];
-  allGuests.forEach(g => rows.push([g.name, g.maxAttendees, guestLink(g), g.selectedAttendees, statusLabel(g.status)]));
+  if (!allGuests.length) return toast('No guests to export', 'err');
+
+  // Tables are only meaningful when the feature is on, so the column appears only then — an
+  // always-present empty "Tables" column would just be noise for everyone else. The plan is
+  // fetched if the couple has not opened the Seating tab in this session.
+  let seatsByGuest = null;
+  if (seatingAvailable()) {
+    try {
+      if (!seatPlan) seatPlan = await api('GET', '/api/client/seating');
+      if (seatPlan.enabled) {
+        seatsByGuest = new Map(seatPlan.guests.map(g => [g.guestId, g.seats]));
+      }
+    } catch { /* fall back to exporting without tables rather than failing the export */ }
+  }
+
+  const header = ['Name', 'Maximum Allowed Attendees', 'Personalized Invitation Link',
+                  'Selected Attendees', 'RSVP Status'];
+  if (seatsByGuest) header.push('Tables', 'Seat Names');
+
+  const rows = [header];
+  allGuests.forEach(g => {
+    const row = [g.name, g.maxAttendees, guestLink(g), g.selectedAttendees, statusLabel(g.status)];
+    if (seatsByGuest) {
+      const seats = seatsByGuest.get(g.id) || [];
+      // A party split across tables reads as "3, 7" rather than a single number, so the venue
+      // can see the split without opening the dashboard.
+      const tables = [...new Set(seats.map(s => s.tableNumber).filter(t => t != null))].sort((a, b) => a - b);
+      row.push(tables.length ? tables.join(', ') : (seats.length ? 'Not seated' : ''));
+      row.push(seats.map(s => s.seatIndex === 1 ? g.name : (s.label || 'Guest ' + s.seatIndex)).join(', '));
+    }
+    rows.push(row);
+  });
+
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 28 }, { wch: 12 }, { wch: 60 }, { wch: 10 }, { wch: 14 }];
+  if (seatsByGuest) ws['!cols'].push({ wch: 14 }, { wch: 40 });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Guest List');
+  // Distinct from the RSVP export, which also wrote guest-list.xlsx and silently overwrote this.
   XLSX.writeFile(wb, 'guest-list.xlsx');
 }
 
@@ -1122,7 +1474,9 @@ function exportGuestsExcel() {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Guests');
-  XLSX.writeFile(wb, 'guest-list.xlsx');
+  // rsvp-responses, not guest-list: this and exportGuestList both wrote guest-list.xlsx, so
+  // whichever ran second silently replaced the other in the downloads folder.
+  XLSX.writeFile(wb, 'rsvp-responses.xlsx');
 }
 
 // ── Account: change password ─────────────────────────────────────
@@ -1170,6 +1524,377 @@ function toast(msg, type) {
     el.classList.remove('in');
     setTimeout(() => el.remove(), 400);
   }, 3800);
+}
+
+// ══ SEATING ═══════════════════════════════════════════════════════════════════
+// One seat = one person. Seat 1 is the guest named on the list; seats 2..N are their party, who
+// exist nowhere else in the data, so the couple can name them here or leave the placeholder.
+
+let seatPlan = null;          // last SeatingPlanDto from the server
+
+/** Whether this invitation has seating switched on, per the dashboard summary. */
+function seatingAvailable() {
+  const btn = document.getElementById('seatingTabBtn');
+  return !!btn && !btn.classList.contains('hidden');
+}
+const seatOpen = new Set();   // guestIds whose party panel is expanded, kept across re-renders
+const seatDirty = new Set();  // guestIds with an unsaved typed name
+
+async function loadSeating() {
+  try {
+    seatPlan = await api('GET', '/api/client/seating');
+  } catch (e) { toast(e.message, 'err'); return; }
+
+  // A Super Admin owns the switch; if it is off the tab should not be reachable at all.
+  if (!seatPlan.enabled) {
+    document.getElementById('seatingTabBtn').classList.add('hidden');
+    toast('Seating is not enabled for this invitation', 'err');
+    return;
+  }
+
+  document.getElementById('seatTableCount').value = seatPlan.tableCount;
+  renderSeatingLink();
+  renderSeatingProgress();
+  renderTableFilterOptions();
+  renderSeatingTables();
+  renderSeatWarning();
+}
+
+function seatingUrl() {
+  return window.location.origin + '/seating/' + seatPlan.seatingToken;
+}
+
+function renderSeatingLink() {
+  document.getElementById('seatUrl').value = seatingUrl();
+  const box = document.getElementById('seatQrBox');
+  box.innerHTML = '';
+  if (typeof QRCode === 'undefined') {
+    box.innerHTML = '<p style="color:#333;font-size:.7rem;padding:1rem;max-width:180px;">QR library did not load. The link beside this box still works.</p>';
+    return;
+  }
+  // correctLevel H: the card gets handled, propped against things and photographed at an angle,
+  // so favour error tolerance over a smaller symbol.
+  new QRCode(box, {
+    text: seatingUrl(), width: 180, height: 180,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+function openSeatingLink() { window.open(seatingUrl(), '_blank', 'noopener'); }
+
+function downloadSeatingQr() {
+  // qrcodejs renders BOTH a hidden <canvas> and a visible <img> whose src is already a PNG data
+  // URL. Prefer the img: it is the thing on screen, so what downloads is provably what the
+  // couple is looking at, and it does not depend on a hidden canvas keeping its bitmap.
+  const img = document.querySelector('#seatQrBox img');
+  const canvas = document.querySelector('#seatQrBox canvas');
+  let href = null;
+  if (img && img.src.startsWith('data:image')) href = img.src;
+  else if (canvas) { try { href = canvas.toDataURL('image/png'); } catch { /* fall through */ } }
+  if (!href) { toast('QR code is not ready yet', 'err'); return; }
+
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = 'find-my-table-qr.png';
+  a.click();
+}
+
+async function regenerateSeatingLink() {
+  if (!confirm('Regenerate the link?\n\nEvery printed copy of the current QR code stops working immediately.')) return;
+  try {
+    const res = await api('POST', '/api/client/seating/regenerate-link');
+    seatPlan.seatingToken = res.seatingToken;
+    renderSeatingLink();
+    toast('New link generated - reprint the code', 'ok');
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+function renderSeatWarning() {
+  const el = document.getElementById('seatWarn');
+  const bits = [];
+  if (seatPlan.tableCount === 0) {
+    bits.push('Set the number of tables before you can assign anyone.');
+  }
+  const unseated = seatPlan.totalSeats - seatPlan.seatedCount;
+  if (seatPlan.tableCount > 0 && unseated > 0) {
+    bits.push(unseated + (unseated === 1 ? ' person has' : ' people have') + ' no table yet.');
+  }
+  const n = seatPlan.unlistedRsvpCount;
+  if (n > 0) {
+    bits.push(n + ' accepted RSVP' + (n === 1 ? '' : 's') + ' ' + (n === 1 ? 'is' : 'are')
+      + ' not on your guest list, so they cannot be seated. Add them in Guest List to include them.');
+  }
+  el.innerHTML = bits.map(b => escHtml(b)).join('<br>');
+  el.classList.toggle('hidden', bits.length === 0);
+}
+
+/** Options 1..tableCount plus "Not seated". Shared by every seat dropdown. */
+function tableOptions(selected) {
+  let html = '<option value=""' + (selected == null ? ' selected' : '') + '>Not seated</option>';
+  for (let t = 1; t <= seatPlan.tableCount; t++) {
+    html += '<option value="' + t + '"' + (selected === t ? ' selected' : '') + '>Table ' + t + '</option>';
+  }
+  return html;
+}
+
+function acceptedGuests() {
+  return (seatPlan.guests || []).filter(g => g.status === 'Accepted' && g.seats.length > 0);
+}
+
+/** Progress readout in the Seating tab header. The guest rows themselves live in Guest List. */
+function renderSeatingProgress() {
+  const el = document.getElementById('seatProgress');
+  if (!el || !seatPlan) return;
+  el.innerHTML = '<strong>' + seatPlan.seatedCount + '</strong> of <strong>'
+    + seatPlan.totalSeats + '</strong> seated';
+}
+// Delegated listeners for the seating controls, which now live on the GUEST LIST rows. No inline
+// handlers at all, which is what keeps a name like O&rsquo;Brien from breaking a row.
+document.addEventListener('click', ev => {
+  const caret = ev.target.closest('#glBody .seat-caret');
+  if (!caret) return;
+  const tr = caret.closest('tr[data-gid]');
+  const gid = tr.dataset.gid;
+  // The editor is a sibling <tr>, not a child — a table row cannot contain another row.
+  const editor = document.querySelector('#glBody tr.gl-seats-row[data-gid="' + CSS.escape(gid) + '"]');
+  if (!editor) return;
+  const nowOpen = editor.hidden;
+  editor.hidden = !nowOpen;
+  caret.classList.toggle('open', nowOpen);
+  caret.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
+  if (nowOpen) seatOpen.add(gid); else seatOpen.delete(gid);
+});
+
+document.addEventListener('change', ev => {
+  const sel = ev.target.closest('#glBody [data-act="seat"], #glBody [data-act="party"]');
+  if (!sel) return;
+  const gid = sel.closest('tr[data-gid]').dataset.gid;
+  if (sel.dataset.act === 'party') {
+    // The Mixed sentinel is a label, not a destination - picking it should do nothing.
+    if (sel.value === '__mixed') return;
+    assignWholeParty(gid, sel.value === '' ? null : parseInt(sel.value, 10));
+  } else {
+    saveGuestSeats(gid);
+  }
+});
+
+document.addEventListener('input', ev => {
+  const inp = ev.target.closest('#glBody [data-act="label"]');
+  if (!inp) return;
+  seatDirty.add(inp.closest('tr[data-gid]').dataset.gid);
+});
+
+// A typed name saves on blur, not per keystroke - one request per edit rather than per letter.
+document.addEventListener('focusout', ev => {
+  const inp = ev.target.closest('#glBody [data-act="label"]');
+  if (!inp) return;
+  const gid = inp.closest('tr[data-gid]').dataset.gid;
+  if (seatDirty.has(gid)) { seatDirty.delete(gid); saveGuestSeats(gid); }
+});
+
+function readSeatsFrom(editorRow) {
+  return [...editorRow.querySelectorAll('.seat-row')].map(row => {
+    const label = row.querySelector('[data-act="label"]');
+    const sel = row.querySelector('[data-act="seat"]');
+    return {
+      seatIndex: parseInt(row.dataset.seat, 10),
+      label: label ? (label.value.trim() || null) : null,
+      tableNumber: sel.value === '' ? null : parseInt(sel.value, 10)
+    };
+  });
+}
+
+async function saveGuestSeats(guestId) {
+  const editor = document.querySelector('#glBody tr.gl-seats-row[data-gid="' + CSS.escape(guestId) + '"]');
+  // A guest attending alone has no editor row; their single seat is driven by the party dropdown,
+  // which routes through assignWholeParty instead.
+  if (!editor) return;
+  try {
+    const updated = await api('PUT', '/api/client/seating/guests/' + guestId, { seats: readSeatsFrom(editor) });
+    const i = seatPlan.guests.findIndex(g => g.guestId === guestId);
+    if (i >= 0) seatPlan.guests[i] = updated;
+    afterSeatChange();
+  } catch (e) {
+    toast(e.message, 'err');
+    loadGuestList();   // the server rejected it, so resync rather than leave the UI lying
+  }
+}
+
+async function assignWholeParty(guestId, tableNumber) {
+  try {
+    await api('POST', '/api/client/seating/assign-party', { guestId: guestId, tableNumber: tableNumber });
+    const g = seatPlan.guests.find(x => x.guestId === guestId);
+    if (g) g.seats.forEach(s => { s.tableNumber = tableNumber; });
+    afterSeatChange();
+  } catch (e) { toast(e.message, 'err'); loadGuestList(); }
+}
+
+function afterSeatChange() {
+  const gs = acceptedGuests();
+  seatPlan.totalSeats = gs.reduce((n, g) => n + g.seats.length, 0);
+  seatPlan.seatedCount = gs.reduce((n, g) => n + g.seats.filter(s => s.tableNumber != null).length, 0);
+  // The controls live on the guest-list rows, so those are what must redraw. seatOpen survives
+  // the re-render, so an expanded party stays expanded.
+  if (guestListLoaded) renderGuestList();
+  renderSeatingProgress();
+  renderSeatingTables();
+  renderSeatWarning();
+}
+
+async function saveTableCount() {
+  const count = parseInt(document.getElementById('seatTableCount').value, 10);
+  if (!Number.isInteger(count) || count < 0 || count > 500) {
+    toast('Enter a number between 0 and 500', 'err');
+    return;
+  }
+  try {
+    const res = await api('PUT', '/api/client/seating/settings', { tableCount: count });
+    if (res.unseated > 0) {
+      toast('Saved - ' + res.unseated + (res.unseated === 1 ? ' person was' : ' people were')
+        + ' unseated from removed tables', 'err');
+    } else {
+      toast('Saved', 'ok');
+    }
+    await loadSeating();
+    // The table count drives every dropdown over in the guest list, so refresh those too.
+    if (guestListLoaded) await loadGuestList();
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+function renderTableFilterOptions() {
+  const sel = document.getElementById('seatTableFilter');
+  const keep = sel.value;
+  let html = '<option value="">All tables</option>';
+  for (let t = 1; t <= seatPlan.tableCount; t++) {
+    html += '<option value="' + t + '">Table ' + t + '</option>';
+  }
+  sel.innerHTML = html;
+  if (keep && parseInt(keep, 10) <= seatPlan.tableCount) sel.value = keep;
+}
+
+/** Guests grouped by table, from the plan already in memory - no extra request. */
+function seatingByTable() {
+  const byTable = new Map();
+  for (let t = 1; t <= seatPlan.tableCount; t++) byTable.set(t, []);
+  acceptedGuests().forEach(g => {
+    g.seats.forEach(s => {
+      if (s.tableNumber == null || !byTable.has(s.tableNumber)) return;
+      byTable.get(s.tableNumber).push(
+        s.seatIndex === 1 ? g.name : (s.label || 'Guest of ' + g.name));
+    });
+  });
+  return byTable;
+}
+
+function renderSeatingTables() {
+  const host = document.getElementById('seatTables');
+  const only = document.getElementById('seatTableFilter').value;
+  const hideEmpty = document.getElementById('seatHideEmpty').checked;
+
+  document.getElementById('seatTablesEmpty').classList.toggle('hidden', seatPlan.tableCount > 0);
+  if (seatPlan.tableCount === 0) { host.innerHTML = ''; return; }
+
+  let entries = [...seatingByTable().entries()];
+  if (only) entries = entries.filter(e => String(e[0]) === only);
+  if (hideEmpty) entries = entries.filter(e => e[1].length > 0);
+
+  host.innerHTML = entries.map(e => {
+    const t = e[0], names = e[1];
+    const list = names.length
+      ? names.map(n => '<li>' + escHtml(n) + '</li>').join('')
+      : '<li style="color:var(--muted)">&mdash;</li>';
+    return '<div class="seat-table-card ' + (names.length ? '' : 'empty') + '">'
+      + '<h4>Table ' + t + '</h4>'
+      + '<div class="cap">' + names.length + (names.length === 1 ? ' person' : ' people') + '</div>'
+      + '<ul>' + list + '</ul></div>';
+  }).join('');
+}
+
+/** Seating-only export: one row per person, so it can be handed to a venue as-is. */
+/**
+ * Seating export, one sheet per table.
+ *
+ * The previous single "Guest | Seat | Name | Table" sheet was confusing to read: it repeated the
+ * inviting guest's name on every row, buried the table in the last column, and left whoever is
+ * setting out place cards to sort and filter it themselves. A sheet per table matches how the
+ * workbook is actually used — you stand at table 6 holding the "Table 6" tab.
+ *
+ * Sheet 1 is a summary so the whole plan is visible at a glance; the rest are one per table, plus
+ * a "Not seated" sheet only when somebody still needs a chair.
+ */
+function exportSeatingExcel() {
+  if (!seatPlan || !seatPlan.enabled) { toast('Seating is not enabled', 'err'); return; }
+
+  const guests = acceptedGuests();
+  if (!guests.length) { toast('No seated guests to export yet', 'err'); return; }
+
+  // Display name for one person: the invitee for seat 1, the typed name for a companion, or a
+  // relation so an unnamed companion is still accounted for at the table.
+  const personName = (g, s) =>
+    s.seatIndex === 1 ? g.name : (s.label || 'Guest of ' + g.name);
+
+  const byTable = new Map();
+  const unseated = [];
+  for (let t = 1; t <= seatPlan.tableCount; t++) byTable.set(t, []);
+
+  guests.forEach(g => {
+    g.seats.forEach(s => {
+      const entry = { name: personName(g, s), party: g.name, seat: s.seatIndex };
+      if (s.tableNumber == null || !byTable.has(s.tableNumber)) unseated.push(entry);
+      else byTable.get(s.tableNumber).push(entry);
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Summary ──────────────────────────────────────────────
+  const summary = [['Table', 'People', 'Guests at this table']];
+  byTable.forEach((people, t) => {
+    summary.push([
+      t,
+      people.length,
+      people.map(p => p.name).join(', ')
+    ]);
+  });
+  summary.push([]);
+  summary.push(['Seated', seatPlan.seatedCount]);
+  summary.push(['Not seated', unseated.length]);
+  summary.push(['Total people', seatPlan.totalSeats]);
+  const wsSummary = XLSX.utils.aoa_to_sheet(summary);
+  wsSummary['!cols'] = [{ wch: 8 }, { wch: 8 }, { wch: 80 }];
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+  // ── One sheet per table ──────────────────────────────────
+  byTable.forEach((people, t) => {
+    const rows = [['Name', 'Part of']];
+    if (people.length) {
+      people.forEach(p => rows.push([p.name, p.seat === 1 ? '' : p.party]));
+    } else {
+      rows.push(['(nobody seated here yet)', '']);
+    }
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 30 }, { wch: 26 }];
+    // Sheet names are capped at 31 characters by the format and must be unique; "Table 12" is
+    // comfortably inside that for any plausible table count.
+    XLSX.utils.book_append_sheet(wb, ws, 'Table ' + t);
+  });
+
+  // ── Anyone still without a chair ─────────────────────────
+  // Only added when it is non-empty: an always-present empty sheet trains people to ignore it,
+  // and its presence is exactly the signal that work remains.
+  if (unseated.length) {
+    const rows = [['Name', 'Part of']];
+    unseated.forEach(p => rows.push([p.name, p.seat === 1 ? '' : p.party]));
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 30 }, { wch: 26 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Not seated');
+  }
+
+  XLSX.writeFile(wb, 'seating-plan.xlsx');
+  toast(unseated.length
+    ? 'Exported - ' + unseated.length + ' still not seated'
+    : 'Exported', unseated.length ? 'err' : 'ok');
 }
 </script>
 </body>

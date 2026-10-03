@@ -1,6 +1,7 @@
 using Scalar.AspNetCore;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.RateLimiting;
 using InvitationPlatform.Api.Auth;
 using InvitationPlatform.Api.Services.Email;
 using InvitationPlatform.Api.Services.Media;
@@ -9,6 +10,8 @@ using InvitationPlatform.Api.Services.Storage;
 using InvitationPlatform.Domain.Entities;
 using InvitationPlatform.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -149,6 +152,57 @@ builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 builder.Services.Configure<SuperAdminSettings>(builder.Configuration.GetSection("SuperAdmin"));
 builder.Services.AddScoped<DatabaseSeeder>();
 
+// ── Client IP behind the proxies ─────────────────────────────────────
+// Required by the seating rate limiter below, which partitions per caller. In production the
+// chain is  client → Caddy → nginx → api, so the API's immediate peer is always the web
+// container: without this every request shares one partition and the first scraper locks every
+// guest at the venue out of the lookup. Caddy replaces X-Forwarded-For with the connecting
+// address and discards whatever the client sent (its default, since no peer is in
+// trusted_proxies), then nginx appends its own peer — so the header arrives as "<client>, <caddy>"
+// and ForwardLimit = 2 walks back exactly those two hops. Both entries were written by our own
+// proxies, which is what makes the result trustworthy. The api container publishes no port and is
+// reachable only on the private compose network, so the proxy lists stay empty rather than
+// pinning Docker's dynamically-assigned subnet.
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.ForwardLimit = 2;
+    o.KnownIPNetworks.Clear();
+    o.KnownProxies.Clear();
+});
+
+// ── Rate limiting ────────────────────────────────────────────────────
+// Only the anonymous seating lookup carries a policy. A global limiter is the wrong shape: one
+// invitation page pulls dozens of images from /api/public/media, so a budget large enough for
+// that would be useless against someone harvesting a guest list.
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    o.AddPolicy(RateLimitPolicies.SeatingLookup, http => RateLimitPartition.GetFixedWindowLimiter(
+        http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            // Sustained ~1 request every 2 seconds. A guest looking themselves up needs two or
+            // three; harvesting a 200-name list needs hundreds.
+            PermitLimit = 30,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+
+    o.OnRejected = async (ctx, ct) =>
+    {
+        ctx.HttpContext.Response.Headers.RetryAfter = "60";
+        ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("RateLimiter")
+            .LogWarning("Seating lookup rate limit hit on {Path} by {Ip}",
+                ctx.HttpContext.Request.Path,
+                ctx.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+        await ctx.HttpContext.Response.WriteAsJsonAsync(
+            new { error = "Too many lookups. Please wait a minute and try again." }, ct);
+    };
+});
+
 // ── CORS ─────────────────────────────────────────────────────────────
 // In every supported setup the pages and the API share an origin — nginx proxies /api/* in
 // the container stack, and the API serves the pages itself under "dotnet run" — so production
@@ -180,6 +234,10 @@ using (var scope = app.Services.CreateScope())
     await scope.ServiceProvider.GetRequiredService<DatabaseSeeder>().SeedAsync();
 }
 
+// Must be the FIRST middleware: everything downstream that reads the caller's address — the
+// seating rate limiter's partition key above all — sees whatever this leaves behind.
+app.UseForwardedHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -196,6 +254,9 @@ if (app.Environment.IsDevelopment())
         app.UseRewriter(new RewriteOptions()
             // Personal guest links: /invite/<name-slug> → the dispatcher, which reads the slug.
             .AddRewrite(@"^invite/[A-Za-z0-9._~-]+$", "invitation.html", skipRemainingRules: true)
+            // Find-my-table links: /seating/<token> → the lookup page, which reads the token from
+            // the path. Base64url, so the character class allows - and _ as well.
+            .AddRewrite(@"^seating/[A-Za-z0-9._~-]+$", "seating.html", skipRemainingRules: true)
             // Template folder without a file: /templates/wedding/elegant-noir → its index.html.
             .AddRewrite(@"^(templates/[A-Za-z0-9-]+/[A-Za-z0-9-]+)/?$", "$1/index.html", skipRemainingRules: true)
             // Any extensionless single-segment page path → its .html file
@@ -235,6 +296,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("Frontend");
+// After routing (implicit in minimal hosting), so the per-endpoint [EnableRateLimiting] policy
+// on PublicSeatingController is visible to it.
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

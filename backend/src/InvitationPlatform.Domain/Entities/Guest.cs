@@ -32,4 +32,11 @@ public class Guest
 
     // Navigation
     public Invitation Invitation { get; set; } = null!;
+
+    /// <summary>
+    /// Table assignments for this guest's party, one per person. Empty until the couple opens the
+    /// seating tab — seats are materialised on demand from <see cref="SelectedAttendees"/> rather
+    /// than at RSVP time, so switching the feature on after the replies are in still works.
+    /// </summary>
+    public ICollection<GuestSeat> Seats { get; set; } = new List<GuestSeat>();
 }

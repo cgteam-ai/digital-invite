@@ -90,7 +90,7 @@ public class ClientController(AppDbContext db) : ControllerBase
     {
         var inv = await db.Invitations
             .Where(i => i.Id == CurrentInvitationId)
-            .Select(i => new { i.Id, i.Slug, i.Title, i.EventDate, i.MaxAttendees })
+            .Select(i => new { i.Id, i.Slug, i.Title, i.EventDate, i.MaxAttendees, i.SeatingEnabled })
             .FirstOrDefaultAsync();
         if (inv is null) return NotFound();
 
@@ -102,7 +102,7 @@ public class ClientController(AppDbContext db) : ControllerBase
 
         return Ok(new DashboardSummary(
             inv.Id, inv.Slug, inv.Title, inv.EventDate, inv.MaxAttendees,
-            rsvps.Count, attending, declined, seats, rate));
+            rsvps.Count, attending, declined, seats, rate, inv.SeatingEnabled));
     }
 
     [HttpGet("dashboard/attendees")]
@@ -128,6 +128,25 @@ public class ClientController(AppDbContext db) : ControllerBase
     // ── GUEST LIST MANAGEMENT ────────────────────────────────
 
     private const int MaxAttendeesLimit = 100;
+
+    /// <summary>
+    /// The largest party the couple may grant one guest. This is the INVITATION's own
+    /// "max attendees per RSVP", which a Super Admin sets — without it the guest list happily
+    /// accepted 14 on an invitation capped at 10, and PublicController then rejected the RSVP
+    /// at the door, so the guest saw the failure rather than the couple.
+    ///
+    /// A non-positive invitation cap means "no limit" (the same reading PublicController uses),
+    /// in which case only the absolute ceiling applies.
+    /// </summary>
+    private async Task<int> GuestAttendeeCapAsync(CancellationToken ct = default)
+    {
+        var invMax = await db.Invitations
+            .Where(i => i.Id == CurrentInvitationId)
+            .Select(i => i.MaxAttendees)
+            .FirstOrDefaultAsync(ct);
+
+        return invMax > 0 ? Math.Min(invMax, MaxAttendeesLimit) : MaxAttendeesLimit;
+    }
 
     private static string NewGuestToken() =>
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(12))
@@ -171,8 +190,9 @@ public class ClientController(AppDbContext db) : ControllerBase
         var name = (req.Name ?? "").Trim();
         if (name.Length == 0) return BadRequest(new { error = "Name is required" });
         if (name.Length > 256) return BadRequest(new { error = "Name is longer than 256 characters" });
-        if (req.MaxAttendees < 1 || req.MaxAttendees > MaxAttendeesLimit)
-            return BadRequest(new { error = $"Max attendees must be between 1 and {MaxAttendeesLimit}" });
+        var cap = await GuestAttendeeCapAsync();
+        if (req.MaxAttendees < 1 || req.MaxAttendees > cap)
+            return BadRequest(new { error = $"Max attendees must be between 1 and {cap}" });
 
         var exists = await db.Guests.AnyAsync(g =>
             g.InvitationId == CurrentInvitationId && g.Name.ToLower() == name.ToLower());
@@ -203,6 +223,9 @@ public class ClientController(AppDbContext db) : ControllerBase
             return BadRequest(new { error = "No rows to import" });
         if (req.Rows.Count > 10000)
             return BadRequest(new { error = "Import is limited to 10,000 rows per file" });
+
+        // Resolved once for the whole file rather than per row — it cannot change mid-import.
+        var importCap = await GuestAttendeeCapAsync();
 
         var existing = await db.Guests
             .Where(g => g.InvitationId == CurrentInvitationId)
@@ -240,9 +263,9 @@ public class ClientController(AppDbContext db) : ControllerBase
                 failed.Add(new ImportRowError(row.Row, "Maximum allowed attendees is missing or not a number"));
                 continue;
             }
-            if (row.MaxAttendees < 1 || row.MaxAttendees > MaxAttendeesLimit)
+            if (row.MaxAttendees < 1 || row.MaxAttendees > importCap)
             {
-                failed.Add(new ImportRowError(row.Row, $"Maximum allowed attendees must be between 1 and {MaxAttendeesLimit}"));
+                failed.Add(new ImportRowError(row.Row, $"Maximum allowed attendees must be between 1 and {importCap}"));
                 continue;
             }
 
@@ -291,8 +314,9 @@ public class ClientController(AppDbContext db) : ControllerBase
         var name = (req.Name ?? "").Trim();
         if (name.Length == 0) return BadRequest(new { error = "Name is required" });
         if (name.Length > 256) return BadRequest(new { error = "Name is longer than 256 characters" });
-        if (req.MaxAttendees < 1 || req.MaxAttendees > MaxAttendeesLimit)
-            return BadRequest(new { error = $"Max attendees must be between 1 and {MaxAttendeesLimit}" });
+        var cap = await GuestAttendeeCapAsync();
+        if (req.MaxAttendees < 1 || req.MaxAttendees > cap)
+            return BadRequest(new { error = $"Max attendees must be between 1 and {cap}" });
 
         var duplicate = await db.Guests.AnyAsync(g =>
             g.InvitationId == CurrentInvitationId && g.Id != id && g.Name.ToLower() == name.ToLower());

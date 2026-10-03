@@ -119,7 +119,7 @@ public class AdminController(AppDbContext db) : ControllerBase
             inv.Id, inv.Slug, inv.Title, inv.Status.ToString(),
             inv.EventType, inv.EventDate, inv.MaxAttendees, inv.TemplateId,
             inv.UpdatedAt, InvitationDataMapper.ToData(inv),
-            inv.PublicToken));
+            inv.PublicToken, inv.SeatingEnabled));
     }
 
     [HttpPost("invitations")]
@@ -166,6 +166,10 @@ public class AdminController(AppDbContext db) : ControllerBase
             ? DateTime.SpecifyKind(req.EventDate.Value.Date, DateTimeKind.Utc)
             : null;
         inv.MaxAttendees = req.MaxAttendees;
+        // Null means "leave as it is", so a client that does not send the field cannot switch
+        // seating off by omission. Only a Super Admin reaches this endpoint, which is what keeps
+        // the flag out of the couple's hands.
+        if (req.SeatingEnabled.HasValue) inv.SeatingEnabled = req.SeatingEnabled.Value;
         inv.UpdatedAt = DateTime.UtcNow;
         InvitationDataMapper.ApplyData(inv, req.Data);
         await db.SaveChangesAsync();

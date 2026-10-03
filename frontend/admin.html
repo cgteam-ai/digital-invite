@@ -105,6 +105,19 @@
   .toggle input:checked + .toggle-slider { background: var(--gold); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
 
+  /* Guest-seating toggle. The state has to be readable at a glance, so the switch is backed by
+     an explicit ON/OFF word and a coloured border rather than relying on the slider alone. */
+  .seat-toggle-row { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+                     border: 1px solid var(--border); border-radius: 6px; padding: .6rem .8rem;
+                     transition: border-color .2s, background .2s; }
+  .seat-toggle-row.on { border-color: var(--gold); background: rgba(201,169,110,.07); }
+  .seat-toggle-state { font-size: .68rem; letter-spacing: 2px; font-weight: 600;
+                       border-radius: 3px; padding: .15rem .45rem; min-width: 42px; text-align: center;
+                       background: rgba(255,255,255,.08); color: var(--muted); }
+  .seat-toggle-row.on .seat-toggle-state { background: var(--gold); color: #1b1613; }
+  .seat-toggle-caption { font-size: .8rem; opacity: .8; }
+  .seat-toggle-help { font-size: .72rem; opacity: .55; margin: .5rem 0 0; }
+
   .chev { color: var(--muted); transition: transform .2s; }
   .section.collapsed .chev { transform: rotate(-90deg); }
   .section.collapsed .section-body { display: none; }
@@ -200,13 +213,22 @@
 
   /* ── MOBILE ── 16px form controls stop iOS Safari zooming on focus; guard against
      any single wide element pushing the whole page sideways. */
-  @media (max-width: 600px) {
+  @media (max-width: 760px) {
     html, body { overflow-x: hidden; }
     .field input, .field textarea, .field select,
     .search-row input, .url-row input, .login-card input,
     input, textarea, select { font-size: 16px; }
     .editor, .sidebar, .panel { padding: 1rem; }
-    .btn { padding: .6rem 1rem; }
+    /* 40px keeps every control a comfortable tap target. */
+    .btn { padding: .6rem 1rem; min-height: 40px; }
+    .btn-sm { min-height: 36px; }
+    /* A URL and its Copy button side by side leaves the input a few characters wide. */
+    .url-row { flex-direction: column; align-items: stretch; gap: .4rem; }
+    /* The seating switch wraps rather than squeezing the ON/OFF pill off the edge. */
+    .seat-toggle-row { gap: .5rem; }
+    .seat-toggle-caption { flex-basis: 100%; }
+    /* Wide RSVP table scrolls inside its own box instead of widening the page. */
+    .rsvp-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   }
 
   .pill { display: inline-block; font-size: .6rem; letter-spacing: 1.5px; text-transform: uppercase; background: rgba(201,169,110,.15); color: var(--gold-light); padding: 3px 8px; border-radius: 2px; border: 1px solid var(--border); }
@@ -827,6 +849,30 @@ function renderEditor() {
           <label>Max attendees per RSVP</label>
           <input type="number" min="1" data-bind="maxAttendees" value="${esc(inv.maxAttendees)}" oninput="onFieldChange(this)">
         </div>
+        <div class="field full">
+          <label>Guest seating</label>
+          <!-- The .toggle class is a fixed 36x20 box whose slider is position:absolute inset:0,
+               so it must wrap the checkbox ONLY. Putting the caption inside it (an earlier
+               attempt) painted the slider straight over the text. The caption and the state word
+               are siblings instead.
+               Also deliberately NOT data-bind: that handler is whitelisted to
+               slug/eventDate/maxAttendees and reads input.value, which is "on" for a checkbox
+               whatever its state. Writing the model from onchange is what toggleSection does. -->
+          <div class="seat-toggle-row ${inv.seatingEnabled ? 'on' : ''}" id="seat-toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="seat-toggle-input"
+                     ${inv.seatingEnabled ? 'checked' : ''} onchange="toggleSeating(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="seat-toggle-state" id="seat-toggle-state">${inv.seatingEnabled ? 'ON' : 'OFF'}</span>
+            <span class="seat-toggle-caption">Let the couple assign guests to tables</span>
+          </div>
+          <p class="seat-toggle-help" id="seat-toggle-help">
+            ${inv.seatingEnabled
+              ? 'The couple sees a Seating tab with a QR code guests scan at the venue to find their table.'
+              : 'Off — the couple has no Seating tab. Turning this on adds one, with a QR code for guests.'}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -1193,6 +1239,26 @@ function fieldHtmlFor(f, obj, sectionKey) {
     <label for="${id}">${esc(label)}</label>
     ${input}
   </div>`;
+}
+
+// Seating is a top-level invitation field, not a section, so it writes to currentInv rather than
+// currentInv.data and is sent by saveCurrent/publishInvitation as seatingEnabled.
+function toggleSeating(enabled) {
+  if (!currentInv) return;
+  currentInv.seatingEnabled = enabled;
+  dirty = true;
+  // Reflect the new state immediately. Without this the only feedback is a 36px slider, which
+  // is what made it unclear whether the switch had actually taken.
+  const row = document.getElementById('seat-toggle-row');
+  if (row) row.classList.toggle('on', enabled);
+  const state = document.getElementById('seat-toggle-state');
+  if (state) state.textContent = enabled ? 'ON' : 'OFF';
+  const help = document.getElementById('seat-toggle-help');
+  if (help) {
+    help.textContent = enabled
+      ? 'The couple sees a Seating tab with a QR code guests scan at the venue to find their table.'
+      : 'Off — the couple has no Seating tab. Turning this on adds one, with a QR code for guests.';
+  }
 }
 
 function toggleSection(key, enabled) {
@@ -1569,6 +1635,7 @@ async function saveCurrent() {
       eventType: currentInv.eventType,
       eventDate: currentInv.eventDate || null,
       maxAttendees: currentInv.maxAttendees,
+      seatingEnabled: !!currentInv.seatingEnabled,
       data: currentInv.data
     });
     dirty = false;
@@ -1589,7 +1656,8 @@ async function publishInvitation() {
   try {
     if (dirty) await api('PUT', `/api/admin/invitations/${currentInv.id}`, {
       title: currentInv.title, slug: currentInv.slug, eventType: currentInv.eventType,
-      eventDate: currentInv.eventDate || null, maxAttendees: currentInv.maxAttendees, data: currentInv.data
+      eventDate: currentInv.eventDate || null, maxAttendees: currentInv.maxAttendees,
+      seatingEnabled: !!currentInv.seatingEnabled, data: currentInv.data
     });
     await api('POST', `/api/admin/invitations/${currentInv.id}/publish`);
     dirty = false;

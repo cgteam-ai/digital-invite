@@ -29,6 +29,17 @@ public static partial class SlugHelper
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Unguessable URL-safe token for a capability link. Used for the seating lookup URL a QR
+    /// code encodes: anyone holding it can read the seating plan, so it must not be derivable
+    /// from a name or guessable by enumeration — hence a CSPRNG and 16 bytes (~128 bits) rather
+    /// than the 12 used for older per-guest tokens. Base64url, so it survives a QR code, a path
+    /// segment and a double-click without escaping.
+    /// </summary>
+    public static string UrlSafeToken(int byteLength = 16) =>
+        Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(byteLength))
+            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
+
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max].TrimEnd('-');
 
     private static string RemoveDiacritics(string text)
