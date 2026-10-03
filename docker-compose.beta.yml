@@ -37,7 +37,12 @@ x-logging: &logging
 
 services:
   # ── Static site + routing ──────────────────────────────────────────────────
-  web:
+  # Named "betaweb", NOT "web". Compose publishes the SERVICE name as a DNS alias on every
+  # network the service joins, including the shared edge. A service called "web" here would put
+  # a second "web" on that edge, where production's Caddy also sits — and Docker resolved the
+  # edge one in preference, so production traffic was answered by this container. The container
+  # name below is what Caddy actually addresses; this rename is the belt to that braces.
+  betaweb:
     image: ${WEB_IMAGE:-ghcr.io/cgteam-ai/digital-invite-web:release}
     build:
       context: ./frontend

@@ -127,6 +127,32 @@ jobs:
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
           echo "Deploying '$REF' to $TARGET"
 
+      # Pin the deploy to the EXACT commit, not to a moving tag.
+      #
+      # ":latest" and ":release" are branch pointers: they say which branch an image came from,
+      # never which commit. Deploy by one of those and the running image is whatever was last
+      # built from that branch — which silently differs from the code just checked out if the
+      # build was skipped, run from another branch, or is still in flight. The failure is
+      # invisible: healthy containers serving the wrong bytes.
+      #
+      # build-images.yml also tags every build "sha-<40 hex>" (type=sha,format=long), so
+      # resolving the ref to its commit here gives an immutable, unambiguous image reference.
+      - name: Resolve commit
+        id: c
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.t.outputs.ref }}
+          fetch-depth: 1
+
+      - name: Image tag
+        id: img
+        run: |
+          set -euo pipefail
+          SHA="$(git rev-parse HEAD)"
+          echo "sha=$SHA"        >> "$GITHUB_OUTPUT"
+          echo "tag=sha-$SHA"    >> "$GITHUB_OUTPUT"
+          echo "Deploying commit $SHA as image tag sha-$SHA"
+
       - name: Deploy
         env:
           DEPLOY_REF: ${{ steps.t.outputs.ref }}
@@ -136,6 +162,8 @@ jobs:
           API_CONTAINER: ${{ steps.t.outputs.api_container }}
           RELOAD_CADDY: ${{ steps.t.outputs.reload_caddy }}
           TARGET: ${{ inputs.target }}
+          IMAGE_TAG: ${{ steps.img.outputs.tag }}
+          COMMIT_SHA: ${{ steps.img.outputs.sha }}
         run: |
           set -euo pipefail
 
@@ -148,7 +176,7 @@ jobs:
 
           ssh -o StrictHostKeyChecking=yes \
               "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-              "DEPLOY_REF='$DEPLOY_REF' BACKUP_FIRST='$BACKUP_FIRST' DEPLOY_DIR='$DEPLOY_DIR' COMPOSE_FILE='$COMPOSE_FILE' API_CONTAINER='$API_CONTAINER' RELOAD_CADDY='$RELOAD_CADDY' TARGET='$TARGET' bash -s" <<'REMOTE'
+              "DEPLOY_REF='$DEPLOY_REF' BACKUP_FIRST='$BACKUP_FIRST' DEPLOY_DIR='$DEPLOY_DIR' COMPOSE_FILE='$COMPOSE_FILE' API_CONTAINER='$API_CONTAINER' RELOAD_CADDY='$RELOAD_CADDY' TARGET='$TARGET' IMAGE_TAG='$IMAGE_TAG' COMMIT_SHA='$COMMIT_SHA' bash -s" <<'REMOTE'
           set -euo pipefail
 
           # Fail early and clearly rather than deploying into a half-prepared directory.
@@ -159,7 +187,32 @@ jobs:
           fi
           cd "$HOME/${DEPLOY_DIR}"
 
+          # ── Pin the images to the exact commit ────────────────────────────
+          # Exported, so they override whatever API_IMAGE/WEB_IMAGE the .env pins. The .env
+          # values stay as a sensible default for a hand-run "compose up" on the server; an
+          # automated deploy always runs the commit it was asked for.
+          export API_IMAGE="ghcr.io/cgteam-ai/digital-invite-api:${IMAGE_TAG}"
+          export WEB_IMAGE="ghcr.io/cgteam-ai/digital-invite-web:${IMAGE_TAG}"
+          echo "-> ${TARGET}: commit ${COMMIT_SHA}"
+          echo "   api: ${API_IMAGE}"
+          echo "   web: ${WEB_IMAGE}"
+
           COMPOSE="docker compose -f ${COMPOSE_FILE}"
+
+          # ── Verify the images exist BEFORE touching anything ──────────────
+          # Pulling first means a missing build fails here, with nothing changed: no backup
+          # taken, no checkout, no containers recreated. The common cause is deploying a
+          # commit whose "Build images" run was never started, or is still running.
+          echo "-> pulling images for ${COMMIT_SHA}"
+          for IMG in "$API_IMAGE" "$WEB_IMAGE"; do
+            if ! docker pull --quiet "$IMG" >/dev/null 2>&1; then
+              echo "!! Image not found: $IMG" >&2
+              echo "!! Run 'Build images' from this commit's branch and wait for it to finish," >&2
+              echo "!! then deploy again. Nothing on the server has been changed." >&2
+              exit 1
+            fi
+          done
+          echo "-> images present"
 
           # ── Back up before anything can change the schema ──────────────────
           # Migrations run on boot and cannot be rolled back, so the backup must exist before
@@ -193,10 +246,10 @@ jobs:
           fi
           echo "-> now at $(git rev-parse --short HEAD): $(git log -1 --pretty=%s)"
 
-          # ── Pull the pre-built images and restart ─────────────────────────
-          # No --build: the server never compiles. API_IMAGE and WEB_IMAGE in .env point at
-          # the GHCR tags published by build-images.yml.
-          $COMPOSE pull
+          # ── Restart onto the pinned images ────────────────────────────────
+          # No "pull" here: the sha-pinned images were already fetched and verified above,
+          # before the backup, so by this point they are local. No --build either — the server
+          # never compiles.
           $COMPOSE up -d --remove-orphans
 
           # ── Reload Caddy's configuration ──────────────────────────────────
