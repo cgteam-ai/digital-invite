@@ -1,0 +1,136 @@
+# Beta stack — the release branch, on the same server as production.
+#
+#   web  →  nginx: static site + /api proxy + URL rewrites
+#   api  →  ASP.NET Core
+#   db   →  PostgreSQL, its OWN database — never production's
+#
+# There is deliberately NO caddy here. Only one process can hold ports 80 and 443, and
+# production's Caddy already does; it serves beta.digital-invite.net as a second site block and
+# reaches this stack's web container over the shared "invitation-edge" network.
+#
+# Everything is named and volumed separately from production, so the two stacks can be deployed,
+# restarted and destroyed independently:
+#
+#   project          invitation-platform-beta   (vs -prod)
+#   containers       invitation-beta-*          (vs invitation-prod-*)
+#   volumes          invitation-platform-beta_* (vs -prod_*)
+#   working copy     ~/beta                     (vs ~/app)
+#   branch           release                    (vs main)
+#
+# The separate working copy matters: a single clone cannot be on main and release at once, and
+# checking out release in ~/app would swap the compose file and Caddyfile out from under
+# production.
+#
+#   Server:  cd ~/beta && docker compose -f docker-compose.beta.yml pull && up -d
+#
+# Full walkthrough: backend/docs/DEPLOY.md
+
+name: invitation-platform-beta
+
+# Same rotation as production: an unnoticed error loop must not fill the disk and take the
+# server — and on this box that would take production down with it.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ── Static site + routing ──────────────────────────────────────────────────
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/cgteam-ai/digital-invite-web:release}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: invitation-beta-web
+    # No published ports: production's Caddy reaches this by container name over the edge
+    # network. Nothing here is exposed to the internet except through that Caddy.
+    expose:
+      - "80"
+    networks:
+      - default
+      - edge
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: 64m
+    logging: *logging
+    restart: unless-stopped
+
+  # ── Backend ────────────────────────────────────────────────────────────────
+  api:
+    image: ${API_IMAGE:-ghcr.io/cgteam-ai/digital-invite-api:release}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: invitation-beta-api
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Storage__BasePath: /app/media_storage
+      Jwt__Issuer: InvitationPlatform
+      Jwt__Audience: InvitationPlatform
+      Jwt__ExpiryMinutes: "60"
+      Media__MaxImageBytes: "8388608"
+      Media__MaxVideoBytes: "15728640"
+      Media__MaxAudioBytes: "10485760"
+      Media__MaxImageDimension: "2000"
+      Media__WebpQuality: "80"
+      # Information rather than Warning: beta exists to surface problems, and the extra log
+      # volume is bounded by the rotation above.
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+      Logging__LogLevel__InvitationPlatform: Information
+    expose:
+      - "8080"
+    volumes:
+      # Beta's own uploads. Nothing here is worth backing up — it is test data by definition.
+      - api_media:/app/media_storage
+    # NOT on the edge network. Only the web container needs to be reachable by Caddy; keeping
+    # api and db off it means a beta container cannot open a socket to the production database.
+    depends_on:
+      db:
+        condition: service_healthy
+    # Smaller than production's 640m: this box now runs two stacks, and beta serves one tester
+    # rather than a wedding's worth of guests.
+    mem_limit: 420m
+    logging: *logging
+    restart: unless-stopped
+
+  # ── Database ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:18-alpine
+    container_name: invitation-beta-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-invitationplatform}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in ~/beta/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in ~/beta/.env}
+    volumes:
+      # /var/lib/postgresql, NOT /var/lib/postgresql/data — postgres:18+ moved the data
+      # directory into a version subdirectory; the old path leaves the volume unused and the
+      # container restart-loops.
+      - db_data:/var/lib/postgresql
+    # No published port, exactly as in production.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    mem_limit: 256m
+    logging: *logging
+    restart: unless-stopped
+
+volumes:
+  api_media:
+  db_data:
+
+networks:
+  # Shared with production so its Caddy can reach this stack's web container. Created once on
+  # the server with "docker network create invitation-edge"; external so neither stack's
+  # "down" can remove it from under the other.
+  edge:
+    name: invitation-edge
+    external: true

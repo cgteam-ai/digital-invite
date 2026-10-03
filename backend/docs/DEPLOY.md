@@ -490,14 +490,82 @@ server's database. Close the SSH session and the route disappears.
 
 ### 4.4 Deploy an update
 
-```bash
-git pull && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d
+Deployments run from the **Actions** tab, never by hand on the server. The flow is beta first:
+
+```
+deploy beta (release)  →  test beta.digital-invite.net
+  →  merge release into main  →  deploy production (main)
 ```
 
-Migrations run automatically on boot. Take a database backup first — this project has no
-down-migration path.
+**1 — Build the images.** Actions → *Build images* → choose the branch (`release` for a beta,
+`main` for production) → Run. Wait for green.
 
-### 4.5 Never run `down -v` in production
+The branch matters more than it looks: `build-images.yml` tags every build with its branch name,
+but `:latest` **only** on the default branch. A build from `release` publishes `:release` and
+`:sha-…` and no `:latest` — which is why `~/beta/.env` pins `:release` and `~/app/.env` pins
+`:latest`. Pointing beta at `:latest` would run production's image against beta's code.
+
+**2 — Deploy.** Actions → *Deploy* → pick `beta` or `production` → Run. Leave `ref` blank and it
+uses that target's branch (`release` / `main`). `backup_first` defaults on; leave it on.
+
+Migrations run automatically on boot, and this project has no down-migration path.
+
+**3 — Promote.** Once beta looks right, merge `release` into `main`, run *Build images* from
+`main`, then *Deploy* with target `production`.
+
+### 4.5 How beta and production share one server
+
+Everything that can be separate, is:
+
+| | production | beta |
+|---|---|---|
+| working copy | `~/app` | `~/beta` |
+| compose file | `docker-compose.prod.yml` | `docker-compose.beta.yml` |
+| branch | `main` | `release` |
+| containers | `invitation-prod-*` | `invitation-beta-*` |
+| database | its own volume | its own volume |
+| images | `:latest` | `:release` |
+| `.env` | `~/app/.env` | `~/beta/.env` |
+
+The separate working copy is not fussiness: one clone cannot be on `main` and `release` at once,
+and checking out `release` in `~/app` would swap the compose file and the Caddyfile out from
+under production.
+
+**One thing is shared — the TLS edge.** Only one process can hold ports 80 and 443, so
+production's Caddy serves both hostnames. It reaches the beta web container over an external
+network called `invitation-edge`. Only the two *web* containers join it; beta's api and db do
+not, so a beta build running unreviewed code cannot open a socket to the production database.
+
+### 4.6 Setting beta up (once)
+
+```bash
+# 1. DNS: an A record for beta.digital-invite.net pointing at this server.
+
+# 2. The shared edge network. External to both stacks, so neither "down" removes it.
+docker network create invitation-edge
+
+# 3. Beta's own working copy, on the release branch.
+git clone git@github.com:cgteam-ai/digital-invite.git ~/beta
+cd ~/beta && git checkout release
+cp .env.beta.example .env && nano .env     # fresh secrets — do not reuse production's
+
+# 4. Tell production's Caddy the beta hostname, and reload it.
+cd ~/app
+echo 'BETA_SITE_ADDRESS=beta.digital-invite.net' >> .env
+docker compose -f docker-compose.prod.yml up -d caddy   # picks up the new env var
+```
+
+Step 4 needs `up -d`, not a reload: `BETA_SITE_ADDRESS` is an environment variable on the caddy
+service, so compose has to recreate the container for it to take. (A `caddy reload` is the right
+tool for a changed *Caddyfile*, whose contents compose cannot see — see 4.7.)
+
+Until `BETA_SITE_ADDRESS` is set, the Caddyfile's beta block defaults to `beta.localhost`: it
+parses, resolves nowhere on the internet, and requests no public certificate. A server with no
+beta is unaffected.
+
+After that, beta deploys are just Actions → *Deploy* → `beta`.
+
+### 4.7 Never run `down -v` in production
 
 `docker compose down` is safe: it stops containers and keeps volumes. Adding `-v` destroys
 `db_data`, `api_media` *and* `caddy_data` — that is your database, your users' uploads, and

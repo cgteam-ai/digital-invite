@@ -1,8 +1,27 @@
-# Deploy to the production server.
+# Deploy the application to the server — beta first, production second.
+#
+# The intended sequence is:
+#
+#   deploy beta (release branch)  →  test on beta.digital-invite.net
+#     →  merge release into main  →  deploy production (main branch)
 #
 # Triggered by hand from the Actions tab — there is deliberately no push trigger. A deployment
-# runs migrations against the live database and this project has no down-migration path, so
-# every deploy should be a decision someone made, not a side effect of merging.
+# runs migrations against a live database and this project has no down-migration path, so every
+# deploy should be a decision someone made, not a side effect of merging.
+#
+# Both targets live on the SAME server and are kept apart by everything that can be:
+#
+#                      production              beta
+#   working copy       ~/app                   ~/beta
+#   compose file       docker-compose.prod.yml docker-compose.beta.yml
+#   branch             main                    release
+#   containers         invitation-prod-*       invitation-beta-*
+#   database           its own volume          its own volume
+#   images             :latest                 :release
+#
+# Only one thing is shared: production's Caddy owns ports 80/443, so it serves both hostnames
+# and reaches the beta web container over the external "invitation-edge" network. Beta's api and
+# db are NOT on that network, so a beta build cannot reach the production database.
 #
 # The server does NOT compile anything. Images are built by build-images.yml and published to
 # GHCR; this workflow tells the server to pull them and restart. That is a hosting-cost
@@ -11,7 +30,7 @@
 # makes a small instance sufficient.
 #
 # Deploys are also seconds rather than minutes, and the bytes that ran in CI are the bytes
-# that run in production.
+# that run on the server.
 #
 # Required repository secrets (Settings → Secrets and variables → Actions):
 #
@@ -25,31 +44,41 @@
 #                       Pinning it means a machine-in-the-middle cannot impersonate the
 #                       server. Trusting whatever answers would defeat the SSH key entirely.
 
-name: Deploy to production
+name: Deploy
 
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: "Branch, tag or commit to deploy"
+      target:
+        description: "Where to deploy"
+        type: choice
         required: true
-        default: main
+        default: beta
+        options:
+          - beta
+          - production
+      ref:
+        description: "Branch, tag or commit — leave blank for the target's default (beta→release, production→main)"
+        required: false
+        default: ""
       backup_first:
         description: "Back up the database before deploying"
         type: boolean
         default: true
 
-# Never let two deployments overlap — the second would rebuild containers underneath the first.
+# Keyed by target, so a beta deploy and a production deploy never queue behind one another —
+# but two deploys to the SAME target still cannot overlap, which is what would rebuild
+# containers underneath each other.
 concurrency:
-  group: production-deploy
+  group: deploy-${{ inputs.target }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Attach a GitHub Environment named "production" to require manual approval before this job
-    # runs, and to scope the secrets to it. Configure under Settings → Environments.
-    environment: production
+    # The GitHub Environment is named after the target, so "production" can carry required
+    # reviewers while "beta" deploys without ceremony. Configure under Settings → Environments.
+    environment: ${{ inputs.target }}
 
     steps:
       - name: Set up SSH
@@ -61,10 +90,52 @@ jobs:
           printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      - name: Resolve target
+        id: t
+        env:
+          TARGET: ${{ inputs.target }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          case "$TARGET" in
+            production)
+              echo "dir=app"                        >> "$GITHUB_OUTPUT"
+              echo "compose=docker-compose.prod.yml" >> "$GITHUB_OUTPUT"
+              echo "api_container=invitation-prod-api" >> "$GITHUB_OUTPUT"
+              echo "default_ref=main"               >> "$GITHUB_OUTPUT"
+              echo "url=https://digital-invite.net/" >> "$GITHUB_OUTPUT"
+              # Only production runs Caddy, so only production has a config to reload.
+              echo "reload_caddy=true"              >> "$GITHUB_OUTPUT"
+              ;;
+            beta)
+              echo "dir=beta"                        >> "$GITHUB_OUTPUT"
+              echo "compose=docker-compose.beta.yml" >> "$GITHUB_OUTPUT"
+              echo "api_container=invitation-beta-api" >> "$GITHUB_OUTPUT"
+              echo "default_ref=release"             >> "$GITHUB_OUTPUT"
+              echo "url=https://beta.digital-invite.net/" >> "$GITHUB_OUTPUT"
+              echo "reload_caddy=false"              >> "$GITHUB_OUTPUT"
+              ;;
+            *) echo "Unknown target: $TARGET" >&2; exit 1 ;;
+          esac
+          REF="${INPUT_REF:-}"
+          if [ -z "$REF" ]; then
+            case "$TARGET" in
+              production) REF=main ;;
+              beta)       REF=release ;;
+            esac
+          fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "Deploying '$REF' to $TARGET"
+
       - name: Deploy
         env:
-          DEPLOY_REF: ${{ inputs.ref }}
+          DEPLOY_REF: ${{ steps.t.outputs.ref }}
           BACKUP_FIRST: ${{ inputs.backup_first }}
+          DEPLOY_DIR: ${{ steps.t.outputs.dir }}
+          COMPOSE_FILE: ${{ steps.t.outputs.compose }}
+          API_CONTAINER: ${{ steps.t.outputs.api_container }}
+          RELOAD_CADDY: ${{ steps.t.outputs.reload_caddy }}
+          TARGET: ${{ inputs.target }}
         run: |
           set -euo pipefail
 
@@ -77,11 +148,18 @@ jobs:
 
           ssh -o StrictHostKeyChecking=yes \
               "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-              "DEPLOY_REF='$DEPLOY_REF' BACKUP_FIRST='$BACKUP_FIRST' bash -s" <<'REMOTE'
+              "DEPLOY_REF='$DEPLOY_REF' BACKUP_FIRST='$BACKUP_FIRST' DEPLOY_DIR='$DEPLOY_DIR' COMPOSE_FILE='$COMPOSE_FILE' API_CONTAINER='$API_CONTAINER' RELOAD_CADDY='$RELOAD_CADDY' TARGET='$TARGET' bash -s" <<'REMOTE'
           set -euo pipefail
-          cd ~/app
 
-          COMPOSE="docker compose -f docker-compose.prod.yml"
+          # Fail early and clearly rather than deploying into a half-prepared directory.
+          if [ ! -d "$HOME/${DEPLOY_DIR}" ]; then
+            echo "!! $HOME/${DEPLOY_DIR} does not exist." >&2
+            echo "!! See backend/docs/DEPLOY.md — the ${TARGET} working copy is cloned there once, by hand." >&2
+            exit 1
+          fi
+          cd "$HOME/${DEPLOY_DIR}"
+
+          COMPOSE="docker compose -f ${COMPOSE_FILE}"
 
           # ── Back up before anything can change the schema ──────────────────
           # Migrations run on boot and cannot be rolled back, so the backup must exist before
@@ -138,26 +216,32 @@ jobs:
           #
           # "< /dev/null" is the same stdin guard the backup step documents: this script is the
           # stdin of "bash -s", and "compose exec -T" would otherwise swallow the lines after it.
-          echo "-> reloading caddy configuration"
-          if $COMPOSE exec -T caddy caddy reload --config /etc/caddy/Caddyfile < /dev/null; then
-            echo "-> caddy reloaded"
+          # Beta has no Caddy of its own — production's serves both hostnames — so there is
+          # nothing to reload when deploying beta.
+          if [ "${RELOAD_CADDY}" = "true" ]; then
+            echo "-> reloading caddy configuration"
+            if $COMPOSE exec -T caddy caddy reload --config /etc/caddy/Caddyfile < /dev/null; then
+              echo "-> caddy reloaded"
+            else
+              echo "!! caddy reload FAILED — it is still serving the PREVIOUS configuration." >&2
+              echo "!! The site is up, but your Caddyfile change has NOT been applied." >&2
+              exit 1
+            fi
           else
-            echo "!! caddy reload FAILED — it is still serving the PREVIOUS configuration." >&2
-            echo "!! The site is up, but your Caddyfile change has NOT been applied." >&2
-            exit 1
+            echo "-> skipping caddy reload (beta is served by production's Caddy)"
           fi
 
           # ── Wait for the API to report healthy ────────────────────────────
           # Migrations and seeding run before it listens, so this is the real readiness signal.
           echo "-> waiting for the api container to become healthy"
           for i in $(seq 1 40); do
-            STATE=$(docker inspect -f '{{.State.Health.Status}}' invitation-prod-api 2>/dev/null || echo missing)
+            STATE=$(docker inspect -f '{{.State.Health.Status}}' "${API_CONTAINER}" 2>/dev/null || echo missing)
             if [ "$STATE" = "healthy" ]; then
               echo "-> healthy after $((i * 5))s"
               break
             fi
             if [ "$i" -eq 40 ]; then
-              echo "!! api never became healthy (last state: ${STATE}). Recent logs:"
+              echo "!! ${API_CONTAINER} never became healthy (last state: ${STATE}). Recent logs:"
               $COMPOSE logs --tail 40 api
               exit 1
             fi
@@ -167,14 +251,17 @@ jobs:
           $COMPOSE ps
           docker image prune -f >/dev/null 2>&1 || true
           REMOTE
-
       - name: Smoke-test the public site
+        env:
+          URL: ${{ steps.t.outputs.url }}
+          TARGET: ${{ inputs.target }}
         run: |
           set -euo pipefail
-          CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://digital-invite.net/ || echo 000)
-          echo "https://digital-invite.net/ -> ${CODE}"
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL" || echo 000)
+          echo "$URL -> ${CODE}"
           # The deploy already passed its own health gate, so a non-200 here is reported rather
-          # than failed: it is expected while the site is still running on the bare IP.
+          # than failed: it is expected while a site is still on a bare IP, or before the beta
+          # DNS record has propagated.
           if [ "${CODE}" != "200" ]; then
-            echo "::warning::Public site returned ${CODE}. Expected while still on the bare IP."
+            echo "::warning::${TARGET} returned ${CODE} at ${URL}. Expected before DNS points there, or while still on the bare IP."
           fi

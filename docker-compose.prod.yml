@@ -44,12 +44,23 @@ services:
       - "443:443/udp"        # HTTP/3
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in .env (":80" until a domain is pointed)}
+      # Hostname of the beta site, served by this same Caddy because only one process can hold
+      # ports 80/443. Left at a .localhost default when no beta exists: Caddy still parses the
+      # block, nothing on the internet resolves there, and no public certificate is requested.
+      BETA_SITE_ADDRESS: ${BETA_SITE_ADDRESS:-beta.localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # Certificates and account keys. Losing this volume means re-issuing certificates,
       # and Let's Encrypt rate-limits that — so never "docker compose down -v" in production.
       - caddy_data:/data
       - caddy_config:/config
+    # Caddy sits on BOTH networks: the private prod one, to reach the prod web container, and
+    # the shared edge, to reach the beta web container. Only the two web containers are on the
+    # edge — prod's api and db are not, so a beta build running unreviewed code cannot open a
+    # connection to the production database.
+    networks:
+      - default
+      - edge
     depends_on:
       - web
     mem_limit: 96m
@@ -159,3 +170,14 @@ volumes:
   db_data:
   caddy_data:
   caddy_config:
+
+networks:
+  # Created once on the server, outside either stack, so prod and beta can be brought up and
+  # torn down independently without one deleting the other's network:
+  #
+  #   docker network create invitation-edge
+  #
+  # Declared external on purpose — compose must never create or remove it.
+  edge:
+    name: invitation-edge
+    external: true

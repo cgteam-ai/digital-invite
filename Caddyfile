@@ -55,3 +55,38 @@
 		format console
 	}
 }
+
+# ── Beta ─────────────────────────────────────────────────────────────────────
+# The release branch, on this same server, behind this same Caddy — only one process can hold
+# ports 80 and 443, so beta cannot have a Caddy of its own.
+#
+# BETA_SITE_ADDRESS comes from the PRODUCTION .env (docker-compose.prod.yml passes it to this
+# container). It defaults to beta.localhost, which keeps this block parseable on a server with
+# no beta: nothing on the internet resolves there, so no public certificate is ever requested.
+# Set it to beta.digital-invite.net once the DNS record exists and Caddy obtains a certificate
+# for it on the next restart.
+#
+# The upstream is addressed by CONTAINER NAME, not a compose service name: these two stacks are
+# separate compose projects, so "web" here would resolve to production's web container. The beta
+# web container joins the shared invitation-edge network precisely so this line can find it.
+{$BETA_SITE_ADDRESS:beta.localhost} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		# Beta runs unreleased code against throwaway data. Keeping it out of search results
+		# avoids a half-finished feature being indexed under the brand, and avoids beta pages
+		# competing with production's for the same queries.
+		X-Robots-Tag "noindex, nofollow"
+	}
+
+	reverse_proxy invitation-beta-web:80
+
+	log {
+		output stdout
+		format console
+	}
+}
