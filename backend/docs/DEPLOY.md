@@ -404,10 +404,19 @@ the apex.
 **6 — Tighten the host filter** now that real hostnames exist. In `.env`:
 
 ```
-AllowedHosts=digital-invite.net;www.digital-invite.net
+AllowedHosts=digital-invite.net;www.digital-invite.net;localhost
 ```
 
 Then `docker compose -f docker-compose.prod.yml up -d api`.
+
+**`localhost` must stay in that list.** The container HEALTHCHECK runs
+`curl http://localhost:8080/health` from inside the container, so its Host header is
+`localhost`; ASP.NET Core host filtering answers **400 Bad Request** to any host not named
+there, and Docker then marks a perfectly healthy api container unhealthy. The next deploy
+fails at the health gate with `dependency failed to start: container … is unhealthy`, which
+looks nothing like a host-filtering problem — the application log shows a clean startup. It
+weakens nothing: an outside request cannot arrive with `Host: localhost`, because Caddy
+matches the real hostname first and nginx forwards it unchanged.
 
 **7 — Consider HSTS**, but not immediately. Once the certificate has been renewing cleanly for a
 week or two, uncomment the `Strict-Transport-Security` header in the `Caddyfile`. Browsers cache
