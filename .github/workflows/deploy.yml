@@ -217,7 +217,22 @@ jobs:
           # ── Back up before anything can change the schema ──────────────────
           # Migrations run on boot and cannot be rolled back, so the backup must exist before
           # the new containers start, not after.
-          if [ "${BACKUP_FIRST}" = "true" ]; then
+          #
+          # Skipped when the database is not running yet, which is exactly the case on the FIRST
+          # deploy of a new environment: there is no schema to protect and no container to dump
+          # from. Without this the whole deploy aborts on 'service "db" is not running' — safely,
+          # but it blocks standing the environment up at all.
+          DB_ID="$($COMPOSE ps -q db 2>/dev/null || true)"
+          DB_RUNNING=false
+          if [ -n "$DB_ID" ] && [ "$(docker inspect -f '{{.State.Running}}' "$DB_ID" 2>/dev/null)" = "true" ]; then
+            DB_RUNNING=true
+          fi
+
+          if [ "${BACKUP_FIRST}" = "true" ] && [ "$DB_RUNNING" != "true" ]; then
+            echo "-> no running database in this environment yet — nothing to back up (first deploy)"
+          fi
+
+          if [ "${BACKUP_FIRST}" = "true" ] && [ "$DB_RUNNING" = "true" ]; then
             mkdir -p ~/backups
             STAMP=$(date +%F-%H%M%S)
             echo "-> backing up to ~/backups/pre-deploy-${STAMP}.sql.gz"
