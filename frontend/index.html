@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-type="service" data-radius="sharp" data-buttons="tonal" data-motion>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Éclat — Digital Invitations for Every Celebration</title>
-<meta name="description" content="Elegant digital invitations for weddings, engagements, birthdays and more. Beautiful on any phone, with live RSVP tracking and guest management built in.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Digital Invites: digital invitations for weddings, engagements and birthdays</title>
+<meta name="description" content="Choose an invitation design, add your names, date and venues, and share one link. Guests reply in a tap and you see every answer as it arrives.">
 <script>
   // Backward compatibility: invitations were previously shared as "/index?id=<slug>" (and
   // "?g=<guest>"). The dispatcher now lives at /invitation.html, so forward those links before
@@ -14,379 +14,302 @@
     if (/[?&](id|g|d|demo)=/.test(q)) window.location.replace('/invitation.html' + q);
   })();
 </script>
+<meta name="site-kind" content="other">
+<meta name="page-type" content="service">
+
+<!-- Search and social previews -->
+<link rel="canonical" href="https://digital-invite.net/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Digital Invites">
+<meta property="og:title" content="Digital Invites: digital invitations for weddings, engagements and birthdays">
+<meta property="og:description" content="Choose a design, add your details and share one link. Guests reply in a tap.">
+<meta property="og:url" content="https://digital-invite.net/">
+<meta property="og:image" content="https://digital-invite.net/assets/brand/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Digital Invites logo: an envelope sealed with a heart above the words Digital Invites">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Digital Invites",
+  "url": "https://digital-invite.net/",
+  "logo": "https://digital-invite.net/assets/brand/icon-192.png",
+  "slogan": "Weddings · Engagements · Celebrations"
+}
+</script>
+
+<!-- Icons: the brand's icon-only mark (ivory envelope on Ink Black) -->
+<link rel="icon" href="/assets/brand/favicon.ico" sizes="48x48">
+<link rel="icon" href="/assets/brand/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/assets/brand/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#f7f3ea">
+
+<!-- Fonts: the three weights the brand uses -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/landing.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+
+<!-- The design kit (layout, nav, buttons, forms, motion), then the brand layer on top of it.
+     nginx caches CSS for a week: bump ?v= on site.css whenever it changes. -->
+<link rel="stylesheet" href="/assets/kit/system.css">
+<link rel="stylesheet" href="/assets/kit/ui/cards.css">
+<link rel="stylesheet" href="/assets/kit/motion/motion.css">
+<link rel="stylesheet" href="/assets/kit/layout/layout.css">
+<link rel="stylesheet" href="/css/site.css?v=2026111002">
+<!-- The hero's entrance: set before the first paint so its words wait for motion.js instead of
+     flashing; the 700ms mark shows them anyway if the script is late. -->
+<script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
+<!-- The features picture develops once as it comes on screen (picture-develops): the guard, then its modules. -->
+<script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
+<link rel="modulepreload" href="/assets/kit/moments/moments.js">
+<link rel="modulepreload" href="/assets/kit/moments/lib.js">
+<link rel="modulepreload" href="/assets/kit/moments/picture-develops/moment.js">
 </head>
 <body>
+<!-- type: service
+     deal: hero split, nav nav-centre, close close-type, footer footer-dark, rhythm surface-pairs (the steps
+           stand on the one surface band), buttons tonal, mark replaced by the client's logo; palette and
+           type from the Brand Guidelines
+     moments: picture-develops on the features picture
+     The page is a stack of screens: the hero alone on the first, every other section one or two. -->
 
-<!-- ═══ HEADER ═══ -->
-<header class="site-header" id="header">
-  <div class="wrap nav">
-    <a class="brand" href="#top">
-      <span class="brand-mark">É</span>
-      <span class="brand-name">Éclat<small>Digital Invitations</small></span>
-    </a>
-    <nav class="nav-links" id="navLinks">
-      <a href="#templates">Templates</a>
-      <a href="#how">How It Works</a>
-      <a href="#features">Features</a>
-      <a href="#faq">FAQ</a>
-      <a href="#contact">Contact</a>
-      <a class="btn btn-primary btn-sm" href="#contact">Request a Demo</a>
+<header class="nav nav--centre">
+  <div class="wrap nav__bar">
+    <a class="skip-link" href="#top">Skip to content</a>
+    <a class="nav__logo" href="#top"><img src="/assets/brand/logo-black.webp" alt="Digital Invites" width="400" height="33"></a>
+    <nav class="nav__links" aria-label="Main">
+      <div class="nav__item"><a class="nav__link" href="#designs">Designs</a></div>
+      <div class="nav__item"><a class="nav__link" href="#steps">Steps</a></div>
+      <div class="nav__item"><a class="nav__link" href="#features">Features</a></div>
+      <div class="nav__item"><a class="nav__link" href="#questions">Questions</a></div>
     </nav>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-        <path d="M3 6h18M3 12h18M3 18h18"/>
-      </svg>
+    <div class="nav__actions">
+      <a class="btn btn--primary" href="#request">Request a Demo</a>
+    </div>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-label="Menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </button>
   </div>
 </header>
 
 <main id="top">
 
-  <!-- ═══ HERO ═══ -->
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <p class="eyebrow">Invitations, reimagined</p>
-        <h1>Your celebration deserves more than <em>paper</em>.</h1>
-        <p class="lead">
-          Éclat turns your wedding, engagement or birthday into a beautiful mobile invitation —
-          shared in a single link, opened anywhere, and answered in one tap. Track every RSVP
-          as it arrives, without a spreadsheet in sight.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#templates">View Templates</a>
-          <a class="btn btn-gold" href="#contact">Request a Demo</a>
-          <a class="btn btn-ghost" href="#contact">Contact Us</a>
-        </div>
-        <div class="hero-stats">
-          <div><b>1 link</b><span>Share anywhere</span></div>
-          <div><b>&lt;2s</b><span>Mobile load time</span></div>
-          <div><b>100%</b><span>Yours to customise</span></div>
-        </div>
+  <!-- ═══ HERO: exactly the first screen ═══ -->
+  <section class="hero hero--split" data-enter aria-labelledby="hero-h">
+    <div class="wrap"><div class="hero-text grid hero__grid">
+      <div class="hero__text span-6">
+        <p class="hero__kicker">Weddings · Engagements · Celebrations</p>
+        <h1 id="hero-h">Digital invitations for every celebration</h1>
+        <p class="hero__lead">Choose one of <span data-design-count>27</span> designs and we set it up with your names, date and venues. Guests open one link on their phone and reply in a tap.</p>
+        <div class="btn-row"><a class="btn btn--primary" href="#request">Request a Demo</a><a class="btn btn--secondary" href="#designs">See the designs</a></div>
       </div>
+      <div class="hero__media span-6 start-7">
+        <img src="/assets/landing/hero.webp" srcset="/assets/landing/hero-628.webp 628w, /assets/landing/hero.webp 1256w" sizes="(max-width: 1023px) 92vw, 628px" alt="Three invitations on phone screens: an engagement invitation for Sarah and Daniel, and wedding invitations for Isabella and Nicolas and for Léa and Marc" width="1256" height="1432" fetchpriority="high" data-source="client" data-subject="invitation designs">
+      </div>
+    </div></div>
+  </section>
 
-      <!-- Pure-CSS phone mock: zero image payload, instant first paint -->
-      <div class="phone-stage">
-        <div class="phone">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <p class="phone-eyebrow">Save the date</p>
-            <p class="phone-names">Nadia<span class="phone-amp">&amp;</span>Karim</p>
-            <div class="phone-rule"></div>
-            <p class="phone-date">19 June 2035 · Beirut</p>
-            <!-- Showcase only: counts down to a fixed sample date in the browser. Not linked to the
-                 admin, the API or any real invitation. -->
-            <div class="phone-cd" data-demo-countdown="2035-06-19T00:00:00">
-              <div><b data-u="d">3203</b><small>Days</small></div>
-              <div><b data-u="h">00</b><small>Hrs</small></div>
-              <div><b data-u="m">00</b><small>Min</small></div>
-            </div>
-          </div>
+  <!-- ═══ DESIGNS: two screens; both grids are filled by the script from the TEMPLATES catalogue ═══ -->
+  <section class="section g2" id="designs" aria-labelledby="designs-h">
+    <div class="wrap">
+      <div class="group">
+        <div class="section-head">
+          <h2 id="designs-h"><span data-design-count>27</span> designs for <span data-occasion-count>5</span> occasions</h2>
+          <p id="designsNote">Open any design to see a live sample invitation.</p>
         </div>
-        <div class="float-card float-rsvp"><span class="dot-ok"></span><span><b>84</b> guests attending</span></div>
-        <div class="float-card float-guests"><span><b>RSVP</b> just received</span></div>
+        <div class="chips" id="tplFilter" role="group" aria-label="Show the designs for one occasion"></div>
+        <div class="grid designs" id="tplGridA"></div>
       </div>
+      <div class="grid designs" id="tplGridB"></div>
     </div>
   </section>
 
-  <!-- ═══ WHY CHOOSE US ═══ -->
-  <section class="section alt" id="why">
+  <!-- ═══ STEPS: the page's one surface band; three numbered cards, each with its picture ═══ -->
+  <section class="section ground-surface" id="steps" style="--hm: 2" aria-labelledby="steps-h">
     <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Why Éclat</p>
-        <h2>Everything your invitation should be</h2>
-        <p>Designed for the way guests actually receive invitations today — on a phone, in a message, moments before they reply.</p>
+      <div class="section-head">
+        <h2 id="steps-h">Three steps from design to replies</h2>
       </div>
-      <div class="grid grid-3">
-        <article class="card reveal">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg></div>
-          <h3>Beautiful by design</h3>
-          <p>Typography, spacing and motion crafted like stationery — not a form with a photo on top.</p>
+      <div class="grid steps">
+        <article class="card card--row span-4">
+          <span class="step-num">01</span>
+          <h3>Choose a design</h3>
+          <p>Start from a design for a wedding, an engagement, a birthday, a baby shower or a graduation.</p>
+          <div class="panel"><img class="frame__img" src="/assets/landing/step-design.webp" alt="Two invitation designs on phone screens: a seaside engagement and a candle-lit fiftieth birthday" width="760" height="700" loading="lazy" data-source="client" data-subject="invitation designs"></div>
         </article>
-        <article class="card reveal">
-          <div class="icon"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg></div>
-          <h3>Made for mobile</h3>
-          <p>Over 99% of guests open invitations on a phone. Every template is built mobile-first and tested there.</p>
+        <article class="card card--row span-4">
+          <span class="step-num">02</span>
+          <h3>Send your invitation details</h3>
+          <p>Names, date, venues, photos, timeline and music. We set up the invitation and send you a sample to check.</p>
+          <div class="panel"><img class="frame__img" src="/assets/landing/step-details.webp" alt="Two screens of one wedding invitation: the families' names with a countdown to the day, and the ceremony venue" width="760" height="700" loading="lazy" data-source="client" data-subject="a finished invitation"></div>
         </article>
-        <article class="card reveal">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-          <h3>Effortless RSVP</h3>
-          <p>One tap to accept or decline. Party size, guest names and messages captured automatically.</p>
+        <article class="card card--row span-4">
+          <span class="step-num">03</span>
+          <h3>Share the invitation link</h3>
+          <p>Send it by WhatsApp, SMS or email, or give each guest a link of their own. Replies show as they arrive.</p>
+          <div class="panel"><img class="frame__img" src="/assets/landing/step-reply.webp" alt="The reply form inside an invitation, asking Will you join us, with buttons to accept or decline" width="760" height="700" loading="lazy" data-source="client" data-subject="the reply form"></div>
         </article>
-        <article class="card reveal">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
-          <h3>Guest management</h3>
-          <p>Import your list, give every guest a personal link, and see exactly who has replied.</p>
-        </article>
-        <article class="card reveal">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
-          <h3>Fully customisable</h3>
-          <p>Your names, colours, photos, music and schedule — every section is yours to shape.</p>
-        </article>
-        <article class="card reveal">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M4 12v8h16v-8"/><path d="M12 16V3"/><path d="m8 7 4-4 4 4"/></svg></div>
-          <h3>Share in seconds</h3>
-          <p>One link for WhatsApp, SMS or email. No app to install, nothing for guests to sign up to.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ TEMPLATES ═══ -->
-  <section class="section" id="templates">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">The collection</p>
-        <h2>Templates for every occasion</h2>
-        <p>Start from a design you love, then make it entirely your own. Tap any preview to open a live sample invitation.</p>
-      </div>
-
-      <div class="filter-row" id="tplFilter"></div>
-      <div class="tpl-groups" id="tplGrid"></div>
-    </div>
-  </section>
-
-  <!-- ═══ HOW IT WORKS ═══ -->
-  <section class="section alt" id="how">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Simple from start to finish</p>
-        <h2>How it works</h2>
-      </div>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-num"></div>
-          <h3>Choose a template</h3>
-          <p>Pick the design that matches your celebration — wedding, engagement, birthday and more.</p>
-        </div>
-        <div class="step reveal">
-          <div class="step-num"></div>
-          <h3>Customise your invitation</h3>
-          <p>Add your names, date, venues, photos, timeline and music. We handle the polish.</p>
-        </div>
-        <div class="step reveal">
-          <div class="step-num"></div>
-          <h3>Share with your guests</h3>
-          <p>Send one link — or a personal link per guest — and watch the replies arrive live.</p>
-        </div>
       </div>
     </div>
   </section>
 
   <!-- ═══ FEATURES ═══ -->
-  <section class="section" id="features">
+  <section class="section" id="features" style="--hm: 2" aria-labelledby="features-h">
     <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Built in</p>
-        <h2>Thoughtful features, no clutter</h2>
-        <p>Everything you need to invite, inform and delight your guests.</p>
+      <div class="section-head">
+        <h2 id="features-h">Features in every invitation</h2>
       </div>
-      <div class="grid grid-4">
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><div><h4>Live RSVP tracking</h4><p>Replies appear on your dashboard the moment they are sent.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div><h4>Guest management</h4><p>Import a list, set seats per guest, export results.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m21 17-5-5-4 4"/></svg><div><h4>Photo galleries</h4><p>Share your favourite moments in an elegant gallery.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><h4>Countdown timer</h4><p>Build anticipation with a live countdown to the day.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg><div><h4>Interactive maps</h4><p>One tap opens directions to every venue.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><div><h4>Event timeline</h4><p>Show guests exactly how the day will unfold.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/></svg><div><h4>Mobile responsive</h4><p>Flawless on iPhone, Android and tablets alike.</p></div></div>
-        <div class="feat reveal"><svg viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg><div><h4>Background music</h4><p>Set the mood with a track that plays as guests scroll.</p></div></div>
+      <div class="grid grid--top fill">
+        <ul class="rows span-6">
+          <li><span class="rows__name">Collects replies in one tap</span><p>Guests accept or decline, say how many are coming and leave you a note.</p></li>
+          <li><span class="rows__name">Gives each guest a personal link</span><p>Import your list and every guest opens an invitation with their own name.</p></li>
+          <li><span class="rows__name">Seats guests at tables</span><p>Plan the tables, then guests find theirs with a code on the day.</p></li>
+          <li><span class="rows__name">Opens directions to each venue</span><p>The ceremony and the reception each open on the map.</p></li>
+          <li><span class="rows__name">Counts down to the day</span><p>A live countdown and the timeline of the day sit inside the invitation.</p></li>
+          <li><span class="rows__name">Shows your photos and plays your music</span><p>Add a gallery, a song and your gift details.</p></li>
+        </ul>
+        <div class="frame frame--photo frame--fill span-6 start-7">
+          <picture data-moment="picture-develops">
+            <source media="(max-width: 639px)" srcset="/assets/landing/features-phone.webp" width="684" height="1520">
+            <img class="frame__img" src="/assets/landing/features.webp" srcset="/assets/landing/features-628.webp 628w, /assets/landing/features.webp 1256w" sizes="(max-width: 1023px) 92vw, 628px" alt="Two invitation screens: a timeline of the evening with a photo gallery and gift registry, and a wedding invitation opening on a photograph of the couple" width="1256" height="1160" loading="lazy" data-source="client" data-subject="invitation screens">
+          </picture>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══ TESTIMONIALS (placeholder) ═══
-       Hidden until real customer reviews are available. Remove the `hidden` attribute (and
-       restore the nav link in the footer) once this is wired up to live testimonials. -->
-  <section class="section alt" id="testimonials" hidden>
+  <!-- ═══ QUESTIONS: every answer open ═══ -->
+  <section class="section" id="questions" style="--hm: 2" aria-labelledby="questions-h">
     <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Kind words</p>
-        <h2>What our couples say</h2>
+      <div class="section-head">
+        <h2 id="questions-h">Questions hosts ask</h2>
+        <p>Eight answers about designs, replies, sharing and price.</p>
       </div>
-      <div class="grid grid-3">
-        <blockquote class="quote reveal">
-          <div class="mark">&ldquo;</div>
-          <p>This space is reserved for a client review. Share your experience after your event and it will appear here.</p>
-          <div class="who"><span class="avatar">—</span><span><b>Your name here</b><span>Wedding · 2027</span></span></div>
-        </blockquote>
-        <blockquote class="quote reveal">
-          <div class="mark">&ldquo;</div>
-          <p>This space is reserved for a client review. Share your experience after your event and it will appear here.</p>
-          <div class="who"><span class="avatar">—</span><span><b>Your name here</b><span>Engagement · 2027</span></span></div>
-        </blockquote>
-        <blockquote class="quote reveal">
-          <div class="mark">&ldquo;</div>
-          <p>This space is reserved for a client review. Share your experience after your event and it will appear here.</p>
-          <div class="who"><span class="avatar">—</span><span><b>Your name here</b><span>Birthday · 2027</span></span></div>
-        </blockquote>
-      </div>
-      <p class="placeholder-note">Testimonials are placeholders and will be replaced with real client reviews.</p>
-    </div>
-  </section>
-
-  <!-- ═══ FAQ ═══ -->
-  <section class="section" id="faq">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Good to know</p>
-        <h2>Frequently asked questions</h2>
-      </div>
-      <div class="faq reveal">
-        <details open>
-          <summary>Can the invitation be customised to match our event?</summary>
-          <p>Yes. Every section — names, wording, photos, colours, venues, timeline, music and gift details — is tailored to your celebration. If you need a section we don't offer yet, tell us and we'll build it in.</p>
-        </details>
-        <details>
-          <summary>How does the RSVP work?</summary>
-          <p>Guests reply directly inside the invitation with a single tap. They can confirm how many people are attending, add each guest's name and leave you a message. Every reply appears instantly on your private dashboard.</p>
-        </details>
-        <details>
-          <summary>Will it work on every phone?</summary>
-          <p>Yes. Invitations are built mobile-first and tested on iPhone, Android and tablets. There is no app to install — guests simply open the link in whatever browser they already use.</p>
-        </details>
-        <details>
-          <summary>How do we share the invitation?</summary>
-          <p>You get one link that works everywhere: WhatsApp, SMS, email or social media. You can also generate a personal link for each guest so their name appears on their own invitation.</p>
-        </details>
-        <details>
-          <summary>Can we send personal links to each guest?</summary>
-          <p>Absolutely. Import your guest list, set how many seats each guest is allowed, and every guest receives their own link. Their RSVP is matched to them automatically.</p>
-        </details>
-        <details>
-          <summary>How much does it cost?</summary>
-          <p>Pricing depends on the template and the features you need. Get in touch with a few details about your event and we'll send a tailored quote — no obligation.</p>
-        </details>
+      <div class="grid grid--top">
+        <div class="faq span-6">
+          <div class="faq__item"><h3>Can the invitation match our event?</h3>
+            <p>Yes. The names, wording, photos, colours, venues, timeline, music and gift details are yours to set. If you need a section we do not have yet, tell us and we will add it for you.</p></div>
+          <div class="faq__item"><h3>How do guests reply to the invitation?</h3>
+            <p>Inside the invitation, in one tap. They can say how many are coming, add each guest's name and leave you a message. You see every reply as it arrives.</p></div>
+          <div class="faq__item"><h3>Will the invitation open on every phone?</h3>
+            <p>Yes. Guests tap the link and the invitation opens on any phone, tablet or computer. There is nothing to install and nothing to sign up for.</p></div>
+          <div class="faq__item"><h3>What do you need to start our invitation?</h3>
+            <p>The occasion, the date, the venues and the names. Your photos, music and guest list can follow once you have seen the sample.</p></div>
+        </div>
+        <div class="faq span-6">
+          <div class="faq__item"><h3>How do we share the invitation?</h3>
+            <p>You get one link that you can send by WhatsApp, SMS, email or social media. You can also give each guest a link of their own, with their name on the invitation.</p></div>
+          <div class="faq__item"><h3>Can each guest get their own invitation link?</h3>
+            <p>Yes. Import your guest list, set the seats for each guest, and everyone gets a link with their name on it. Their reply is matched to them.</p></div>
+          <div class="faq__item"><h3>How much does an invitation cost?</h3>
+            <p>The price depends on the design and the features you need. Send us a few details about your event and we reply with a quote within one business day.</p></div>
+          <div class="faq__item"><h3>Can we change the invitation after it is sent?</h3>
+            <p>Yes. Tell us what changed and we update the invitation. The link your guests already have stays the same.</p></div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══ CONTACT ═══ -->
-  <section class="section alt" id="contact">
+  <!-- ═══ REQUEST: the form posts to /api/public/demo-request (see the script below). Field names are
+       the API's contract: name, eventType, email, phone, company, message. ═══ -->
+  <section class="section" id="request" style="--hm: 2" aria-labelledby="request-h">
     <div class="wrap">
-      <div class="section-head reveal">
-        <p class="eyebrow">Let's talk</p>
-        <h2>Request a demo</h2>
-        <p>Tell us about your celebration and we'll send you a live sample invitation.</p>
+      <div class="section-head">
+        <h2 id="request-h">Your demo invitation</h2>
+        <p>Tell us about your celebration. We send you a demo: a live sample invitation to open on your phone.</p>
       </div>
-
-      <div class="contact-grid">
-        <form class="reveal" id="contactForm" novalidate>
-          <div class="field-row">
-            <div class="field">
-              <label for="cf-name">Your name</label>
-              <input type="text" id="cf-name" name="name" autocomplete="name" required>
-            </div>
-            <div class="field">
-              <label for="cf-event">Event type</label>
-              <select id="cf-event" name="eventType">
-                <option>Wedding</option>
-                <option>Engagement</option>
-                <option>Birthday</option>
-                <option>Baby Shower</option>
-                <option>Graduation</option>
-                <option>Corporate Event</option>
-                <option>Other</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label for="cf-email">Email</label>
-              <input type="email" id="cf-email" name="email" autocomplete="email">
-            </div>
-            <div class="field">
-              <label for="cf-phone">Phone</label>
-              <input type="tel" id="cf-phone" name="phone" autocomplete="tel">
-            </div>
+      <div class="grid grid--top fill">
+        <form class="request-form span-6" id="contactForm" novalidate>
+          <div class="field">
+            <label for="cf-name">Your name</label>
+            <input type="text" id="cf-name" name="name" autocomplete="name" required aria-describedby="cf-name-err">
+            <p class="field__error" id="cf-name-err" hidden>Please tell us your name.</p>
           </div>
           <div class="field">
-            <label for="cf-company">Company / Organisation <span style="opacity:.55">(optional)</span></label>
+            <label for="cf-event">Event type</label>
+            <select id="cf-event" name="eventType">
+              <option>Wedding</option>
+              <option>Engagement</option>
+              <option>Birthday</option>
+              <option>Baby Shower</option>
+              <option>Graduation</option>
+              <option>Corporate Event</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cf-email">Email</label>
+            <input type="email" id="cf-email" name="email" autocomplete="email" inputmode="email" aria-describedby="cf-contact-err">
+            <p class="field__error" id="cf-contact-err" hidden>Please leave an email address or a phone number so we can reply.</p>
+          </div>
+          <div class="field">
+            <label for="cf-phone">Phone</label>
+            <input type="tel" id="cf-phone" name="phone" autocomplete="tel" aria-describedby="cf-contact-err">
+          </div>
+          <div class="field field--full">
+            <label for="cf-company">Company or organisation (optional)</label>
             <input type="text" id="cf-company" name="company" autocomplete="organization">
           </div>
-          <div class="field">
-            <label for="cf-msg">Tell us about your event</label>
-            <textarea id="cf-msg" name="message" placeholder="Date, venue, roughly how many guests…"></textarea>
+          <div class="field field--full">
+            <label for="cf-msg">About your event</label>
+            <textarea id="cf-msg" name="message" placeholder="Date, venue, roughly how many guests"></textarea>
           </div>
-          <button class="btn btn-primary" type="submit" id="cfSubmit">Send Request</button>
-          <p class="form-note" id="cfNote">We reply within one business day. Please include an email or a phone number.</p>
+          <div class="btn-row"><button class="btn btn--primary" type="submit" id="cfSubmit">Request a Demo</button></div>
+          <p class="form__status" id="cfNote" role="status" data-form-status></p>
+          <p class="t-small">We reply within one business day. By sending this request you agree to our <a href="/terms-and-conditions.html">Terms</a> and <a href="/privacy-policy.html">Privacy Policy</a>.</p>
         </form>
 
-        <aside class="reveal">
-          <!-- Contact details are managed in the admin panel and injected at runtime;
-               anything left blank there is simply not rendered here. -->
-          <div class="contact-list" id="contactList"></div>
-
-          <div id="socialsWrap" hidden>
-            <h4 class="eyebrow" style="margin-bottom:.7rem;">Follow us</h4>
-            <div class="socials" id="socials"></div>
-          </div>
-
-          <div class="map-holder" id="mapHolder" hidden></div>
-        </aside>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ CTA BAND ═══ -->
-  <section class="section cta-band">
-    <div class="wrap">
-      <h2>Ready to send something beautiful?</h2>
-      <p>Browse the collection, or tell us about your event and we'll prepare a personalised sample for you.</p>
-      <div class="hero-actions" style="justify-content:center;">
-        <a class="btn btn-gold" href="#templates">View Templates</a>
-        <a class="btn btn-ghost" href="#contact">Request a Demo</a>
+        <!-- Holds a picture by default. If a map is set in Admin → Landing Page Contact Details,
+             the script puts that map here instead. -->
+        <div class="frame frame--photo frame--fill request-pic span-6 start-7" id="mapHolder">
+          <picture>
+            <source media="(max-width: 639px)" srcset="/assets/landing/request-phone.webp" width="684" height="1240">
+            <img class="frame__img" src="/assets/landing/request.webp" srcset="/assets/landing/request-628.webp 628w, /assets/landing/request.webp 1256w" sizes="(max-width: 1023px) 92vw, 628px" alt="Three more designs: an engagement invitation with two overlapping circles, one with a torn-edge photograph, and a wedding invitation with a drawn first dance" width="1256" height="1200" loading="lazy" data-source="client" data-subject="invitation designs">
+          </picture>
+        </div>
       </div>
     </div>
   </section>
 </main>
 
-<!-- ═══ FOOTER ═══ -->
-<footer class="site-footer">
+<!-- ═══ CLOSE + FOOTER: one last screen ═══ -->
+<footer class="footer closing footer--dark ground-inverse" id="contact" aria-labelledby="close-h">
   <div class="wrap">
-    <div class="footer-grid">
-      <div>
-        <a class="brand" href="#top" style="margin-bottom:.9rem;">
-          <span class="brand-mark">É</span>
-          <span class="brand-name">Éclat<small>Digital Invitations</small></span>
-        </a>
-        <p style="max-width:22rem;">Elegant digital invitations for the moments that matter — designed, customised and delivered in a single link.</p>
+    <div class="closing__cta close--type">
+      <div class="section-head">
+        <h2 id="close-h">An invitation for your date</h2>
+        <p>Send us the occasion and the date. We reply within one business day.</p>
       </div>
-      <div>
-        <h4>Explore</h4>
-        <ul>
-          <li><a href="#templates">Templates</a></li>
-          <li><a href="#how">How It Works</a></li>
-          <li><a href="#features">Features</a></li>
-          <!-- Restore alongside the testimonials section once reviews are live.
-          <li><a href="#testimonials">Reviews</a></li> -->
-        </ul>
-      </div>
-      <div>
-        <h4>Support</h4>
-        <ul>
-          <li><a href="#faq">FAQ</a></li>
-          <li><a href="#contact">Contact Us</a></li>
-          <li><a href="#contact">Request a Demo</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Legal</h4>
-        <ul>
-          <li><a href="#" onclick="return legalNote(event)">Privacy Policy</a></li>
-          <li><a href="#" onclick="return legalNote(event)">Terms of Service</a></li>
-        </ul>
-      </div>
+      <a class="btn btn--primary btn--xl btn--wide" href="#request">Request a Demo<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
     </div>
-    <div class="footer-bottom">
-      <span>&copy; <span id="year">2027</span> Éclat Digital Invitations. All rights reserved.</span>
-      <span>Made with care in Beirut.</span>
+    <div class="closing__links">
+      <div class="grid">
+        <div class="span-6 stack-4">
+          <a class="nav__logo" href="#top"><img src="/assets/brand/logo-ivory.webp" alt="Digital Invites" width="400" height="33" loading="lazy"></a>
+          <p class="t-small">Digital invitations for weddings, engagements and celebrations, shared in one link.</p>
+          <!-- Filled from Admin → Landing Page Contact Details; stays hidden while there is nothing to show. -->
+          <ul class="footer__contact" id="contactList" hidden></ul>
+        </div>
+        <div class="span-3 footer__col"><h3>Invitations</h3><ul><li><a href="#designs">Designs</a></li><li><a href="#steps">Steps</a></li><li><a href="#features">Features</a></li><li><a href="#questions">Questions</a></li></ul></div>
+        <div class="span-3 footer__col"><h3>Legal</h3><ul><li><a href="/terms-and-conditions.html">Terms and Conditions</a></li><li><a href="/privacy-policy.html">Privacy Policy</a></li></ul></div>
+      </div>
+      <div class="footer__legal">
+        <span>&copy; <span id="year">2026</span> Digital Invites</span>
+        <div class="socials" id="socials"></div>
+      </div>
     </div>
   </div>
 </footer>
+
+<!-- Phones: the main action stays in reach at the foot of the screen once the hero's own button
+     has scrolled away (the kit's script shows and hides it). -->
+<nav class="actionbar" aria-label="Quick actions">
+  <a class="btn btn--primary" href="#request">Request a Demo</a>
+</nav>
 
 <script>
 // ── Template catalogue ────────────────────────────────────────────────────────
@@ -549,104 +472,129 @@ const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-let tplFilter = 'All';
+// ── Designs ──────────────────────────────────────────────────────────────────
+// The catalogue above drives everything here: the counts in the hero and the heading, the
+// occasion filter and the tiles. Adding a template to TEMPLATES is all a new design needs.
+const tplFilterRow = document.getElementById('tplFilter');
+const tplGrids = [document.getElementById('tplGridA'), document.getElementById('tplGridB')];
+const designsNote = document.getElementById('designsNote');
+const DESIGNS_NOTE = designsNote.textContent;
+const FIRST_SCREEN_TILES = 12;          // two rows of six on the section's first screen
+const phone = matchMedia('(max-width: 639px)');
+
+// Shown in the catalogue's own order: one occasion after another.
+const DESIGNS = CATEGORY_ORDER.flatMap(ev => TEMPLATES.filter(t => t.event === ev));
+// On a phone the list opens on the first occasion, so it stays a short column.
+let tplFilter = phone.matches ? CATEGORY_ORDER[0] : 'All';
 
 function templateUrl(t) {
   return `/templates/${t.category}/${t.key}/index.html?demo=${encodeURIComponent(t.key)}`;
 }
 
-function renderFilter() {
-  const types = ['All', ...new Set(TEMPLATES.map(t => t.event))];
-  document.getElementById('tplFilter').innerHTML = types.map(t =>
-    `<button class="filter-chip ${t === tplFilter ? 'active' : ''}" data-filter="${esc(t)}">${esc(t)}</button>`
+// Every thumbnail has a smaller thumb.webp beside its thumb.jpg. The page asks for the WebP
+// and falls back to the JPEG (see the error handler below), so a template added with only a
+// JPEG still shows its picture.
+const thumbWebp = (t, size = '') => t.thumb.replace(/\.jpe?g$/i, `${size}.webp`);
+// Tells the browser how wide a tile's picture is drawn, so it picks the 400px or the 800px file.
+// A phone's two-a-row tiles crop the picture to a portrait (70vw of it fills the crop); an
+// occasion shown one a row uses the full width (see applyFilter).
+const THUMB_SIZES = '(max-width: 639px) 70vw, (max-width: 1023px) 22vw, 193px';
+
+function tile(t) {
+  return `
+    <a class="design span-2" href="${esc(templateUrl(t))}" target="_blank" rel="noopener" data-event="${esc(t.event)}"
+       aria-label="${esc(t.name)}, ${esc(t.event.toLowerCase())} design: open a live sample in a new tab">
+      <span class="design__media m-zoom"><img src="${esc(thumbWebp(t))}" srcset="${esc(thumbWebp(t, '-400'))} 400w, ${esc(thumbWebp(t))} 800w" sizes="${THUMB_SIZES}" data-fallback="${esc(t.thumb)}" alt="" loading="lazy" decoding="async" width="800" height="600"></span>
+      <span class="design__name">${esc(t.name)}</span>
+      <span class="design__event">${esc(t.event)}</span>
+    </a>`;
+}
+
+// The last row is closed by one wider tile for occasions without a design of their own, so
+// every row ends on the page's right edge. --rem-6 and --rem-4 are the free places in that
+// row at six and four tiles a row (site.css turns them into the tile's width).
+function fillerTile(count) {
+  const free = per => (per - count % per) % per;
+  return `
+    <a class="design design--more" href="#request" style="--rem-6:${free(6)};--rem-4:${free(4)}" data-rem-6="${free(6)}" data-rem-4="${free(4)}">
+      <span class="design__name">Another occasion</span>
+      <span class="design__event">Corporate events and more, on request</span>
+    </a>`;
+}
+
+
+function renderDesigns() {
+  // A phone gets one column of tiles under the filter; wider screens split them over the
+  // section's two screens.
+  const first = phone.matches ? DESIGNS.length : FIRST_SCREEN_TILES;
+  tplGrids[0].innerHTML = DESIGNS.slice(0, first).map(tile).join('');
+  tplGrids[1].innerHTML = DESIGNS.slice(first).map(tile).join('') + (phone.matches ? '' : fillerTile(DESIGNS.length - first));
+  const occasions = CATEGORY_ORDER.filter(ev => DESIGNS.some(t => t.event === ev));
+  document.querySelectorAll('[data-design-count]').forEach(el => { el.textContent = DESIGNS.length; });
+  document.querySelectorAll('[data-occasion-count]').forEach(el => { el.textContent = occasions.length; });
+  // The chips are drawn once; clicks only flip aria-pressed, so keyboard focus stays put.
+  // A phone lists one occasion at a time (all the designs would run to 14 rows), so it has no All chip.
+  tplFilterRow.innerHTML = [...(phone.matches ? [] : ['All']), ...occasions].map(ev =>
+    `<button type="button" class="chip" data-filter="${esc(ev)}" aria-pressed="${ev === tplFilter}">${esc(ev)}</button>`
   ).join('');
 }
 
-function renderTemplates() {
-  // One group per occasion, each with its own heading and grid of cards.
-  const groups = CATEGORY_ORDER
-    .filter(ev => tplFilter === 'All' || ev === tplFilter)
-    .map(ev => [ev, TEMPLATES.filter(t => t.event === ev)])
-    .filter(([, list]) => list.length);
-  document.getElementById('tplGrid').innerHTML = groups.map(([ev, list]) => `
-    <section class="tpl-cat" id="cat-${esc(ev.toLowerCase().replace(/\s+/g, '-'))}" aria-label="${esc(ev)} templates">
-      <div class="tpl-cat-head">
-        <h3>${esc(ev)}</h3>
-        <span class="tpl-count">${list.length} ${list.length === 1 ? 'design' : 'designs'}</span>
-        ${CATEGORY_BLURB[ev] ? `<p>${esc(CATEGORY_BLURB[ev])}</p>` : ''}
-      </div>
-      <div class="tpl-grid">${renderCards(list)}</div>
-    </section>`).join('');
+// Designs outside the chosen occasion are switched off, not removed: site.css dims them in
+// place on wide screens and hides them on a phone; `inert` takes them out of the Tab order.
+function applyFilter() {
+  let shown = 0;
+  tplGrids.forEach(grid => grid.querySelectorAll('.design[data-event]').forEach(el => {
+    const on = tplFilter === 'All' || el.dataset.event === tplFilter;
+    el.toggleAttribute('data-off', !on);
+    el.inert = !on;
+    if (on) shown++;
+  }));
+  tplFilterRow.querySelectorAll('[data-filter]').forEach(c =>
+    c.setAttribute('aria-pressed', String(c.dataset.filter === tplFilter)));
+  const few = shown <= 4;
+  tplGrids[0].toggleAttribute('data-few', few);
+  tplGrids[0].querySelectorAll('img').forEach(img => { img.sizes = few && phone.matches ? '100vw' : THUMB_SIZES; });
+  // The line under the heading doubles as the filter's status for screen readers.
+  designsNote.textContent = tplFilter === 'All'
+    ? DESIGNS_NOTE
+    : `${shown} ${tplFilter.toLowerCase()} ${shown === 1 ? 'design' : 'designs'}. ${CATEGORY_BLURB[tplFilter] || ''}`.trim();
 }
 
-function renderCards(list) {
-  return list.map(t => t.soon ? `
-    <article class="tpl tpl-soon">
-      <div class="tpl-thumb"><span>Coming soon</span><span class="tpl-tag">${esc(t.event)}</span></div>
-      <div class="tpl-body">
-        <h3>${esc(t.name)}</h3>
-        <p>${esc(t.desc)}</p>
-        <a class="btn btn-ghost btn-sm" href="#contact">Notify Me</a>
-      </div>
-    </article>` : `
-    <article class="tpl">
-      <div class="tpl-thumb">
-        <img src="${esc(t.thumb)}" alt="${esc(t.name)} template preview" loading="lazy" width="800" height="600">
-        <span class="tpl-tag">${esc(t.event)}</span>
-      </div>
-      <div class="tpl-body">
-        <h3>${esc(t.name)}</h3>
-        <p>${esc(t.desc)}</p>
-        <a class="btn btn-primary btn-sm" href="${esc(templateUrl(t))}" target="_blank" rel="noopener">Preview</a>
-      </div>
-    </article>`).join('');
-}
-
-document.getElementById('tplFilter').addEventListener('click', e => {
+tplFilterRow.addEventListener('click', e => {
   const chip = e.target.closest('[data-filter]');
-  if (!chip) return;
+  if (!chip || chip.dataset.filter === tplFilter) return;
   tplFilter = chip.dataset.filter;
-  renderFilter();
-  renderTemplates();
+  applyFilter();
 });
 
-renderFilter();
-renderTemplates();
+// `error` does not bubble, so listen in the capture phase for any thumbnail that fails.
+tplGrids.forEach(grid => grid.addEventListener('error', e => {
+  const img = e.target;
+  if (img.tagName !== 'IMG' || !img.dataset.fallback) return;
+  img.removeAttribute('srcset');
+  img.src = img.dataset.fallback;
+  delete img.dataset.fallback;          // one retry only
+}, true));
 
-// ── Header state + mobile nav ────────────────────────────────────────────────
-const header = document.getElementById('header');
-addEventListener('scroll', () => header.classList.toggle('scrolled', scrollY > 8), { passive: true });
-
-const navToggle = document.getElementById('navToggle');
-const navLinks = document.getElementById('navLinks');
-navToggle.addEventListener('click', () => {
-  const open = navLinks.classList.toggle('open');
-  navToggle.setAttribute('aria-expanded', String(open));
+renderDesigns();
+applyFilter();
+// Crossing the phone breakpoint (a rotated phone, a resized window) redraws both layouts.
+phone.addEventListener('change', () => {
+  tplFilter = phone.matches ? CATEGORY_ORDER[0] : 'All';
+  renderDesigns();
+  applyFilter();
 });
-navLinks.addEventListener('click', e => {
-  if (e.target.tagName === 'A') { navLinks.classList.remove('open'); navToggle.setAttribute('aria-expanded', 'false'); }
-});
-
-// ── Reveal on scroll ─────────────────────────────────────────────────────────
-const io = new IntersectionObserver(entries => {
-  entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
-}, { threshold: .12 });
-document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 // ── Contact details (managed in the admin panel) ─────────────────────────────
 // Fetched from the public settings endpoint; every field is optional and blank ones are
-// skipped entirely, so the section never shows an empty row or a dead link.
+// skipped entirely, so the footer never shows an empty row or a dead link.
 let CONTACT = {};
 
 const ICON = {
-  mail:   '<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>',
-  phone:  '<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.6a16 16 0 0 0 6 6l1.1-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7A2 2 0 0 1 22 16.9z"/></svg>',
-  pin:    '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>',
-  whats:  '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg>',
-  insta:  '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>',
-  fb:     '<svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
-  tiktok: '<svg viewBox="0 0 24 24"><path d="M16 3v3a5 5 0 0 0 5 5v3a8 8 0 0 1-5-1.8V16a6 6 0 1 1-6-6c.3 0 .7 0 1 .1v3.1A3 3 0 1 0 13 16V3z"/></svg>',
-  pin2:   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7c-2 0-3.2 1.3-3.2 2.9 0 .8.4 1.6 1 1.9L9 14.5"/></svg>'
+  insta:  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>',
+  fb:     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3v3a5 5 0 0 0 5 5v3a8 8 0 0 1-5-1.8V16a6 6 0 1 1-6-6c.3 0 .7 0 1 .1v3.1A3 3 0 1 0 13 16V3z"/></svg>',
+  pin2:   '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7c-2 0-3.2 1.3-3.2 2.9 0 .8.4 1.6 1 1.9L9 14.5"/></svg>'
 };
 
 // Digits only (keep a leading +) for tel:/wa.me links.
@@ -654,28 +602,25 @@ const telHref = v => (v || '').replace(/[^\d+]/g, '');
 
 function renderContact(s) {
   const rows = [];
-  if (s.companyEmail)   rows.push(`<div class="contact-item">${ICON.mail}<div><b>Email</b><a href="mailto:${esc(s.companyEmail)}">${esc(s.companyEmail)}</a></div></div>`);
-  if (s.phoneNumber)    rows.push(`<div class="contact-item">${ICON.phone}<div><b>Phone</b><a href="tel:${esc(telHref(s.phoneNumber))}">${esc(s.phoneNumber)}</a></div></div>`);
-  if (s.whatsAppNumber) rows.push(`<div class="contact-item">${ICON.whats}<div><b>WhatsApp</b><a href="https://wa.me/${esc(telHref(s.whatsAppNumber).replace(/^\+/, ''))}" target="_blank" rel="noopener">${esc(s.whatsAppNumber)}</a></div></div>`);
-  if (s.companyAddress) rows.push(`<div class="contact-item">${ICON.pin}<div><b>Studio</b><span>${esc(s.companyAddress)}</span></div></div>`);
+  if (s.companyEmail)   rows.push(`<li><a href="mailto:${esc(s.companyEmail)}">${esc(s.companyEmail)}</a></li>`);
+  if (s.phoneNumber)    rows.push(`<li><a href="tel:${esc(telHref(s.phoneNumber))}">${esc(s.phoneNumber)}</a></li>`);
+  if (s.whatsAppNumber) rows.push(`<li><a href="https://wa.me/${esc(telHref(s.whatsAppNumber).replace(/^\+/, ''))}" target="_blank" rel="noopener">WhatsApp ${esc(s.whatsAppNumber)}</a></li>`);
+  if (s.companyAddress) rows.push(`<li>${esc(s.companyAddress)}</li>`);
   document.getElementById('contactList').innerHTML = rows.join('');
+  document.getElementById('contactList').hidden = rows.length === 0;
 
-  const socials = [
+  document.getElementById('socials').innerHTML = [
     [s.instagramUrl, 'Instagram', ICON.insta],
     [s.facebookUrl,  'Facebook',  ICON.fb],
     [s.tikTokUrl,    'TikTok',    ICON.tiktok],
     [s.pinterestUrl, 'Pinterest', ICON.pin2]
-  ].filter(([url]) => url);
-  document.getElementById('socialsWrap').hidden = socials.length === 0;
-  document.getElementById('socials').innerHTML = socials
-    .map(([url, label, svg]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(label)}">${svg}</a>`).join('');
+  ].filter(([url]) => url)
+    .map(([url, label, svg]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(label)} (opens in a new tab)">${svg}</a>`).join('');
 
-  const map = document.getElementById('mapHolder');
+  // A map set in the admin panel takes the place of the picture beside the form.
   if (s.mapEmbedUrl) {
-    map.hidden = false;
-    map.innerHTML = `<iframe src="${esc(s.mapEmbedUrl)}" width="100%" height="100%" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Our location"></iframe>`;
-  } else {
-    map.hidden = true;
+    document.getElementById('mapHolder').innerHTML =
+      `<iframe src="${esc(s.mapEmbedUrl)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Our location"></iframe>`;
   }
 }
 
@@ -684,27 +629,50 @@ function renderContact(s) {
     const base = (window.API_BASE || '').replace(/\/$/, '');
     const res = await fetch(`${base}/api/public/landing-settings`, { headers: { Accept: 'application/json' } });
     if (res.ok) CONTACT = await res.json() || {};
-  } catch { /* keep the section empty rather than showing stale placeholders */ }
+  } catch { /* keep the footer column hidden rather than showing stale placeholders */ }
   renderContact(CONTACT);
 })();
 
-// ── Contact form ─────────────────────────────────────────────────────────────
+// ── Request form ─────────────────────────────────────────────────────────────
 // Posts the enquiry to our own API, which stores it and emails the address configured in
 // Admin → Landing Page Contact Details. No mail client is ever opened.
-document.getElementById('contactForm').addEventListener('submit', async e => {
+const contactForm = document.getElementById('contactForm');
+const formStatus = document.getElementById('cfNote');
+
+// The status line is a live region, so each message is also read out by screen readers.
+// `state` only changes how it looks: 'error', 'success' or nothing for neutral.
+function say(text, state) {
+  formStatus.textContent = text;
+  if (state) formStatus.dataset.state = state; else delete formStatus.dataset.state;
+}
+// Each reason sits under its own field; the fields at fault are marked and the first takes
+// the focus, so the fix is one keystroke away.
+function reject(errorId, ...fields) {
+  const err = document.getElementById(errorId);
+  err.hidden = false;
+  fields.forEach(el => el.setAttribute('aria-invalid', 'true'));
+  say('Please fix 1 field above.', 'error');
+  fields[0].focus();
+}
+function clearErrors() {
+  contactForm.querySelectorAll('.field__error').forEach(el => { el.hidden = true; });
+  contactForm.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
+}
+
+contactForm.addEventListener('submit', async e => {
   e.preventDefault();
-  const f = e.target;
-  const note = document.getElementById('cfNote');
+  const f = contactForm.elements;
   const btn = document.getElementById('cfSubmit');
   const name = f.name.value.trim(), email = f.email.value.trim(), phone = f.phone.value.trim();
+  clearErrors();
 
   // Client-side checks are a courtesy; the API validates independently.
-  if (!name)            { note.textContent = 'Please tell us your name.'; return; }
-  if (!email && !phone) { note.textContent = 'Please leave an email address or a phone number so we can reply.'; return; }
+  if (!name)            { reject('cf-name-err', f.name); return; }
+  if (!email && !phone) { reject('cf-contact-err', f.email, f.phone); return; }
 
   const original = btn.textContent;
   btn.disabled = true; btn.textContent = 'Sending…';
-  note.textContent = 'Sending your request…';
+  say('Sending your request…');
   try {
     const base = (window.API_BASE || '').replace(/\/$/, '');
     const res = await fetch(`${base}/api/public/demo-request`, {
@@ -717,49 +685,34 @@ document.getElementById('contactForm').addEventListener('submit', async e => {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      note.textContent = data.error || 'Something went wrong. Please try again.';
+      say(data.error || 'Something went wrong. Please try again.', 'error');
       return;
     }
-    f.reset();
-    note.textContent = 'Thank you — your request has been sent. We reply within one business day.';
+    contactForm.reset();
+    say('Your demo request is in. We reply within one business day.', 'success');
   } catch {
-    note.textContent = 'Network error. Please check your connection and try again.';
+    say('We could not send your request. Check your connection and try again.', 'error');
   } finally {
     btn.disabled = false; btn.textContent = original;
   }
 });
 
-function legalNote(e) {
-  e.preventDefault();
-  alert('Privacy Policy and Terms of Service are being finalised and will be published here.');
-  return false;
-}
+// A field stops being flagged as soon as the visitor edits it. Email and phone clear
+// together, because either one satisfies the "how do we reach you" rule.
+contactForm.addEventListener('input', e => {
+  const pair = ['email', 'phone'];
+  const names = pair.includes(e.target.name) ? pair : [e.target.name];
+  names.forEach(n => contactForm.elements[n]?.removeAttribute('aria-invalid'));
+  const errId = e.target.getAttribute('aria-describedby');
+  if (errId) document.getElementById(errId).hidden = true;
+});
 
 document.getElementById('year').textContent = new Date().getFullYear();
-
-// ── HERO PHONE COUNTDOWN (showcase only) ─────────────────
-// Counts down to the fixed sample date in data-demo-countdown, entirely in the browser. It only
-// demonstrates the feature: it is deliberately not linked to the admin, the API or any invitation.
-(function () {
-  const box = document.querySelector('[data-demo-countdown]');
-  if (!box) return;
-  const target = new Date(box.dataset.demoCountdown).getTime();
-  if (isNaN(target)) return;
-  const pad = n => String(n).padStart(2, '0');
-  const tick = () => {
-    const diff = Math.max(0, target - Date.now());
-    const v = {
-      d: String(Math.floor(diff / 86400000)),
-      h: pad(Math.floor(diff / 3600000) % 24),
-      m: pad(Math.floor(diff / 60000) % 60)
-    };
-    box.querySelectorAll('[data-u]').forEach(el => {
-      if (el.textContent !== v[el.dataset.u]) el.textContent = v[el.dataset.u];
-    });
-  };
-  tick();
-  setInterval(tick, 15000);   // minutes are the smallest unit shown
-})();
 </script>
+
+<!-- The kit's scripts: nav and phone menu, the developing picture, hovers, presses and focus. -->
+<script type="module" src="/assets/kit/system.js"></script>
+<script type="module" src="/assets/kit/motion/motion.js"></script>
+<script type="module" src="/assets/kit/layout/layout.js"></script>
 </body>
 </html>

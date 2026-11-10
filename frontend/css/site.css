@@ -1,0 +1,317 @@
+/* ============================================================================
+   Digital Invites — site styles (landing page, Terms, Privacy)
+   ----------------------------------------------------------------------------
+   Layout, grid, buttons, nav, footer, forms and motion come from the design kit
+   in /assets/kit (system.css, layout.css, motion.css — do not edit those). This
+   file sits on top of it and does two jobs:
+
+     1. Brand layer — the Digital Invites Brand Guidelines, which win over the
+        kit's own type and colour: Soft Ivory + Ink Black only, Cormorant Garamond
+        Medium UPPERCASE 0.16em for headings, Jost Light UPPERCASE 0.42em for
+        labels and buttons, Jost Regular for body text.
+     2. Page CSS — the few things the kit has no class for (the design tiles'
+        filter, the request form's grid, the legal pages' long text).
+
+   Load order matters: this file comes after the kit's stylesheets.
+   nginx caches CSS for a week: bump ?v= on the <link> when this file changes.
+   ========================================================================== */
+
+/* ── 1. Brand tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Palette: the kit's token names, filled with the two brand colours. The surface and
+     muted tones are Ink Black mixed into Soft Ivory, never a third hue. */
+  --p-bg: #f7f3ea; --p-surface: #eae6de; --p-ink: #141414; --p-muted: #615f5c;
+  --p-accent: #141414; --p-accent-ink: #f7f3ea; --p-action: #141414; --p-action-ink: #f7f3ea;
+  --p-inv-bg: #141414; --p-inv-surface: #212020; --p-inv-ink: #f7f3ea; --p-inv-muted: #979590;
+  --p-inv-accent: #f7f3ea; --p-inv-accent-ink: #141414; --p-inv-action: #f7f3ea; --p-inv-action-ink: #141414;
+  /* The ground behind a picture in a frame or a card: the same surface tone, never a third hue. */
+  --ground-bg: #eae6de; --ground-surface: #eae6de; --ground-ink: #141414; --ground-muted: #615f5c; --ground-accent: #141414;
+
+  /* Type: the brand's two families and its letter spacing */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-text: 'Jost', system-ui, sans-serif;
+  --display-weight: 500;
+  --display-tracking: .16em;
+  --display-tracking-xl: .16em;
+  --label-tracking: .42em;
+  --ly-scale: 1;
+
+  /* Heading sizes. Capitals at 0.16em run about 1.6 times wider than the kit's sentence-case
+     headings, so each level is set smaller than the kit's: the h1 keeps to three lines beside
+     the hero picture (its size follows the column's width), and each level sits under the last. */
+  --t-h1: clamp(24px, .95vw + 20.3px, 30px);
+  --t-h2: clamp(20px, 1.52vw + 14.1px, 36px);
+  --t-h3: clamp(17px, .29vw + 15.9px, 20px);
+  --ly-h1: var(--t-h1);
+}
+/* From 1024px the hero's words stand beside its picture: the h1 grows with that column. */
+@media (min-width: 1024px) {
+  :root { --t-h1: clamp(30px, 2.764vw + 2.2px, 42px); }
+}
+
+/* ── 2. Brand type ────────────────────────────────────────────────────────── */
+/* Headings and names: Cormorant Garamond Medium, uppercase, 0.16em, lining figures. */
+h1, h2, h3, .t-h1, .t-h2, .t-h3, .t-stat, .footer__lede, .btn--xl {
+  text-transform: uppercase;
+  letter-spacing: var(--display-tracking);
+  font-variant-numeric: lining-nums;
+}
+h1, .hero h1 { line-height: 1.16; }
+h2 { line-height: 1.25; }
+h3 { line-height: 1.35; }
+
+/* Labels, buttons and small details: Jost Light, uppercase, 0.42em. */
+.t-label, .hero__kicker, .nav__link, .btn:not(.btn--xl), .chip, .field > label,
+.footer :is(h3, h4):not(.closing__cta *), .design__event, .legal-toc__title, .prose .updated {
+  font-family: var(--font-text);
+  font-size: var(--t-label);
+  font-weight: 300;
+  letter-spacing: var(--label-tracking);
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+/* A tracked label carries spare space after its last letter; trim it where the label sits in a box. */
+.btn:not(.btn--xl), .chip { padding-right: calc(var(--s-5) - var(--label-tracking) / 2); }
+
+/* The narrowest phones (under 360px): a tracked label is wider than the screen, so buttons
+   take a little less tracking and may wrap onto two lines. */
+@media (max-width: 359px) {
+  .btn:not(.btn--xl), .btn--xl, .btn--xl.btn--wide {
+    letter-spacing: .28em; padding-inline: var(--s-3); white-space: normal; text-align: center; height: auto; min-height: 48px;
+  }
+}
+
+/* Names in lists (designs, questions, feature rows) are body text: Jost Regular, sentence case. */
+.faq :is(.faq__item > h3, summary), .rows__name {
+  font-family: var(--font-text); font-weight: 400; text-transform: none; letter-spacing: 0; font-variant-numeric: normal;
+}
+.faq .faq__item > h3 { font-size: var(--t-lead); }
+/* A feature's name stands a size above the line that explains it. */
+.rows__name { font-size: 20px; line-height: 1.35; }
+
+/* On a phone the close's wide button reads like every other button. */
+@media (max-width: 639px) {
+  .btn--xl, .btn--xl.btn--wide { font: 300 var(--t-label)/1.6 var(--font-text); letter-spacing: var(--label-tracking); height: 48px; padding-inline: var(--s-4); }
+}
+
+/* Errors are told by a mark and a heavier border, not by red: the palette has two colours. */
+form { --error: var(--ink); }
+
+/* ── 3. Header logo ───────────────────────────────────────────────────────── */
+/* The supplied lockup. Clear space on every side is at least the envelope's own height,
+   which the bar's height and gaps give at both sizes; never under 180px wide. */
+.nav__logo img, .footer .nav__logo img { display: block; width: 184px; height: auto; }
+@media (min-width: 1024px) {
+  .nav__logo img, .footer .nav__logo img { width: 216px; }
+}
+
+
+/* Between 1024 and 1119px the four tracked nav words and the button do not fit one bar.
+   The words stay; the button steps aside (the hero and the close carry the same action). */
+@media (min-width: 1024px) and (max-width: 1119px) {
+  .nav .nav__actions { display: none; }
+}
+
+/* ── 3a. Short laptop screens ─────────────────────────────────────────────── */
+/* From 1280px wide the kit makes every section exactly one screen tall, sized for a 900px-tall
+   screen. On a shorter laptop (1366x768, 1536x864) a full section would run into the next one, so
+   there each section is at least one screen and grows with what it holds, as the kit already
+   does on tablets. */
+@media (min-width: 1280px) and (max-height: 859px) {
+  main > :is(section, .section):not(.hero, .section--hero), footer.closing {
+    height: auto; min-height: calc(var(--h, 1) * 100svh);
+    display: flex; flex-direction: column;
+  }
+  main > :is(section, .section):not(.hero, .section--hero) > :is(.wrap, .container), footer.closing > .wrap { flex: 1 0 auto; height: auto; min-height: 0; }
+  .faq > .faq__item { padding-block: 20px; }
+}
+
+/* ── 3b. The second action ────────────────────────────────────────────────── */
+/* Beside the one filled button, the second action is an underlined text link, the look the kit
+   already gives it on a phone. A grey box read as a switched-off button. */
+html[data-buttons] .btn.btn--secondary {
+  background: none; border-color: transparent; padding-inline: var(--s-2);
+  text-decoration: underline; text-underline-offset: 6px; text-decoration-color: var(--line-strong);
+}
+html[data-buttons] .btn.btn--secondary:hover { background: none; border-color: transparent; text-decoration-color: currentColor; }
+
+/* ── 4. Designs (the 27 templates) ────────────────────────────────────────── */
+/* Occasion filter: toggle buttons. The chosen one is marked by a full-strength border and
+   text, so the page's one filled button stays the main action. */
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-5); }
+/* Tighter than the kit's defaults so two rows and the filter fit one laptop screen (768px tall). */
+#designs .section-head { margin-bottom: var(--s-5); }
+.designs { row-gap: var(--s-4); }
+.chip {
+  min-height: 44px; padding-left: var(--s-5);
+  background: none; color: var(--muted); border: 1px solid var(--line-strong, var(--line)); border-radius: var(--r-btn);
+  cursor: pointer;
+}
+.chip:hover { color: var(--ink); border-color: var(--ink); }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+
+/* Each design is one link: its picture, then its name and occasion. Six a row on a desktop,
+   four on a tablet, two on a phone. */
+.design { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-2); align-content: start; color: inherit; text-decoration: none; }
+/* Hovering or focusing anywhere on a design zooms its picture inside the frame and underlines its name. */
+.design__media > img { transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+html:not([data-motion="off"]) a.design:is(:hover, :focus-visible) .design__media > img { transform: scale(1.03); }
+a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .design__media > img { transition: none; }
+  html a.design:is(:hover, :focus-visible) .design__media > img { transform: none; }
+}
+.design__media { display: block; aspect-ratio: 3 / 2; overflow: clip; border-radius: var(--r-md); background: var(--surface); }
+.design__media > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.design__name { font-size: var(--t-body); line-height: 1.3; overflow-wrap: anywhere; }
+.design__event { color: var(--muted); }
+@media (max-width: 1023px) {
+  .designs > .design.span-2 { grid-column: auto / span 3; }
+  .designs .design__media { aspect-ratio: 4 / 3; }
+}
+@media (max-width: 639px) {
+  /* Two square tiles a row; an occasion with four designs or fewer shows them one a row
+     (the script sets data-few), so each occasion fills about the same height. */
+  .designs > .design.span-2 { grid-column: auto / span 6; }
+  .designs .design__media { aspect-ratio: 10 / 11; }
+  /* The occasion buttons stack at full width, each running from edge to edge of the content. */
+  .chips { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .designs[data-few] > .design.span-2 { grid-column: 1 / -1; }
+  .designs[data-few] .design__media { aspect-ratio: 16 / 9; }
+  /* One column of tiles under the filter: the second grid is empty on a phone. */
+  #designs .wrap { display: block; }
+}
+/* The closing tile: as wide as the places left in the last row, so the row ends on the right line. */
+.design--more {
+  grid-column: auto / span calc(var(--rem-6) * 2);
+  align-content: center; padding: var(--s-5);
+  border: 1px solid var(--line-strong, var(--line)); border-radius: var(--r-md);
+}
+.design--more[data-rem-6="0"] { display: none; }
+.design--more:hover { border-color: var(--ink); }
+@media (max-width: 1023px) {
+  .design--more { grid-column: auto / span calc(var(--rem-4) * 3); }
+  .design--more[data-rem-6="0"] { display: grid; }
+  .design--more[data-rem-4="0"] { display: none; }
+}
+/* Filtered-out designs: dimmed in place on wide screens, so the wall keeps its shape;
+   removed on a phone, where the list is one long column. The script also makes them inert. */
+.design[data-off] { opacity: .22; }
+@media (max-width: 639px) {
+  .design[data-off] { display: none; }
+}
+
+/* ── 4b. Questions ────────────────────────────────────────────────────────── */
+/* A little more air between answers than the kit's default, so eight of them fill their screen. */
+.faq > .faq__item { padding-block: 26px; }
+@media (min-width: 640px) {
+  .faq > .faq__item { padding-block: var(--s-6); }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .grid > .faq.span-6 { grid-column: auto / span 6; }
+  .faq > .faq__item { padding-block: 20px; }
+  .request-pic { min-height: 0; height: 168px; }
+}
+/* A tall tablet held upright has room to spare: open the answers up so they fill the screen. */
+@media (min-width: 640px) and (max-width: 1023px) and (min-height: 1100px) {
+  .faq > .faq__item { padding-block: var(--s-7); }
+}
+
+/* ── 4c. Steps ────────────────────────────────────────────────────────────── */
+/* Three numbered cards on the page's one surface band. A step's title is a heading, so it takes
+   the brand's heading face; its number sits a line above it. */
+.steps .card > h3 {
+  margin-top: var(--s-4);
+  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--t-h3);
+  line-height: 1.35; letter-spacing: var(--display-tracking);
+}
+.steps .card > p { margin-top: var(--s-3); }
+/* From 1280px a section is exactly one screen tall, so a step's picture takes what the screen's
+   height leaves: shorter on a 768px-tall laptop, full size on a tall monitor. */
+@media (min-width: 1280px) {
+  .steps .panel { --p-h: clamp(150px, 100svh - 600px, 320px); }
+}
+/* The cards run down to the section's foot (never shorter than what they hold), so the band has
+   no empty strip under them. A tablet stacks the cards, which takes two screens; a phone's
+   pictures are a little shorter so the three steps fill two phone screens exactly. */
+#steps .steps { flex: 1 0 auto; }
+@media (min-width: 640px) and (max-width: 1279px) {
+  #steps { --h: 2; }
+}
+@media (max-width: 639px) {
+  .steps .panel { --p-h: 228px; }
+}
+
+/* The features picture is the page's one moment (it develops like a print as it scrolls in).
+   Its <picture> is the moment's host, so it takes the frame's whole area. */
+#features .frame > picture { position: absolute; inset: 0; display: block; }
+
+@media (max-width: 639px) {
+  /* The footer keeps to one phone screen: the logo says what the line under it would. */
+  .closing__links .stack-4 > .t-small { display: none; }
+}
+
+/* ── 5. Request form ──────────────────────────────────────────────────────── */
+/* The kit's field styles with the page's own grid. It is not the kit's form.form, because
+   that posts form-encoded data and this API takes JSON (see the script in index.html). */
+.request-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
+.request-form > :is(.field--full, .btn-row, p) { grid-column: 1 / -1; }
+.request-form textarea { min-height: 96px; }
+@media (max-width: 639px) {
+  .request-form { grid-template-columns: minmax(0, 1fr); }
+}
+.request-form .form__status[data-state] { font-weight: 400; padding-left: var(--s-3); border-left: 2px solid var(--ink); }
+@media (min-width: 1024px) and (max-height: 820px), (min-width: 640px) and (max-width: 1023px) {
+  #request .section-head { margin-bottom: var(--s-5); }
+  .request-form { gap: var(--s-3); }
+  .request-form textarea { min-height: 56px; height: 56px; }
+  .request-form .field :is(input, select) { height: 44px; }
+}
+.request-pic { min-height: 240px; }
+.request-pic iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: grayscale(1) contrast(1.05); }
+
+/* Links inside small print are underlined so they read as links without colour. */
+.t-small a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── 6. Footer contact ────────────────────────────────────────────────────── */
+/* Filled from Admin → Landing Page Contact Details; the column is hidden while empty. */
+@media (max-width: 1023px) {
+  .closing__links .grid > .span-6, .footer > .wrap > .grid > .span-6 { grid-column: 1 / -1; }
+  .footer .grid > .footer__col.span-3 { grid-column: auto / span 6; }
+}
+.footer__contact { display: grid; gap: var(--s-2); font-size: var(--t-small); }
+.footer .socials a { display: grid; place-items: center; }
+.footer .socials svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── 7. Legal pages (Terms, Privacy) ──────────────────────────────────────── */
+/* Long reading pages: one column of text beside a table of contents. They are not built from
+   one-screen sections, so they take the kit's header, footer, type and tokens only. */
+.legal { padding-block: calc(var(--nav) + var(--s-8)) var(--s-9); }
+.legal__grid { display: grid; gap: var(--s-7); }
+.legal-toc ol { display: grid; gap: var(--s-2); margin-top: var(--s-4); padding: 0; list-style: none; counter-reset: toc; }
+.legal-toc li { counter-increment: toc; }
+.legal-toc a { display: inline-flex; gap: var(--s-3); min-height: 32px; align-items: baseline; text-decoration: none; }
+.legal-toc a::before { content: counter(toc, decimal-leading-zero); color: var(--muted); font-variant-numeric: tabular-nums; }
+.legal-toc a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.prose { max-width: 68ch; }
+.prose .updated { margin-top: var(--s-4); color: var(--muted); }
+.prose .lede { margin-top: var(--s-5); font-size: var(--t-lead); line-height: 1.6; }
+.prose h2 { margin-top: var(--s-8); scroll-margin-top: calc(var(--nav) + var(--s-5)); }
+.prose h3 { margin-top: var(--s-6); }
+.prose :is(p, ul, ol, table) { margin-top: var(--s-4); line-height: 1.7; }
+.prose ul { padding-left: 1.25em; list-style: disc; }
+.prose li + li { margin-top: var(--s-2); }
+.prose a { text-decoration: underline; text-underline-offset: 3px; }
+.prose table { width: 100%; border-collapse: collapse; font-size: var(--t-small); }
+.prose :is(th, td) { padding: var(--s-3) var(--s-4) var(--s-3) 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.prose th { font-weight: 400; color: var(--muted); }
+.prose .table-wrap { overflow-x: auto; }
+/* A detail only the company can supply. Marked so it cannot be missed before launch. */
+.todo { padding: 0 .3em; background: var(--ink); color: var(--bg); font-weight: 400; white-space: nowrap; }
+.prose [data-placeholder] { outline: none; }
+.legal-note { margin-top: var(--s-6); padding: var(--s-4) var(--s-5); border: 1px solid var(--ink); }
+@media (min-width: 1024px) {
+  .legal__grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: var(--gutter); }
+  .legal-toc { position: sticky; top: calc(var(--nav) + var(--s-6)); align-self: start; }
+}
