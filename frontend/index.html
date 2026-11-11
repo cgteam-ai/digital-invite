@@ -59,22 +59,16 @@
 <link rel="stylesheet" href="/assets/kit/ui/cards.css">
 <link rel="stylesheet" href="/assets/kit/motion/motion.css">
 <link rel="stylesheet" href="/assets/kit/layout/layout.css">
-<link rel="stylesheet" href="/css/site.css?v=2026111002">
+<link rel="stylesheet" href="/css/site.css?v=2026111201">
 <!-- The hero's entrance: set before the first paint so its words wait for motion.js instead of
      flashing; the 700ms mark shows them anyway if the script is late. -->
 <script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
-<!-- The features picture develops once as it comes on screen (picture-develops): the guard, then its modules. -->
-<script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
-<link rel="modulepreload" href="/assets/kit/moments/moments.js">
-<link rel="modulepreload" href="/assets/kit/moments/lib.js">
-<link rel="modulepreload" href="/assets/kit/moments/picture-develops/moment.js">
 </head>
 <body>
 <!-- type: service
      deal: hero split, nav nav-centre, close close-type, footer footer-dark, rhythm surface-pairs (the steps
            stand on the one surface band), buttons tonal, mark replaced by the client's logo; palette and
            type from the Brand Guidelines
-     moments: picture-develops on the features picture
      The page is a stack of screens: the hero alone on the first, every other section one or two. -->
 
 <header class="nav nav--centre">
@@ -107,53 +101,61 @@
         <p class="hero__lead">Choose one of <span data-design-count>27</span> designs and we set it up with your names, date and venues. Guests open one link on their phone and reply in a tap.</p>
         <div class="btn-row"><a class="btn btn--primary" href="#request">Request a Demo</a><a class="btn btn--secondary" href="#designs">See the designs</a></div>
       </div>
-      <div class="hero__media span-6 start-7">
-        <img src="/assets/landing/hero.webp" srcset="/assets/landing/hero-628.webp 628w, /assets/landing/hero.webp 1256w" sizes="(max-width: 1023px) 92vw, 628px" alt="Three invitations on phone screens: an engagement invitation for Sarah and Daniel, and wedding invitations for Isabella and Nicolas and for Léa and Marc" width="1256" height="1432" fetchpriority="high" data-source="client" data-subject="invitation designs">
+      <!-- Three real designs, whole and on the page's own ivory: one transparent picture, so it never
+           sits in a box of another colour. contain keeps every screen uncropped at any size. -->
+      <div class="hero__media hero__showcase span-6 start-7">
+        <img src="/assets/showcase/hero.webp" srcset="/assets/showcase/hero-720.webp 720w, /assets/showcase/hero.webp 1440w" sizes="(max-width: 1023px) 92vw, 628px" alt="Three invitations on phone screens: an engagement invitation for Sarah and Daniel, and wedding invitations for Isabella and Nicolas and for Jane and Andrew" width="1440" height="1208" fetchpriority="high" decoding="async">
       </div>
     </div></div>
   </section>
 
-  <!-- ═══ DESIGNS: two screens; both grids are filled by the script from the TEMPLATES catalogue ═══ -->
-  <section class="section g2" id="designs" aria-labelledby="designs-h">
+  <!-- ═══ DESIGNS: one occasion at a time, on every screen; the grid is filled by the script from the TEMPLATES catalogue ═══ -->
+  <section class="section" id="designs" aria-labelledby="designs-h">
     <div class="wrap">
-      <div class="group">
-        <div class="section-head">
-          <h2 id="designs-h"><span data-design-count>27</span> designs for <span data-occasion-count>5</span> occasions</h2>
-          <p id="designsNote">Open any design to see a live sample invitation.</p>
-        </div>
-        <div class="chips" id="tplFilter" role="group" aria-label="Show the designs for one occasion"></div>
-        <div class="grid designs" id="tplGridA"></div>
+      <div class="section-head">
+        <p class="t-label">The collection</p>
+        <h2 id="designs-h"><span data-design-count>27</span> designs for <span data-occasion-count>5</span> occasions</h2>
+        <p id="designsNote">Open any design to see a live sample invitation.</p>
       </div>
-      <div class="grid designs" id="tplGridB"></div>
+      <div class="chips" id="tplFilter" role="group" aria-label="Show the designs for one occasion"></div>
+      <div class="grid designs" id="tplGrid"></div>
     </div>
   </section>
 
-  <!-- ═══ STEPS: the page's one surface band; three numbered cards, each with its picture ═══ -->
+  <!-- ═══ STEPS: the page's one deeper-ivory band. Three stages, each a numeral on a fine ink rule,
+       a Soft Ivory plate holding the whole picture, then its title and words. ═══ -->
   <section class="section ground-surface" id="steps" style="--hm: 2" aria-labelledby="steps-h">
     <div class="wrap">
       <div class="section-head">
+        <p class="t-label">How it works</p>
         <h2 id="steps-h">Three steps from design to replies</h2>
       </div>
-      <div class="grid steps">
-        <article class="card card--row span-4">
-          <span class="step-num">01</span>
-          <h3>Choose a design</h3>
-          <p>Start from a design for a wedding, an engagement, a birthday, a baby shower or a graduation.</p>
-          <div class="panel"><img class="frame__img" src="/assets/landing/step-design.webp" alt="Two invitation designs on phone screens: a seaside engagement and a candle-lit fiftieth birthday" width="760" height="700" loading="lazy" data-source="client" data-subject="invitation designs"></div>
-        </article>
-        <article class="card card--row span-4">
-          <span class="step-num">02</span>
-          <h3>Send your invitation details</h3>
-          <p>Names, date, venues, photos, timeline and music. We set up the invitation and send you a sample to check.</p>
-          <div class="panel"><img class="frame__img" src="/assets/landing/step-details.webp" alt="Two screens of one wedding invitation: the families' names with a countdown to the day, and the ceremony venue" width="760" height="700" loading="lazy" data-source="client" data-subject="a finished invitation"></div>
-        </article>
-        <article class="card card--row span-4">
-          <span class="step-num">03</span>
-          <h3>Share the invitation link</h3>
-          <p>Send it by WhatsApp, SMS or email, or give each guest a link of their own. Replies show as they arrive.</p>
-          <div class="panel"><img class="frame__img" src="/assets/landing/step-reply.webp" alt="The reply form inside an invitation, asking Will you join us, with buttons to accept or decline" width="760" height="700" loading="lazy" data-source="client" data-subject="the reply form"></div>
-        </article>
-      </div>
+      <ol class="steps">
+        <li class="step" data-rise>
+          <p class="step__num" aria-hidden="true">01</p>
+          <figure class="step__plate"><img src="/assets/showcase/step-choose.webp" srcset="/assets/showcase/step-choose-536.webp 536w, /assets/showcase/step-choose.webp 1072w" sizes="(max-width: 639px) 92vw, (max-width: 1023px) 42vw, 400px" alt="Two invitation designs on phone screens: an engagement save-the-date for Yasmine and Omar, and a baby shower invitation" width="1072" height="1260" loading="lazy" decoding="async"></figure>
+          <div class="step__text">
+            <h3>Choose a design</h3>
+            <p>Start from a design for a wedding, an engagement, a birthday, a baby shower or a graduation.</p>
+          </div>
+        </li>
+        <li class="step" data-rise style="--d: 120ms">
+          <p class="step__num" aria-hidden="true">02</p>
+          <figure class="step__plate"><img src="/assets/showcase/step-details.webp" srcset="/assets/showcase/step-details-536.webp 536w, /assets/showcase/step-details.webp 1072w" sizes="(max-width: 639px) 92vw, (max-width: 1023px) 42vw, 400px" alt="Two screens of one wedding invitation: the families' names with a countdown to the day, and the ceremony venue" width="1072" height="1260" loading="lazy" decoding="async"></figure>
+          <div class="step__text">
+            <h3>Send your invitation details</h3>
+            <p>Names, date, venues, photos, timeline and music. We set up the invitation and send you a sample to check.</p>
+          </div>
+        </li>
+        <li class="step" data-rise style="--d: 240ms">
+          <p class="step__num" aria-hidden="true">03</p>
+          <figure class="step__plate"><img src="/assets/showcase/step-reply.webp" srcset="/assets/showcase/step-reply-536.webp 536w, /assets/showcase/step-reply.webp 1072w" sizes="(max-width: 639px) 92vw, (max-width: 1023px) 42vw, 400px" alt="The reply form inside an invitation: a guest accepts for two and leaves a note, then picks how many are coming in one tap" width="1072" height="1260" loading="lazy" decoding="async"></figure>
+          <div class="step__text">
+            <h3>Share the invitation link</h3>
+            <p>Send it by WhatsApp, SMS or email, or give each guest a link of their own. Replies show as they arrive.</p>
+          </div>
+        </li>
+      </ol>
     </div>
   </section>
 
@@ -161,6 +163,7 @@
   <section class="section" id="features" style="--hm: 2" aria-labelledby="features-h">
     <div class="wrap">
       <div class="section-head">
+        <p class="t-label">The details</p>
         <h2 id="features-h">Features in every invitation</h2>
       </div>
       <div class="grid grid--top fill">
@@ -172,11 +175,8 @@
           <li><span class="rows__name">Counts down to the day</span><p>A live countdown and the timeline of the day sit inside the invitation.</p></li>
           <li><span class="rows__name">Shows your photos and plays your music</span><p>Add a gallery, a song and your gift details.</p></li>
         </ul>
-        <div class="frame frame--photo frame--fill span-6 start-7">
-          <picture data-moment="picture-develops">
-            <source media="(max-width: 639px)" srcset="/assets/landing/features-phone.webp" width="684" height="1520">
-            <img class="frame__img" src="/assets/landing/features.webp" srcset="/assets/landing/features-628.webp 628w, /assets/landing/features.webp 1256w" sizes="(max-width: 1023px) 92vw, 628px" alt="Two invitation screens: a timeline of the evening with a photo gallery and gift registry, and a wedding invitation opening on a photograph of the couple" width="1256" height="1160" loading="lazy" data-source="client" data-subject="invitation screens">
-          </picture>
+        <div class="frame frame--photo frame--fill showcase-frame span-6 start-7" style="--ar: 1280 / 1484" data-rise>
+          <img class="frame__img" src="/assets/showcase/features.webp" srcset="/assets/showcase/features-640.webp 640w, /assets/showcase/features.webp 1280w" sizes="(max-width: 1023px) 92vw, 628px" alt="Two invitation screens: the order of the day with a photo gallery, and a wedding invitation opening on a photograph of the couple" width="1280" height="1484" loading="lazy" decoding="async">
         </div>
       </div>
     </div>
@@ -186,6 +186,7 @@
   <section class="section" id="questions" style="--hm: 2" aria-labelledby="questions-h">
     <div class="wrap">
       <div class="section-head">
+        <p class="t-label">Good to know</p>
         <h2 id="questions-h">Questions hosts ask</h2>
         <p>Eight answers about designs, replies, sharing and price.</p>
       </div>
@@ -219,6 +220,7 @@
   <section class="section" id="request" style="--hm: 2" aria-labelledby="request-h">
     <div class="wrap">
       <div class="section-head">
+        <p class="t-label">Request a demo</p>
         <h2 id="request-h">Your demo invitation</h2>
         <p>Tell us about your celebration. We send you a demo: a live sample invitation to open on your phone.</p>
       </div>
@@ -265,11 +267,8 @@
 
         <!-- Holds a picture by default. If a map is set in Admin → Landing Page Contact Details,
              the script puts that map here instead. -->
-        <div class="frame frame--photo frame--fill request-pic span-6 start-7" id="mapHolder">
-          <picture>
-            <source media="(max-width: 639px)" srcset="/assets/landing/request-phone.webp" width="684" height="1240">
-            <img class="frame__img" src="/assets/landing/request.webp" srcset="/assets/landing/request-628.webp 628w, /assets/landing/request.webp 1256w" sizes="(max-width: 1023px) 92vw, 628px" alt="Three more designs: an engagement invitation with two overlapping circles, one with a torn-edge photograph, and a wedding invitation with a drawn first dance" width="1256" height="1200" loading="lazy" data-source="client" data-subject="invitation designs">
-          </picture>
+        <div class="frame frame--photo frame--fill request-pic showcase-frame span-6 start-7" id="mapHolder" style="--ar: 1376 / 1144" data-rise>
+          <img class="frame__img" src="/assets/showcase/request.webp" srcset="/assets/showcase/request-688.webp 688w, /assets/showcase/request.webp 1376w" sizes="(max-width: 1023px) 92vw, 628px" alt="Three more designs: an engagement invitation with a torn-edge photograph, a wedding invitation set as a newspaper front page, and an engagement invitation with two overlapping circles" width="1376" height="1144" loading="lazy" decoding="async">
         </div>
       </div>
     </div>
@@ -475,17 +474,15 @@ const esc = s => String(s == null ? '' : s)
 // ── Designs ──────────────────────────────────────────────────────────────────
 // The catalogue above drives everything here: the counts in the hero and the heading, the
 // occasion filter and the tiles. Adding a template to TEMPLATES is all a new design needs.
+// Phones, tablets and desktops work the same way: one occasion at a time, opening on the first.
 const tplFilterRow = document.getElementById('tplFilter');
-const tplGrids = [document.getElementById('tplGridA'), document.getElementById('tplGridB')];
+const tplGrid = document.getElementById('tplGrid');
 const designsNote = document.getElementById('designsNote');
-const DESIGNS_NOTE = designsNote.textContent;
-const FIRST_SCREEN_TILES = 12;          // two rows of six on the section's first screen
 const phone = matchMedia('(max-width: 639px)');
 
 // Shown in the catalogue's own order: one occasion after another.
 const DESIGNS = CATEGORY_ORDER.flatMap(ev => TEMPLATES.filter(t => t.event === ev));
-// On a phone the list opens on the first occasion, so it stays a short column.
-let tplFilter = phone.matches ? CATEGORY_ORDER[0] : 'All';
+let tplFilter = CATEGORY_ORDER.find(ev => DESIGNS.some(t => t.event === ev));
 
 function templateUrl(t) {
   return `/templates/${t.category}/${t.key}/index.html?demo=${encodeURIComponent(t.key)}`;
@@ -496,9 +493,9 @@ function templateUrl(t) {
 // JPEG still shows its picture.
 const thumbWebp = (t, size = '') => t.thumb.replace(/\.jpe?g$/i, `${size}.webp`);
 // Tells the browser how wide a tile's picture is drawn, so it picks the 400px or the 800px file.
-// A phone's two-a-row tiles crop the picture to a portrait (70vw of it fills the crop); an
-// occasion shown one a row uses the full width (see applyFilter).
-const THUMB_SIZES = '(max-width: 639px) 70vw, (max-width: 1023px) 22vw, 193px';
+// A phone's tiles sit two a row at the picture's own 4:3 (about 46vw each); an occasion
+// shown one a row uses the full width (see applyFilter).
+const THUMB_SIZES = '(max-width: 639px) 46vw, (max-width: 1023px) 22vw, 193px';
 
 function tile(t) {
   return `
@@ -510,54 +507,35 @@ function tile(t) {
     </a>`;
 }
 
-// The last row is closed by one wider tile for occasions without a design of their own, so
-// every row ends on the page's right edge. --rem-6 and --rem-4 are the free places in that
-// row at six and four tiles a row (site.css turns them into the tile's width).
-function fillerTile(count) {
-  const free = per => (per - count % per) % per;
-  return `
-    <a class="design design--more" href="#request" style="--rem-6:${free(6)};--rem-4:${free(4)}" data-rem-6="${free(6)}" data-rem-4="${free(4)}">
-      <span class="design__name">Another occasion</span>
-      <span class="design__event">Corporate events and more, on request</span>
-    </a>`;
-}
-
-
 function renderDesigns() {
-  // A phone gets one column of tiles under the filter; wider screens split them over the
-  // section's two screens.
-  const first = phone.matches ? DESIGNS.length : FIRST_SCREEN_TILES;
-  tplGrids[0].innerHTML = DESIGNS.slice(0, first).map(tile).join('');
-  tplGrids[1].innerHTML = DESIGNS.slice(first).map(tile).join('') + (phone.matches ? '' : fillerTile(DESIGNS.length - first));
+  tplGrid.innerHTML = DESIGNS.map(tile).join('');
   const occasions = CATEGORY_ORDER.filter(ev => DESIGNS.some(t => t.event === ev));
   document.querySelectorAll('[data-design-count]').forEach(el => { el.textContent = DESIGNS.length; });
   document.querySelectorAll('[data-occasion-count]').forEach(el => { el.textContent = occasions.length; });
   // The chips are drawn once; clicks only flip aria-pressed, so keyboard focus stays put.
-  // A phone lists one occasion at a time (all the designs would run to 14 rows), so it has no All chip.
-  tplFilterRow.innerHTML = [...(phone.matches ? [] : ['All']), ...occasions].map(ev =>
+  tplFilterRow.innerHTML = occasions.map(ev =>
     `<button type="button" class="chip" data-filter="${esc(ev)}" aria-pressed="${ev === tplFilter}">${esc(ev)}</button>`
   ).join('');
 }
 
-// Designs outside the chosen occasion are switched off, not removed: site.css dims them in
-// place on wide screens and hides them on a phone; `inert` takes them out of the Tab order.
+// Only the chosen occasion's designs are shown: the others are hidden (site.css) and `inert`,
+// so they are out of the layout and the Tab order alike.
 function applyFilter() {
   let shown = 0;
-  tplGrids.forEach(grid => grid.querySelectorAll('.design[data-event]').forEach(el => {
-    const on = tplFilter === 'All' || el.dataset.event === tplFilter;
+  tplGrid.querySelectorAll('.design[data-event]').forEach(el => {
+    const on = el.dataset.event === tplFilter;
     el.toggleAttribute('data-off', !on);
     el.inert = !on;
     if (on) shown++;
-  }));
+  });
   tplFilterRow.querySelectorAll('[data-filter]').forEach(c =>
     c.setAttribute('aria-pressed', String(c.dataset.filter === tplFilter)));
   const few = shown <= 4;
-  tplGrids[0].toggleAttribute('data-few', few);
-  tplGrids[0].querySelectorAll('img').forEach(img => { img.sizes = few && phone.matches ? '100vw' : THUMB_SIZES; });
+  tplGrid.toggleAttribute('data-few', few);
+  tplGrid.querySelectorAll('img').forEach(img => { img.sizes = few && phone.matches ? '100vw' : THUMB_SIZES; });
   // The line under the heading doubles as the filter's status for screen readers.
-  designsNote.textContent = tplFilter === 'All'
-    ? DESIGNS_NOTE
-    : `${shown} ${tplFilter.toLowerCase()} ${shown === 1 ? 'design' : 'designs'}. ${CATEGORY_BLURB[tplFilter] || ''}`.trim();
+  designsNote.textContent =
+    `${shown} ${tplFilter.toLowerCase()} ${shown === 1 ? 'design' : 'designs'}. ${CATEGORY_BLURB[tplFilter] || ''}`.trim();
 }
 
 tplFilterRow.addEventListener('click', e => {
@@ -568,22 +546,19 @@ tplFilterRow.addEventListener('click', e => {
 });
 
 // `error` does not bubble, so listen in the capture phase for any thumbnail that fails.
-tplGrids.forEach(grid => grid.addEventListener('error', e => {
+tplGrid.addEventListener('error', e => {
   const img = e.target;
   if (img.tagName !== 'IMG' || !img.dataset.fallback) return;
   img.removeAttribute('srcset');
   img.src = img.dataset.fallback;
   delete img.dataset.fallback;          // one retry only
-}, true));
+}, true);
 
 renderDesigns();
 applyFilter();
-// Crossing the phone breakpoint (a rotated phone, a resized window) redraws both layouts.
-phone.addEventListener('change', () => {
-  tplFilter = phone.matches ? CATEGORY_ORDER[0] : 'All';
-  renderDesigns();
-  applyFilter();
-});
+// Crossing the phone breakpoint (a rotated phone, a resized window) keeps the chosen occasion
+// and only updates how wide the pictures are drawn.
+phone.addEventListener('change', applyFilter);
 
 // ── Contact details (managed in the admin panel) ─────────────────────────────
 // Fetched from the public settings endpoint; every field is optional and blank ones are
@@ -710,7 +685,24 @@ contactForm.addEventListener('input', e => {
 document.getElementById('year').textContent = new Date().getFullYear();
 </script>
 
-<!-- The kit's scripts: nav and phone menu, the developing picture, hovers, presses and focus. -->
+<script>
+// A quiet entrance: each [data-rise] block fades up once as it reaches the screen. Without this
+// script, with reduced motion or with motion switched off, everything simply stands.
+(() => {
+  const root = document.documentElement;
+  if (!('IntersectionObserver' in window) || root.dataset.motion === 'off'
+      || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  root.classList.add('rise-js');
+  const io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('is-in');
+    io.unobserve(e.target);
+  }), { rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('[data-rise]').forEach(el => io.observe(el));
+})();
+</script>
+
+<!-- The kit's scripts: nav and phone menu, hovers, presses and focus. -->
 <script type="module" src="/assets/kit/system.js"></script>
 <script type="module" src="/assets/kit/motion/motion.js"></script>
 <script type="module" src="/assets/kit/layout/layout.js"></script>

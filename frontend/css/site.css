@@ -18,14 +18,16 @@
 
 /* ── 1. Brand tokens ──────────────────────────────────────────────────────── */
 :root {
-  /* Palette: the kit's token names, filled with the two brand colours. The surface and
-     muted tones are Ink Black mixed into Soft Ivory, never a third hue. */
-  --p-bg: #f7f3ea; --p-surface: #eae6de; --p-ink: #141414; --p-muted: #615f5c;
+  /* The two brand colours, and one deeper Soft Ivory of the same hue (42 degrees) for the page's one
+     band and the ground under a picture. Text is Ink Black on ivory and Soft Ivory on Ink Black, never
+     grey: the kit's "muted" tone is the ink itself. Hex only, because the kit's scripts read them. */
+  --ivory: #f7f3ea; --ivory-deep: #f0eadd; --ink-black: #141414;
+  --p-bg: #f7f3ea; --p-surface: #f0eadd; --p-ink: #141414; --p-muted: #141414;
   --p-accent: #141414; --p-accent-ink: #f7f3ea; --p-action: #141414; --p-action-ink: #f7f3ea;
-  --p-inv-bg: #141414; --p-inv-surface: #212020; --p-inv-ink: #f7f3ea; --p-inv-muted: #979590;
+  --p-inv-bg: #141414; --p-inv-surface: #141414; --p-inv-ink: #f7f3ea; --p-inv-muted: #f7f3ea;
   --p-inv-accent: #f7f3ea; --p-inv-accent-ink: #141414; --p-inv-action: #f7f3ea; --p-inv-action-ink: #141414;
-  /* The ground behind a picture in a frame or a card: the same surface tone, never a third hue. */
-  --ground-bg: #eae6de; --ground-surface: #eae6de; --ground-ink: #141414; --ground-muted: #615f5c; --ground-accent: #141414;
+  /* The ground behind a picture in a frame or a card: the deeper ivory, never a third hue. */
+  --ground-bg: #f0eadd; --ground-surface: #f0eadd; --ground-ink: #141414; --ground-muted: #141414; --ground-accent: #141414;
 
   /* Type: the brand's two families and its letter spacing */
   --font-display: 'Cormorant Garamond', Georgia, serif;
@@ -35,6 +37,11 @@
   --display-tracking-xl: .16em;
   --label-tracking: .42em;
   --ly-scale: 1;
+
+  /* Body text keeps to the brand's 14 to 18px: the kit's lead (20px on a desktop) stops at 18. */
+  --t-lead: 18px;
+  --t-card: 18px;
+  --ly-lead: clamp(16px, .19vw + 15.26px, 18px);
 
   /* Heading sizes. Capitals at 0.16em run about 1.6 times wider than the kit's sentence-case
      headings, so each level is set smaller than the kit's: the h1 keeps to three lines beside
@@ -47,6 +54,11 @@
 /* From 1024px the hero's words stand beside its picture: the h1 grows with that column. */
 @media (min-width: 1024px) {
   :root { --t-h1: clamp(30px, 2.764vw + 2.2px, 42px); }
+}
+/* Rules: a fine rule is the ink itself, thinned; a control's outline is the full ink. */
+:root, .ground-base, .ground-surface, .ground-inverse {
+  --line: color-mix(in oklab, var(--ink) 16%, transparent);
+  --line-strong: var(--ink);
 }
 
 /* ── 2. Brand type ────────────────────────────────────────────────────────── */
@@ -70,6 +82,10 @@ h3 { line-height: 1.35; }
   line-height: 1.6;
   text-transform: uppercase;
 }
+/* A section's label above its heading, the same size as the hero's (the kit's .section-head p rule
+   would set it at the 18px lead). The footer's small print stays at the brand's 14px floor. */
+.section-head > .t-label { font-size: var(--t-label); line-height: 1.6; }
+.footer__legal { font-size: var(--t-small); }
 /* A tracked label carries spare space after its last letter; trim it where the label sits in a box. */
 .btn:not(.btn--xl), .chip { padding-right: calc(var(--s-5) - var(--label-tracking) / 2); }
 
@@ -86,8 +102,8 @@ h3 { line-height: 1.35; }
   font-family: var(--font-text); font-weight: 400; text-transform: none; letter-spacing: 0; font-variant-numeric: normal;
 }
 .faq .faq__item > h3 { font-size: var(--t-lead); }
-/* A feature's name stands a size above the line that explains it. */
-.rows__name { font-size: 20px; line-height: 1.35; }
+/* A feature's name stands a size above the line that explains it (18px: the top of the brand's body sizes). */
+.rows__name { font-size: var(--t-lead); line-height: 1.35; }
 
 /* On a phone the close's wide button reads like every other button. */
 @media (max-width: 639px) {
@@ -126,6 +142,23 @@ form { --error: var(--ink); }
   .faq > .faq__item { padding-block: 20px; }
 }
 
+/* ── 3c. Phones and tablets: each section as tall as what it holds ────────── */
+/* Under 1024px the kit gave every section one or two whole screens, which left up to 550px of empty
+   ivory under a short section. Here a section is as tall as its content, with one even gap between
+   sections (80px on a phone, 96px on a tablet); anchors still land below the fixed header. The hero
+   keeps its full first screen. */
+@media (max-width: 1023px) {
+  main > :is(section, .section):not(.hero, .section--hero), footer.closing {
+    min-height: 0; padding: 40px 0; scroll-margin-top: var(--nav);
+  }
+  /* the close keeps clear of the phone's action bar at the foot of the screen */
+  footer.closing { padding: 56px 0 calc(40px + var(--bar)); }
+  main > :is(section, .section) > .wrap > .fill { flex: 0 0 auto; min-height: auto; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  main > :is(section, .section):not(.hero, .section--hero) { padding-block: 48px; }
+}
+
 /* ── 3b. The second action ────────────────────────────────────────────────── */
 /* Beside the one filled button, the second action is an underlined text link, the look the kit
    already gives it on a phone. A grey box read as a switched-off button. */
@@ -136,19 +169,21 @@ html[data-buttons] .btn.btn--secondary {
 html[data-buttons] .btn.btn--secondary:hover { background: none; border-color: transparent; text-decoration-color: currentColor; }
 
 /* ── 4. Designs (the 27 templates) ────────────────────────────────────────── */
-/* Occasion filter: toggle buttons. The chosen one is marked by a full-strength border and
-   text, so the page's one filled button stays the main action. */
-.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-5); }
+/* Occasion filter: a row of words, like a catalogue's index. The chosen one is underlined in ink and
+   marked by that rule alone; none is a filled box, so the page's one filled button stays the main action. */
+.chips { display: flex; flex-wrap: wrap; gap: 0 var(--s-6); margin-bottom: var(--s-5); }
 /* Tighter than the kit's defaults so two rows and the filter fit one laptop screen (768px tall). */
 #designs .section-head { margin-bottom: var(--s-5); }
-.designs { row-gap: var(--s-4); }
+.designs { row-gap: var(--s-5); }
 .chip {
-  min-height: 44px; padding-left: var(--s-5);
-  background: none; color: var(--muted); border: 1px solid var(--line-strong, var(--line)); border-radius: var(--r-btn);
-  cursor: pointer;
+  min-height: 44px; padding: 0;
+  background: none; color: var(--ink); border: 0; border-radius: 0;
+  text-decoration: underline 1px transparent; text-underline-offset: 10px;
+  cursor: pointer; transition: text-decoration-color var(--dur) var(--ease);
 }
-.chip:hover { color: var(--ink); border-color: var(--ink); }
-.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.chip:hover { text-decoration-color: var(--line); }
+.chip[aria-pressed="true"] { text-decoration-color: var(--ink); }
+.chip:focus-visible { outline-offset: 4px; }
 
 /* Each design is one link: its picture, then its name and occasion. Six a row on a desktop,
    four on a tablet, two on a phone. */
@@ -161,45 +196,23 @@ a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; 
   .design__media > img { transition: none; }
   html a.design:is(:hover, :focus-visible) .design__media > img { transform: none; }
 }
-.design__media { display: block; aspect-ratio: 3 / 2; overflow: clip; border-radius: var(--r-md); background: var(--surface); }
+/* Every picture at the thumbnails' own 4:3, at every width: no design is cropped or squeezed. */
+.design__media { display: block; aspect-ratio: 4 / 3; overflow: clip; border-radius: var(--r-sm); background: var(--surface); }
 .design__media > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .design__name { font-size: var(--t-body); line-height: 1.3; overflow-wrap: anywhere; }
-.design__event { color: var(--muted); }
 @media (max-width: 1023px) {
   .designs > .design.span-2 { grid-column: auto / span 3; }
-  .designs .design__media { aspect-ratio: 4 / 3; }
 }
 @media (max-width: 639px) {
-  /* Two square tiles a row; an occasion with four designs or fewer shows them one a row
-     (the script sets data-few), so each occasion fills about the same height. */
+  /* Two tiles a row; an occasion with four designs or fewer shows them one a row (the script sets
+     data-few), so each occasion fills about the same height. */
   .designs > .design.span-2 { grid-column: auto / span 6; }
-  .designs .design__media { aspect-ratio: 10 / 11; }
-  /* The occasion buttons stack at full width, each running from edge to edge of the content. */
-  .chips { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .chips { gap: 0 var(--s-5); }
   .designs[data-few] > .design.span-2 { grid-column: 1 / -1; }
-  .designs[data-few] .design__media { aspect-ratio: 16 / 9; }
-  /* One column of tiles under the filter: the second grid is empty on a phone. */
-  #designs .wrap { display: block; }
 }
-/* The closing tile: as wide as the places left in the last row, so the row ends on the right line. */
-.design--more {
-  grid-column: auto / span calc(var(--rem-6) * 2);
-  align-content: center; padding: var(--s-5);
-  border: 1px solid var(--line-strong, var(--line)); border-radius: var(--r-md);
-}
-.design--more[data-rem-6="0"] { display: none; }
-.design--more:hover { border-color: var(--ink); }
-@media (max-width: 1023px) {
-  .design--more { grid-column: auto / span calc(var(--rem-4) * 3); }
-  .design--more[data-rem-6="0"] { display: grid; }
-  .design--more[data-rem-4="0"] { display: none; }
-}
-/* Filtered-out designs: dimmed in place on wide screens, so the wall keeps its shape;
-   removed on a phone, where the list is one long column. The script also makes them inert. */
-.design[data-off] { opacity: .22; }
-@media (max-width: 639px) {
-  .design[data-off] { display: none; }
-}
+/* Designs outside the chosen occasion are removed from the grid at every width (the script also
+   makes them inert), so the grid holds only that occasion's designs. */
+.design[data-off] { display: none; }
 
 /* ── 4b. Questions ────────────────────────────────────────────────────────── */
 /* A little more air between answers than the kit's default, so eight of them fill their screen. */
@@ -211,7 +224,6 @@ a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; 
 @media (min-width: 640px) and (max-width: 1023px) {
   .grid > .faq.span-6 { grid-column: auto / span 6; }
   .faq > .faq__item { padding-block: 20px; }
-  .request-pic { min-height: 0; height: 168px; }
 }
 /* A tall tablet held upright has room to spare: open the answers up so they fill the screen. */
 @media (min-width: 640px) and (max-width: 1023px) and (min-height: 1100px) {
@@ -219,38 +231,78 @@ a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; 
 }
 
 /* ── 4c. Steps ────────────────────────────────────────────────────────────── */
-/* Three numbered cards on the page's one surface band. A step's title is a heading, so it takes
-   the brand's heading face; its number sits a line above it. */
-.steps .card > h3 {
-  margin-top: var(--s-4);
-  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--t-h3);
-  line-height: 1.35; letter-spacing: var(--display-tracking);
+/* Three stages on the page's one deeper-ivory band. Each is a column: its numeral on a fine ink rule,
+   a Soft Ivory plate holding the whole picture (two phone screens, kept whole by contain), then its
+   title and words. No card, outline or shadow: the plate is the only shape. */
+#steps { --steps-gap: clamp(32px, 3.4vw, 56px); }
+#steps .section-head { max-width: none; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--s-8); }
+.step { display: flex; flex-direction: column; min-width: 0; }
+.step__num {
+  display: flex; align-items: center; gap: var(--s-4); margin: 0 0 var(--s-5);
+  font: 500 28px/1 var(--font-display); letter-spacing: .1em; font-variant-numeric: lining-nums;
 }
-.steps .card > p { margin-top: var(--s-3); }
-/* From 1280px a section is exactly one screen tall, so a step's picture takes what the screen's
-   height leaves: shorter on a 768px-tall laptop, full size on a tall monitor. */
+.step__num::after { content: ""; flex: 1; height: 1px; background: var(--ink); }
+.step__plate {
+  position: relative; margin: 0; overflow: hidden;
+  aspect-ratio: 1072 / 1260; background: var(--surface); border-radius: var(--r-sm);
+}
+.step__plate > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; }
+.step h3 {
+  margin-top: var(--s-5);
+  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--t-h3); line-height: 1.35;
+}
+.step__text p { margin-top: var(--s-3); max-width: 42ch; }
+
+/* A tablet: one stage a row, its plate beside its words. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .steps { row-gap: var(--s-7); }
+  .step { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: var(--s-7); align-items: center; }
+  .step__num { grid-column: 1 / -1; }
+  .step h3 { margin-top: 0; }
+}
+/* From 1024px the three stand side by side on one shared grid (subgrid), so their numerals, plates and
+   titles line up even where one title runs to two lines. Their rules run on as one line, broken only
+   by the numerals: three stages of one service. */
+@media (min-width: 1024px) {
+  .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: var(--steps-gap); row-gap: 0; }
+  .step { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
+  .step:not(:last-child) .step__num::after { margin-right: calc(var(--s-4) - var(--steps-gap)); }
+}
+/* From 1280px a section is exactly one screen: the plates take the height the words leave and the
+   picture stays whole inside them (on a short laptop the section grows instead; see 3a). */
 @media (min-width: 1280px) {
-  .steps .panel { --p-h: clamp(150px, 100svh - 600px, 320px); }
-}
-/* The cards run down to the section's foot (never shorter than what they hold), so the band has
-   no empty strip under them. A tablet stacks the cards, which takes two screens; a phone's
-   pictures are a little shorter so the three steps fill two phone screens exactly. */
-#steps .steps { flex: 1 0 auto; }
-@media (min-width: 640px) and (max-width: 1279px) {
-  #steps { --h: 2; }
-}
-@media (max-width: 639px) {
-  .steps .panel { --p-h: 228px; }
+  #steps .steps { flex: 1 0 auto; grid-template-rows: auto minmax(240px, 1fr) auto; }
+  .step__plate { aspect-ratio: auto; min-height: 0; height: 100%; }
 }
 
-/* The features picture is the page's one moment (it develops like a print as it scrolls in).
-   Its <picture> is the moment's host, so it takes the frame's whole area. */
-#features .frame > picture { position: absolute; inset: 0; display: block; }
-
-@media (max-width: 639px) {
-  /* The footer keeps to one phone screen: the logo says what the line under it would. */
-  .closing__links .stack-4 > .t-small { display: none; }
+/* ── 4d. Showcase pictures (hero, features, request) ──────────────────────── */
+/* Transparent pictures of real invitation screens that stand on the page's own ivory: no box of
+   another colour around them, and contain keeps every screen whole however the column is shaped. */
+.hero__media.hero__showcase { background: none; border-radius: 0; }
+.hero__showcase > img { object-fit: contain; object-position: 50% 50%; }
+/* From 1024px the words stand in the middle of the screen beside the pictures, which contain also
+   centres: one calm, balanced composition rather than words hung from the top. */
+@media (min-width: 1024px) {
+  .hero--split .hero__text { align-self: center; }
 }
+.showcase-frame { background: none; border: 0; border-radius: 0; }
+.showcase-frame > .frame__img { object-fit: contain; }
+/* The row holding a showcase picture is sized by what it holds, at every width. The kit's .fill has no
+   height of its own, so on a short screen (a phone, 1024x768, a 1366x768 laptop) the section would not
+   grow to fit its list and form, and they would run into the next section. Where the section is exactly
+   one screen and has room, the row still grows to fill it. */
+main > section > .wrap > .grid.fill:has(> .showcase-frame) { flex: 1 0 auto; min-height: auto; }
+/* Stacked under the words (a tablet or a phone) the picture keeps its own proportions, rather than
+   taking whatever height the screen leaves. */
+@media (max-width: 1023px) {
+  .grid.fill > .showcase-frame { flex: none; height: auto; min-height: 0; aspect-ratio: var(--ar, 4 / 3); }
+}
+
+
+/* The closing line reads as one phrase: the kit's 20ch cap broke "for" onto a line of its own. */
+.closing__cta h2 { max-width: none; }
+
 
 /* ── 5. Request form ──────────────────────────────────────────────────────── */
 /* The kit's field styles with the page's own grid. It is not the kit's form.form, because
@@ -269,7 +321,21 @@ a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; 
   .request-form .field :is(input, select) { height: 44px; }
 }
 .request-pic { min-height: 240px; }
-.request-pic iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: grayscale(1) contrast(1.05); }
+/* A map set in the admin panel, in the page's warm tone rather than a cold grey. */
+.request-pic iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: var(--r-sm); filter: grayscale(1) sepia(.2) contrast(1.02); }
+/* Fields as on fine stationery: one ink rule to write on, with no box and no grey ground. A field
+   in focus or at fault takes a second rule under the first, so nothing moves. */
+.request-form .field :is(input, select, textarea) {
+  border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; background: transparent; padding-inline: 0;
+}
+.request-form .field :is(input, select, textarea):focus-visible { outline: none; box-shadow: 0 1px 0 var(--ink); }
+.request-form .field :is(input, select, textarea)[aria-invalid="true"] { border: 0; border-bottom: 1px solid var(--ink); box-shadow: 0 1px 0 var(--ink); }
+.request-form .field select {
+  appearance: none; padding-right: 28px; cursor: pointer;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23141414' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat right 4px center / 12px 8px;
+}
+.request-form .field textarea { padding-block: var(--s-2); }
+.request-form ::placeholder { color: var(--ink); opacity: .5; }
 
 /* Links inside small print are underlined so they read as links without colour. */
 .t-small a { text-decoration: underline; text-underline-offset: 3px; }
@@ -315,3 +381,10 @@ a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; 
   .legal__grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: var(--gutter); }
   .legal-toc { position: sticky; top: calc(var(--nav) + var(--s-6)); align-self: start; }
 }
+
+/* ── 8. Entrance ──────────────────────────────────────────────────────────── */
+/* The steps and the showcase pictures fade up once as they reach the screen (the small script before
+   the kit's in index.html). Without it, with reduced motion or with motion off, they simply stand. */
+html.rise-js [data-rise] { transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0ms); }
+html.rise-js [data-rise]:not(.is-in) { opacity: 0; transform: translateY(18px); }
+@media print { html.rise-js [data-rise] { opacity: 1 !important; transform: none !important; } }
