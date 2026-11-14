@@ -388,3 +388,43 @@ main > section > .wrap > .grid.fill:has(> .showcase-frame) { flex: 1 0 auto; min
 html.rise-js [data-rise] { transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0ms); }
 html.rise-js [data-rise]:not(.is-in) { opacity: 0; transform: translateY(18px); }
 @media print { html.rise-js [data-rise] { opacity: 1 !important; transform: none !important; } }
+
+/* ── 9. Chrome shared by every page: header, buttons, phone action bar, footer ── */
+/* A warm, soft frame around the page: the header floats as an inset ivory bar, buttons are pills, and
+   the shadows are long and faint. Still only Soft Ivory and Ink Black (and ivories of the same hue). */
+:root {
+  --iv-0: #fbf8f1;            /* lightest ivory: cards, the header, notes */
+  --iv-3: #e9e1d1;            /* deepest ivory: rings and the stage behind a picture */
+  --r-btn: 999px;
+  --shadow-soft: 0 1px 2px rgba(20, 20, 20, .04), 0 18px 40px -26px rgba(20, 20, 20, .28);
+  --shadow-lift: 0 2px 6px rgba(20, 20, 20, .05), 0 34px 64px -30px rgba(20, 20, 20, .36);
+}
+html[data-radius] { --r-btn: 999px; }
+.btn:not(.btn--xl) { padding-inline: 28px calc(28px - var(--label-tracking) / 2); }
+
+.nav { background: none; border-bottom: 0; pointer-events: none; }
+.nav > .nav__bar {
+  pointer-events: auto; position: relative; margin-top: 10px; height: calc(100% - 10px);
+  width: min(100% - 24px, var(--container) + 48px); padding-inline: 24px 12px;
+  background: var(--iv-0);
+  border: 1px solid rgba(20, 20, 20, .06); border-radius: 999px; box-shadow: var(--shadow-soft);
+}
+@media (max-width: 1023px) {
+  .nav > .nav__bar { padding-inline: 18px 8px; }
+  .nav__toggle { border-color: rgba(20, 20, 20, .14); }
+}
+.nav.is-open > .nav__bar { background: var(--iv-0); }
+
+@media (max-width: 639px) {
+  .actionbar { background: none; border-top: 0; padding-inline: 16px; pointer-events: none; }
+  .actionbar .btn { pointer-events: auto; box-shadow: 0 16px 34px -14px rgba(20, 20, 20, .55); }
+}
+
+.footer .grid > .footer__col.span-2 { grid-column: auto / span 2; }
+@media (max-width: 1023px) {
+  .footer .grid > .footer__col:is(.span-2, .span-3) { grid-column: auto / span 6; }
+  .footer .grid > .span-4 { grid-column: 1 / -1; }
+}
+.footer__col button.linklike { all: unset; cursor: pointer; }
+.footer__col button.linklike:hover { text-decoration: underline; text-underline-offset: 3px; }
+.footer__col button.linklike:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
