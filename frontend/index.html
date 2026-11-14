@@ -59,8 +59,8 @@
 <link rel="stylesheet" href="/assets/kit/ui/cards.css">
 <link rel="stylesheet" href="/assets/kit/motion/motion.css">
 <link rel="stylesheet" href="/assets/kit/layout/layout.css">
-<link rel="stylesheet" href="/css/site.css?v=2026111401">
-<link rel="stylesheet" href="/css/home.css?v=2026111403">
+<link rel="stylesheet" href="/css/site.css?v=2026111502">
+<link rel="stylesheet" href="/css/home.css?v=2026111502">
 <!-- The hero's entrance: set before the first paint so its words wait for motion.js instead of
      flashing; the 700ms mark shows them anyway if the script is late. -->
 <script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
@@ -135,10 +135,8 @@
   <section class="section home-designs" id="designs" aria-labelledby="designs-h">
     <div class="wrap">
       <div class="head-c" data-rise>
-        <p class="t-label kicker">The collection</p>
-        <h2 id="designs-h"><span data-design-count>27</span> designs for <span data-occasion-count>5</span> occasions</h2>
+        <p class="t-label kicker" id="designs-h">The collection</p>
         <p class="accent">Find the one that feels like your day.</p>
-        <p id="designsNote">Open any design to see a live sample invitation.</p>
       </div>
       <div class="chips" id="tplFilter" role="group" aria-label="Show the designs for one occasion"></div>
       <!-- Phones only: three ways to show the designs (the script remembers the choice on this device). -->
@@ -496,13 +494,6 @@ const TEMPLATES = [
 
 // The showcase is organised by occasion, in this order.
 const CATEGORY_ORDER = ['Wedding', 'Engagement', 'Birthday', 'Baby Shower', 'Graduation'];
-const CATEGORY_BLURB = {
-  'Wedding':     'From classic and romantic to modern and editorial.',
-  'Engagement':  'For the evening you say yes, in whatever style suits you both.',
-  'Birthday':    'Kids, teens and milestone birthdays — playful to black-tie.',
-  'Baby Shower': 'Gentle or bright, and never only pink or blue.',
-  'Graduation':  'Academic and elegant, or loud and celebratory.'
-};
 
 const esc = s => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -515,7 +506,6 @@ const esc = s => String(s == null ? '' : s)
 // opening on the first.
 const tplFilterRow = document.getElementById('tplFilter');
 const tplGrid = document.getElementById('tplGrid');
-const designsNote = document.getElementById('designsNote');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // Shown in the catalogue's own order: one occasion after another.
@@ -588,9 +578,6 @@ function applyFilter(animate) {
   tplGrid.scrollLeft = 0;                       // a phone's row starts again at its first card
   tplFilterRow.querySelectorAll('[data-filter]').forEach(c =>
     c.setAttribute('aria-pressed', String(c.dataset.filter === tplFilter)));
-  // The line under the heading doubles as the filter's status for screen readers.
-  designsNote.textContent =
-    `${shown} ${tplFilter.toLowerCase()} ${shown === 1 ? 'design' : 'designs'}. ${CATEGORY_BLURB[tplFilter] || ''}`.trim();
 }
 
 function showOccasion(ev, scroll) {
@@ -743,7 +730,10 @@ const telHref = v => (v || '').replace(/[^\d+]/g, '');
 function renderContact(s) {
   const rows = [];
   if (s.companyEmail)   rows.push(`<li><a href="mailto:${esc(s.companyEmail)}">${esc(s.companyEmail)}</a></li>`);
-  if (s.phoneNumber)    rows.push(`<li><a href="tel:${esc(telHref(s.phoneNumber))}">${esc(s.phoneNumber)}</a></li>`);
+  // The admin's Phone and WhatsApp are often the same number: then it is listed once, as WhatsApp.
+  const sameNumber = s.phoneNumber && s.whatsAppNumber
+    && telHref(s.phoneNumber).replace(/^\+/, '') === telHref(s.whatsAppNumber).replace(/^\+/, '');
+  if (s.phoneNumber && !sameNumber) rows.push(`<li><a href="tel:${esc(telHref(s.phoneNumber))}">${esc(s.phoneNumber)}</a></li>`);
   if (s.whatsAppNumber) rows.push(`<li><a href="https://wa.me/${esc(telHref(s.whatsAppNumber).replace(/^\+/, ''))}" target="_blank" rel="noopener">WhatsApp ${esc(s.whatsAppNumber)}</a></li>`);
   if (s.companyAddress) rows.push(`<li>${esc(s.companyAddress)}</li>`);
   document.getElementById('contactList').innerHTML = rows.join('');
@@ -763,10 +753,8 @@ function renderContact(s) {
   // the button stays hidden.
   const waNumber = telHref(s.whatsAppNumber).replace(/^\+/, '');
   const wa = document.getElementById('waFloat');
-  if (waNumber) {
-    wa.href = `https://wa.me/${waNumber}`;
-    wa.hidden = false;
-  }
+  if (waNumber) wa.href = `https://wa.me/${waNumber}`;
+  wa.hidden = !waNumber;
 
   // A map set in the admin panel takes the place of the picture beside the form.
   if (s.mapEmbedUrl) {

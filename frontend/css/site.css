@@ -74,7 +74,7 @@ h3 { line-height: 1.35; }
 
 /* Labels, buttons and small details: Jost Light, uppercase, 0.42em. */
 .t-label, .hero__kicker, .nav__link, .btn:not(.btn--xl), .chip, .field > label,
-.footer :is(h3, h4):not(.closing__cta *), .design__event, .legal-toc__title, .prose .updated {
+.footer :is(h3, h4):not(.closing__cta *), .legal-toc__title, .prose .updated {
   font-family: var(--font-text);
   font-size: var(--t-label);
   font-weight: 300;
@@ -96,14 +96,6 @@ h3 { line-height: 1.35; }
     letter-spacing: .28em; padding-inline: var(--s-3); white-space: normal; text-align: center; height: auto; min-height: 48px;
   }
 }
-
-/* Names in lists (designs, questions, feature rows) are body text: Jost Regular, sentence case. */
-.faq :is(.faq__item > h3, summary), .rows__name {
-  font-family: var(--font-text); font-weight: 400; text-transform: none; letter-spacing: 0; font-variant-numeric: normal;
-}
-.faq .faq__item > h3 { font-size: var(--t-lead); }
-/* A feature's name stands a size above the line that explains it (18px: the top of the brand's body sizes). */
-.rows__name { font-size: var(--t-lead); line-height: 1.35; }
 
 /* On a phone the close's wide button reads like every other button. */
 @media (max-width: 639px) {
@@ -139,7 +131,6 @@ form { --error: var(--ink); }
     display: flex; flex-direction: column;
   }
   main > :is(section, .section):not(.hero, .section--hero) > :is(.wrap, .container), footer.closing > .wrap { flex: 1 0 auto; height: auto; min-height: 0; }
-  .faq > .faq__item { padding-block: 20px; }
 }
 
 /* ── 3c. Phones and tablets: each section as tall as what it holds ────────── */
@@ -168,13 +159,10 @@ html[data-buttons] .btn.btn--secondary {
 }
 html[data-buttons] .btn.btn--secondary:hover { background: none; border-color: transparent; text-decoration-color: currentColor; }
 
-/* ── 4. Designs (the 27 templates) ────────────────────────────────────────── */
-/* Occasion filter: a row of words, like a catalogue's index. The chosen one is underlined in ink and
-   marked by that rule alone; none is a filled box, so the page's one filled button stays the main action. */
+/* ── 4. Designs: the occasion filter ─────────────────────────────────────── */
+/* A row of words, like a catalogue's index. The chosen one is underlined in ink; none is a filled
+   box, so the page's one filled button stays the main action. The cards are in css/home.css. */
 .chips { display: flex; flex-wrap: wrap; gap: 0 var(--s-6); margin-bottom: var(--s-5); }
-/* Tighter than the kit's defaults so two rows and the filter fit one laptop screen (768px tall). */
-#designs .section-head { margin-bottom: var(--s-5); }
-.designs { row-gap: var(--s-5); }
 .chip {
   min-height: 44px; padding: 0;
   background: none; color: var(--ink); border: 0; border-radius: 0;
@@ -184,121 +172,7 @@ html[data-buttons] .btn.btn--secondary:hover { background: none; border-color: t
 .chip:hover { text-decoration-color: var(--line); }
 .chip[aria-pressed="true"] { text-decoration-color: var(--ink); }
 .chip:focus-visible { outline-offset: 4px; }
-
-/* Each design is one link: its picture, then its name and occasion. Six a row on a desktop,
-   four on a tablet, two on a phone. */
-.design { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-2); align-content: start; color: inherit; text-decoration: none; }
-/* Hovering or focusing anywhere on a design zooms its picture inside the frame and underlines its name. */
-.design__media > img { transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
-html:not([data-motion="off"]) a.design:is(:hover, :focus-visible) .design__media > img { transform: scale(1.03); }
-a.design:is(:hover, :focus-visible) .design__name { text-decoration: underline; text-underline-offset: 3px; }
-@media (prefers-reduced-motion: reduce) {
-  .design__media > img { transition: none; }
-  html a.design:is(:hover, :focus-visible) .design__media > img { transform: none; }
-}
-/* Every picture at the thumbnails' own 4:3, at every width: no design is cropped or squeezed. */
-.design__media { display: block; aspect-ratio: 4 / 3; overflow: clip; border-radius: var(--r-sm); background: var(--surface); }
-.design__media > img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.design__name { font-size: var(--t-body); line-height: 1.3; overflow-wrap: anywhere; }
-@media (max-width: 1023px) {
-  .designs > .design.span-2 { grid-column: auto / span 3; }
-}
-@media (max-width: 639px) {
-  /* Two tiles a row; an occasion with four designs or fewer shows them one a row (the script sets
-     data-few), so each occasion fills about the same height. */
-  .designs > .design.span-2 { grid-column: auto / span 6; }
-  .chips { gap: 0 var(--s-5); }
-  .designs[data-few] > .design.span-2 { grid-column: 1 / -1; }
-}
-/* Designs outside the chosen occasion are removed from the grid at every width (the script also
-   makes them inert), so the grid holds only that occasion's designs. */
-.design[data-off] { display: none; }
-
-/* ── 4b. Questions ────────────────────────────────────────────────────────── */
-/* A little more air between answers than the kit's default, so eight of them fill their screen. */
-.faq > .faq__item { padding-block: 26px; }
-@media (min-width: 640px) {
-  .faq > .faq__item { padding-block: var(--s-6); }
-}
-
-@media (min-width: 640px) and (max-width: 1023px) {
-  .grid > .faq.span-6 { grid-column: auto / span 6; }
-  .faq > .faq__item { padding-block: 20px; }
-}
-/* A tall tablet held upright has room to spare: open the answers up so they fill the screen. */
-@media (min-width: 640px) and (max-width: 1023px) and (min-height: 1100px) {
-  .faq > .faq__item { padding-block: var(--s-7); }
-}
-
-/* ── 4c. Steps ────────────────────────────────────────────────────────────── */
-/* Three stages on the page's one deeper-ivory band. Each is a column: its numeral on a fine ink rule,
-   a Soft Ivory plate holding the whole picture (two phone screens, kept whole by contain), then its
-   title and words. No card, outline or shadow: the plate is the only shape. */
-#steps { --steps-gap: clamp(32px, 3.4vw, 56px); }
-#steps .section-head { max-width: none; }
-.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--s-8); }
-.step { display: flex; flex-direction: column; min-width: 0; }
-.step__num {
-  display: flex; align-items: center; gap: var(--s-4); margin: 0 0 var(--s-5);
-  font: 500 28px/1 var(--font-display); letter-spacing: .1em; font-variant-numeric: lining-nums;
-}
-.step__num::after { content: ""; flex: 1; height: 1px; background: var(--ink); }
-.step__plate {
-  position: relative; margin: 0; overflow: hidden;
-  aspect-ratio: 1072 / 1260; background: var(--surface); border-radius: var(--r-sm);
-}
-.step__plate > img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; }
-.step h3 {
-  margin-top: var(--s-5);
-  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--t-h3); line-height: 1.35;
-}
-.step__text p { margin-top: var(--s-3); max-width: 42ch; }
-
-/* A tablet: one stage a row, its plate beside its words. */
-@media (min-width: 640px) and (max-width: 1023px) {
-  .steps { row-gap: var(--s-7); }
-  .step { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: var(--s-7); align-items: center; }
-  .step__num { grid-column: 1 / -1; }
-  .step h3 { margin-top: 0; }
-}
-/* From 1024px the three stand side by side on one shared grid (subgrid), so their numerals, plates and
-   titles line up even where one title runs to two lines. Their rules run on as one line, broken only
-   by the numerals: three stages of one service. */
-@media (min-width: 1024px) {
-  .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto auto; column-gap: var(--steps-gap); row-gap: 0; }
-  .step { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
-  .step:not(:last-child) .step__num::after { margin-right: calc(var(--s-4) - var(--steps-gap)); }
-}
-/* From 1280px a section is exactly one screen: the plates take the height the words leave and the
-   picture stays whole inside them (on a short laptop the section grows instead; see 3a). */
-@media (min-width: 1280px) {
-  #steps .steps { flex: 1 0 auto; grid-template-rows: auto minmax(240px, 1fr) auto; }
-  .step__plate { aspect-ratio: auto; min-height: 0; height: 100%; }
-}
-
-/* ── 4d. Showcase pictures (hero, features, request) ──────────────────────── */
-/* Transparent pictures of real invitation screens that stand on the page's own ivory: no box of
-   another colour around them, and contain keeps every screen whole however the column is shaped. */
-.hero__media.hero__showcase { background: none; border-radius: 0; }
-.hero__showcase > img { object-fit: contain; object-position: 50% 50%; }
-/* From 1024px the words stand in the middle of the screen beside the pictures, which contain also
-   centres: one calm, balanced composition rather than words hung from the top. */
-@media (min-width: 1024px) {
-  .hero--split .hero__text { align-self: center; }
-}
-.showcase-frame { background: none; border: 0; border-radius: 0; }
-.showcase-frame > .frame__img { object-fit: contain; }
-/* The row holding a showcase picture is sized by what it holds, at every width. The kit's .fill has no
-   height of its own, so on a short screen (a phone, 1024x768, a 1366x768 laptop) the section would not
-   grow to fit its list and form, and they would run into the next section. Where the section is exactly
-   one screen and has room, the row still grows to fill it. */
-main > section > .wrap > .grid.fill:has(> .showcase-frame) { flex: 1 0 auto; min-height: auto; }
-/* Stacked under the words (a tablet or a phone) the picture keeps its own proportions, rather than
-   taking whatever height the screen leaves. */
-@media (max-width: 1023px) {
-  .grid.fill > .showcase-frame { flex: none; height: auto; min-height: 0; aspect-ratio: var(--ar, 4 / 3); }
-}
-
+@media (max-width: 639px) { .chips { gap: 0 var(--s-5); } }
 
 /* The closing line reads as one phrase: the kit's 20ch cap broke "for" onto a line of its own. */
 .closing__cta h2 { max-width: none; }
@@ -428,3 +302,9 @@ html[data-radius] { --r-btn: 999px; }
 .footer__col button.linklike { all: unset; cursor: pointer; }
 .footer__col button.linklike:hover { text-decoration: underline; text-underline-offset: 3px; }
 .footer__col button.linklike:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+/* On a phone the kit gives each footer link a 44px row; the occasion buttons take the same row, so the
+   Occasions and Invitations columns keep one rhythm. */
+@media (max-width: 639px) {
+  .footer ul:has(> li > button.linklike) { gap: 0; }
+  .footer__col button.linklike { display: inline-flex; align-items: center; min-height: 44px; }
+}

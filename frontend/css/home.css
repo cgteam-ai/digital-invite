@@ -323,15 +323,16 @@ html.rise-js .fcard[data-rise]:not(.is-in) .fcard__icon :is(path, circle, rect) 
 }
 
 /* ── 9. WhatsApp ───────────────────────────────────────────────────────────── */
-/* The page's one colour outside the brand palette, on purpose: WhatsApp's own green, so the button
-   reads as WhatsApp at a glance. */
+/* The WhatsApp glyph in Soft Ivory on an Ink Black circle: recognisable, and in the brand's two colours. */
 .wa-float {
   position: fixed; right: 22px; bottom: 22px; z-index: 45; display: grid; place-items: center; width: 54px; height: 54px;
-  border-radius: 50%; background: #25d366; color: #fff; box-shadow: 0 14px 30px -12px rgba(20, 20, 20, .45);
+  border-radius: 50%; background: var(--ink); color: var(--iv-1);
+  /* a hairline ivory ring keeps the circle visible over the Ink Black footer; on ivory it disappears */
+  box-shadow: 0 0 0 1px rgba(247, 243, 234, .28), 0 16px 34px -14px rgba(20, 20, 20, .6);
   transition: transform .4s var(--ease-soft);
 }
-.wa-float:hover { transform: translateY(-3px) scale(1.04); background: #1ebe5d; }
-.wa-float svg { width: 27px; height: 27px; fill: currentColor; }
+.wa-float:hover { transform: translateY(-3px) scale(1.04); }
+.wa-float svg { width: 25px; height: 25px; fill: currentColor; }
 .wa-float[hidden] { display: none; }
 @media (max-width: 639px) { .wa-float { right: 16px; bottom: calc(var(--bar, 0px) + 12px); width: 48px; height: 48px; } }
 
