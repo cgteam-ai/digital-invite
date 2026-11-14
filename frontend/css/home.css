@@ -78,10 +78,6 @@ main > .hero.home-hero {
 .home-hero .hero__text > .accent { margin-top: 18px; }
 .home-hero .hero__lead { margin-top: 18px; }
 
-.hero__facts { display: flex; flex-wrap: wrap; gap: 14px 36px; margin: 36px 0 0; padding: 22px 0 0; list-style: none; border-top: 1px solid var(--line); }
-.hero__facts li { display: grid; gap: 4px; }
-.hero__facts strong { font: 500 30px/1 var(--font-display); letter-spacing: .04em; font-variant-numeric: lining-nums; }
-.hero__facts span { font: 300 var(--t-label)/1.5 var(--font-text); letter-spacing: var(--label-tracking); text-transform: uppercase; }
 
 /* The stage: a soft halo with one fine ring, the phone, and three notes around it. */
 .hero__media.hero-stage {
@@ -130,8 +126,6 @@ main > .hero.home-hero {
   .home-hero .hero__media.hero-stage { margin-top: 0; flex: none; }
 }
 @media (max-width: 639px) {
-  .hero__facts { gap: 12px 24px; margin-top: 28px; }
-  .hero__facts strong { font-size: 26px; }
   .hero-device { width: min(58vw, 230px); }
   .note { padding: 8px 12px 8px 8px; column-gap: 9px; border-radius: 14px; }
   .note__icon { width: 30px; height: 30px; }
@@ -323,15 +317,14 @@ html.rise-js .fcard[data-rise]:not(.is-in) .fcard__icon :is(path, circle, rect) 
 }
 
 /* ── 9. WhatsApp ───────────────────────────────────────────────────────────── */
-/* The WhatsApp glyph in Soft Ivory on an Ink Black circle: recognisable, and in the brand's two colours. */
+/* WhatsApp's own green with a white glyph, so the button reads as WhatsApp at a glance: the page's one
+   colour outside the brand palette, on purpose. */
 .wa-float {
   position: fixed; right: 22px; bottom: 22px; z-index: 45; display: grid; place-items: center; width: 54px; height: 54px;
-  border-radius: 50%; background: var(--ink); color: var(--iv-1);
-  /* a hairline ivory ring keeps the circle visible over the Ink Black footer; on ivory it disappears */
-  box-shadow: 0 0 0 1px rgba(247, 243, 234, .28), 0 16px 34px -14px rgba(20, 20, 20, .6);
+  border-radius: 50%; background: #25d366; color: #fff; box-shadow: 0 14px 30px -12px rgba(20, 20, 20, .45);
   transition: transform .4s var(--ease-soft);
 }
-.wa-float:hover { transform: translateY(-3px) scale(1.04); }
+.wa-float:hover { transform: translateY(-3px) scale(1.04); background: #1ebe5d; }
 .wa-float svg { width: 25px; height: 25px; fill: currentColor; }
 .wa-float[hidden] { display: none; }
 @media (max-width: 639px) { .wa-float { right: 16px; bottom: calc(var(--bar, 0px) + 12px); width: 48px; height: 48px; } }

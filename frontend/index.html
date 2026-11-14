@@ -60,7 +60,7 @@
 <link rel="stylesheet" href="/assets/kit/motion/motion.css">
 <link rel="stylesheet" href="/assets/kit/layout/layout.css">
 <link rel="stylesheet" href="/css/site.css?v=2026111502">
-<link rel="stylesheet" href="/css/home.css?v=2026111502">
+<link rel="stylesheet" href="/css/home.css?v=2026111601">
 <!-- The hero's entrance: set before the first paint so its words wait for motion.js instead of
      flashing; the 700ms mark shows them anyway if the script is late. -->
 <script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
@@ -99,13 +99,8 @@
         <p class="hero__kicker">Weddings · Engagements · Celebrations</p>
         <h1 id="hero-h">Digital invitations for every celebration</h1>
         <p class="accent">Made to be opened, kept and remembered.</p>
-        <p class="hero__lead">Choose one of <span data-design-count>27</span> designs and we set it up with your names, date and venues. Guests open one link on their phone and reply in a tap.</p>
+        <p class="hero__lead">Choose one of our designs and we set it up with your names, date and venues. Guests open one link on their phone and reply in a tap.</p>
         <div class="btn-row"><a class="btn btn--primary" href="#request">Request a Demo</a><a class="btn btn--secondary" href="#designs">See the designs</a></div>
-        <ul class="hero__facts" aria-label="At a glance">
-          <li><strong data-design-count>27</strong><span>Designs</span></li>
-          <li><strong data-occasion-count>5</strong><span>Occasions</span></li>
-          <li><strong>1</strong><span>Link for every guest</span></li>
-        </ul>
       </div>
       <div class="hero__media hero-stage span-6 start-7">
         <div class="hero-stage__halo" aria-hidden="true"></div>
@@ -500,8 +495,8 @@ const esc = s => String(s == null ? '' : s)
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 // ── Designs ──────────────────────────────────────────────────────────────────
-// The catalogue above drives everything here: the counts in the hero and the heading, the
-// occasion filter, the cards and the footer's occasion links. Adding a template to TEMPLATES is
+// The catalogue above drives everything here: the occasion filter, the cards and the footer's
+// occasion links. Adding a template to TEMPLATES is
 // all a new design needs. Phones, tablets and desktops work the same way: one occasion at a time,
 // opening on the first.
 const tplFilterRow = document.getElementById('tplFilter');
@@ -545,8 +540,6 @@ function card(t) {
 
 function renderDesigns() {
   tplGrid.innerHTML = DESIGNS.map(card).join('');
-  document.querySelectorAll('[data-design-count]').forEach(el => { el.textContent = DESIGNS.length; });
-  document.querySelectorAll('[data-occasion-count]').forEach(el => { el.textContent = OCCASIONS.length; });
   // The chips are drawn once; clicks only flip aria-pressed, so keyboard focus stays put.
   tplFilterRow.innerHTML = OCCASIONS.map(ev =>
     `<button type="button" class="chip" data-filter="${esc(ev)}" aria-pressed="${ev === tplFilter}">${esc(ev)}</button>`
