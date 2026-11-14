@@ -60,7 +60,7 @@
 <link rel="stylesheet" href="/assets/kit/motion/motion.css">
 <link rel="stylesheet" href="/assets/kit/layout/layout.css">
 <link rel="stylesheet" href="/css/site.css?v=2026111401">
-<link rel="stylesheet" href="/css/home.css?v=2026111401">
+<link rel="stylesheet" href="/css/home.css?v=2026111403">
 <!-- The hero's entrance: set before the first paint so its words wait for motion.js instead of
      flashing; the 700ms mark shows them anyway if the script is late. -->
 <script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
@@ -141,7 +141,16 @@
         <p id="designsNote">Open any design to see a live sample invitation.</p>
       </div>
       <div class="chips" id="tplFilter" role="group" aria-label="Show the designs for one occasion"></div>
-      <div class="cards" id="tplGrid"></div>
+      <!-- Phones only: three ways to show the designs (the script remembers the choice on this device). -->
+      <div class="viewbar" role="group" aria-label="Choose how the designs are shown">
+        <span class="viewbar__label" aria-hidden="true">View</span>
+        <div class="viewseg">
+          <button type="button" class="viewseg__btn" data-view="grid" aria-pressed="false" title="Grid" aria-label="Grid: one large design a row"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="1.5" width="10" height="13" rx="1.6"/></svg></button>
+          <button type="button" class="viewseg__btn" data-view="carousel" aria-pressed="true" title="Carousel" aria-label="Carousel: swipe through the designs"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4.5" y="2" width="7" height="12" rx="1.3"/><path d="M1.5 4.5v7M14.5 4.5v7"/></svg></button>
+          <button type="button" class="viewseg__btn" data-view="compact" aria-pressed="false" title="Compact" aria-label="Compact: two designs a row"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg></button>
+        </div>
+      </div>
+      <div class="cards" id="tplGrid" data-view="carousel"></div>
       <p class="swipe-hint" aria-hidden="true">Swipe to see more</p>
     </div>
   </section>
@@ -328,7 +337,7 @@
 </footer>
 
 <!-- Shown only when a WhatsApp number is set in Admin → Landing Page Contact Details. -->
-<a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp (opens in a new tab)" hidden>
+<a class="wa-float" id="waFloat" href="#" data-label="Chat with us" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp (opens in a new tab)" hidden>
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 00-7.8 13.5L3 21l4.6-1.2A9 9 0 1012 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.2 7.8c.3-.6.9-.6 1.2 0l.7 1.6c.1.3 0 .6-.2.8l-.6.6c.6 1.2 1.6 2.2 2.8 2.8l.6-.6c.2-.2.5-.3.8-.2l1.6.7c.6.3.6.9 0 1.2-.8.6-1.8.9-2.8.5-2.4-.9-4.3-2.8-5.2-5.2-.3-1 0-2 .5-2.8z"/></svg>
 </a>
 
@@ -627,6 +636,31 @@ tplGrid.addEventListener('error', e => {
 renderDesigns();
 applyFilter(false);
 
+// ── Phones: how the designs are shown ────────────────────────────────────────
+// Three ways, on a phone only (wider screens always show the grid of cards): Carousel, the default
+// (swipe through, the next design peeking in), Grid (one large design a row) and Compact (two a
+// row, names only). The choice is remembered on this device; private windows simply start again.
+(function designViews() {
+  const seg = document.querySelector('.viewseg');
+  if (!seg) return;
+  const VIEWS = ['grid', 'carousel', 'compact'];
+  let saved = null;
+  try { saved = localStorage.getItem('di-design-view'); } catch { /* storage unavailable */ }
+  function setView(v, animate) {
+    if (!VIEWS.includes(v)) v = 'carousel';
+    tplGrid.dataset.view = v;
+    seg.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+    if (animate) applyFilter(true);
+  }
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('[data-view]');
+    if (!b || b.dataset.view === tplGrid.dataset.view) return;
+    setView(b.dataset.view, true);
+    try { localStorage.setItem('di-design-view', b.dataset.view); } catch { /* not remembered */ }
+  });
+  setView(saved, false);
+})();
+
 // ── Hero: the invitation scrolls itself ──────────────────────────────────────
 // The phone first shows the invitation's opening screen (a light picture that loads with the
 // page). Once the page has loaded, the taller picture of its first four screens takes over and
@@ -693,6 +727,7 @@ applyFilter(false);
 // ── Contact details (managed in the admin panel) ─────────────────────────────
 // Fetched from the public settings endpoint; every field is optional and blank ones are
 // skipped entirely, so the footer never shows an empty row or a dead link.
+
 let CONTACT = {};
 
 const ICON = {
@@ -722,10 +757,14 @@ function renderContact(s) {
   ].filter(([url]) => url)
     .map(([url, label, svg]) => `<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="${esc(label)} (opens in a new tab)">${svg}</a>`).join('');
 
-  // The round WhatsApp button appears only when a WhatsApp number is set.
+  // The round WhatsApp button uses the number set in Admin → Landing Page Contact Details → WhatsApp,
+  // so changing it there changes the button. wa.me is WhatsApp's click-to-chat link: it opens the
+  // WhatsApp app on a phone, and WhatsApp Web or the desktop app on a computer. With no number set,
+  // the button stays hidden.
+  const waNumber = telHref(s.whatsAppNumber).replace(/^\+/, '');
   const wa = document.getElementById('waFloat');
-  if (s.whatsAppNumber) {
-    wa.href = `https://wa.me/${telHref(s.whatsAppNumber).replace(/^\+/, '')}`;
+  if (waNumber) {
+    wa.href = `https://wa.me/${waNumber}`;
     wa.hidden = false;
   }
 

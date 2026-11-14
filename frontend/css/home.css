@@ -323,13 +323,15 @@ html.rise-js .fcard[data-rise]:not(.is-in) .fcard__icon :is(path, circle, rect) 
 }
 
 /* ── 9. WhatsApp ───────────────────────────────────────────────────────────── */
+/* The page's one colour outside the brand palette, on purpose: WhatsApp's own green, so the button
+   reads as WhatsApp at a glance. */
 .wa-float {
   position: fixed; right: 22px; bottom: 22px; z-index: 45; display: grid; place-items: center; width: 54px; height: 54px;
-  border-radius: 50%; background: var(--ink); color: var(--iv-1); box-shadow: 0 16px 34px -14px rgba(20, 20, 20, .6);
+  border-radius: 50%; background: #25d366; color: #fff; box-shadow: 0 14px 30px -12px rgba(20, 20, 20, .45);
   transition: transform .4s var(--ease-soft);
 }
-.wa-float:hover { transform: translateY(-3px) scale(1.04); }
-.wa-float svg { width: 25px; height: 25px; fill: currentColor; }
+.wa-float:hover { transform: translateY(-3px) scale(1.04); background: #1ebe5d; }
+.wa-float svg { width: 27px; height: 27px; fill: currentColor; }
 .wa-float[hidden] { display: none; }
 @media (max-width: 639px) { .wa-float { right: 16px; bottom: calc(var(--bar, 0px) + 12px); width: 48px; height: 48px; } }
 
@@ -371,3 +373,50 @@ html[data-motion="off"] .hero-device.is-live .hero-device__strip { animation: no
 footer.closing { height: auto; min-height: 0; padding: clamp(56px, 7vw, 104px) 0 calc(clamp(32px, 4vw, 48px) + var(--bar, 0px)); }
 footer.closing > .wrap { height: auto; }
 .closing__links { margin-top: clamp(56px, 7vw, 96px); }
+
+/* ── 12. Phones: how the designs are shown ─────────────────────────────────── */
+/* A small segmented control under the occasions: Grid (one large design a row), Carousel (swipe,
+   the default) and Compact (two a row, names only). Wider screens always show the card grid. */
+.viewbar { display: none; }
+@media (max-width: 639px) {
+  .viewbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin: -10px 0 18px; }
+  .viewbar__label { font: 300 11px/1 var(--font-text); letter-spacing: .3em; text-transform: uppercase; }
+  .viewseg { display: inline-flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--iv-0); border: 1px solid rgba(20, 20, 20, .08); box-shadow: 0 1px 2px rgba(20, 20, 20, .04); }
+  .viewseg__btn { display: grid; place-items: center; width: 42px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--ink); cursor: pointer; transition: background .35s var(--ease-soft), color .35s var(--ease-soft); }
+  .viewseg__btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linejoin: round; }
+  .viewseg__btn[aria-pressed="true"] { background: var(--ink); color: var(--iv-1); }
+  .viewseg__btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Grid: one large design a row, scrolling down */
+  .cards[data-view="grid"] { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; overflow: visible; margin-inline: 0; padding: 0; }
+  .cards[data-view="grid"] .dcard { flex: none; }
+  .cards[data-view="grid"] .dcard__stage .device { width: 50%; }
+
+  /* Compact: two a row; each card keeps its phone, occasion, name and Request */
+  .cards[data-view="compact"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; overflow: visible; margin-inline: 0; padding: 0; }
+  .cards[data-view="compact"] .dcard { flex: none; border-radius: 16px; }
+  .cards[data-view="compact"] .dcard__stage { padding: 16px 0 18px; }
+  .cards[data-view="compact"] .dcard__stage .device { width: 62%; }
+  .cards[data-view="compact"] .dcard__body { gap: 4px; padding: 12px 12px 14px; }
+  .cards[data-view="compact"] .dcard__event { font-size: 10px; letter-spacing: .26em; }
+  .cards[data-view="compact"] .dcard__name { font-size: 14px; letter-spacing: .1em; }
+  .cards[data-view="compact"] :is(.dcard__desc, .dcard__link) { display: none; }
+  .cards[data-view="compact"] .dcard__actions { padding-top: 10px; }
+  .cards[data-view="compact"] .dcard__req { width: 100%; justify-content: center; min-height: 34px; }
+
+  /* the swipe hint belongs to the carousel only */
+  .cards:not([data-view="carousel"]) + .swipe-hint { display: none; }
+}
+
+/* ── 13. WhatsApp: a quiet label beside the button on hover ────────────────── */
+.wa-float::before {
+  content: attr(data-label); position: absolute; right: calc(100% + 12px); top: 50%; translate: 8px -50%;
+  padding: 10px 16px calc(10px) calc(16px + .28em); border-radius: 999px; white-space: nowrap; pointer-events: none;
+  background: var(--iv-0); color: var(--ink); box-shadow: var(--shadow-soft);
+  font: 300 11px/1 var(--font-text); letter-spacing: .28em; text-transform: uppercase;
+  opacity: 0; transition: opacity .35s var(--ease-soft), translate .45s var(--ease-soft);
+}
+@media (hover: hover) {
+  .wa-float:is(:hover, :focus-visible)::before { opacity: 1; translate: 0 -50%; }
+}
+.wa-float:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
