@@ -1,12 +1,24 @@
 /*
  * Background music for invitations — shared across every template.
  *
- * Behaviour (per spec):
+ * Behaviour:
  *   • A small elegant icon is fixed in the bottom-left corner and stays visible while scrolling.
- *   • Clicking the icon ONLY toggles mute / unmute. It never pauses, restarts or replays.
- *   • Music autoplays when the browser allows it; otherwise it starts on the first interaction.
- *   • The icon always shows a clear muted / unmuted state.
- *   • Loops continuously.
+ *   • Music tries to start, with sound, as soon as the invitation has loaded.
+ *   • Most browsers block sound until the guest interacts with the page. Then the music starts on
+ *     the guest's first tap, click or key press anywhere (or on the icon itself) — once, with no
+ *     restart. Scrolling alone never counts: browsers do not allow sound from a scroll.
+ *   • Once the music is playing, the icon only toggles mute / unmute. It never pauses or restarts.
+ *   • The icon always shows the real state: off until music is actually requested, on (with a
+ *     pulse) while it plays. If the system pauses the music (a phone call, another app's audio),
+ *     the icon turns off and the next tap resumes it.
+ *   • Loops continuously. One player per page, whatever calls init().
+ *
+ * Why this shape (the bugs it replaces): the earlier version listened for scroll, touchstart and
+ * pointerdown, which browsers never accept as permission to play sound on a phone, and removed its
+ * listener after that first refused attempt; a tap on the icon was also seen first by that page
+ * listener, so the icon's own click then toggled the freshly started music to muted; and a YouTube
+ * source was reported as playing even when the browser had blocked it. Guests had to press the
+ * icon several times.
  *
  * Sources: an uploaded audio file (URL, streamed by the API) OR a YouTube link (audio only —
  * the video surface is hidden and controls are stripped so it behaves like background music).
@@ -53,7 +65,8 @@
       '.inv-music-btn.is-muted{opacity:.72}' +
       '.inv-music-btn .inv-music-pulse{position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(255,255,255,.35);' +
       'animation:invMusicPulse 2.4s ease-out infinite;opacity:0}' +
-      '.inv-music-btn.is-playing .inv-music-pulse{opacity:1}' +
+      // the existing pulse doubles as the "starting" cue, so a guest sees at once that the tap took
+      '.inv-music-btn.is-playing .inv-music-pulse,.inv-music-btn.is-loading .inv-music-pulse{opacity:1}' +
       '@keyframes invMusicPulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.5);opacity:0}}' +
       '@media (prefers-reduced-motion: reduce){.inv-music-btn .inv-music-pulse{animation:none}}';
     var st = document.createElement('style');
@@ -62,16 +75,26 @@
     document.head.appendChild(st);
   }
 
+  // Events a browser accepts as permission to start sound. pointerdown/touchstart (on a touch
+  // screen) and scroll are NOT among them, so they are deliberately absent.
+  //   click    – mouse, trackpad and taps on links/buttons (every browser)
+  //   touchend – a tap anywhere on a phone, including on plain text or pictures, where iOS Safari
+  //              sends no click event to the page
+  //   keydown  – keyboard users
+  var GESTURES = ['click', 'touchend', 'keydown'];
+
+  var active = null;   // the one player on this page
+
   function init(music, apiBase) {
     if (!music || music.enabled === false || !music.url) return;
-    if (document.querySelector('.inv-music-btn')) return;   // guard against double init
+    if (active || document.querySelector('.inv-music-btn')) return;   // one player per page, however often init() is called
 
     injectStyles();
 
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'inv-music-btn is-muted';
-    btn.setAttribute('aria-label', 'Toggle background music');
+    btn.setAttribute('aria-label', 'Play background music');
     btn.setAttribute('aria-pressed', 'false');
     var pulse = document.createElement('span');
     pulse.className = 'inv-music-pulse';
@@ -85,93 +108,179 @@
     var ytId = parseYouTubeId(music.url);
     var engine = ytId ? youTubeEngine(ytId) : audioEngine(resolveUrl(music.url, apiBase));
 
-    var started = false;   // has playback actually begun?
+    // idle      not tried yet
+    // blocked   the browser refused sound until the guest interacts; gesture listeners are armed
+    // starting  play() requested, waiting for the browser to confirm
+    // playing   sound is (or would be, if unmuted) playing
+    var phase = 'idle';
+    var lastIcon = null;
+
     function render() {
-      var muted = engine.isMuted();
-      iconWrap.innerHTML = muted ? ICON_OFF : ICON_ON;
-      btn.classList.toggle('is-muted', muted);
-      btn.classList.toggle('is-playing', started && !muted);
-      btn.setAttribute('aria-pressed', String(!muted));
+      var started = phase === 'starting' || phase === 'playing';
+      var audible = started && !engine.isMuted();
+      var icon = audible ? 'on' : 'off';
+      if (icon !== lastIcon) { iconWrap.innerHTML = audible ? ICON_ON : ICON_OFF; lastIcon = icon; }
+      btn.classList.toggle('is-muted', !audible);
+      btn.classList.toggle('is-loading', phase === 'starting' && audible);
+      btn.classList.toggle('is-playing', phase === 'playing' && audible);
+      btn.setAttribute('aria-pressed', String(audible));
+      btn.setAttribute('aria-label', !started ? 'Play background music'
+        : audible ? 'Mute background music' : 'Unmute background music');
     }
 
-    // Try to autoplay WITH sound. If the browser blocks it, arm a one-time
-    // interaction listener that begins playback — without ever restarting it.
-    function tryStart(unmuted) {
-      engine.start(unmuted).then(function (ok) {
-        started = started || ok;
+    // The single way playback begins. Must run synchronously inside a gesture handler when the
+    // browser requires one: engine.play() calls the underlying play() before returning.
+    function start() {
+      if (phase === 'starting' || phase === 'playing') return;
+      phase = 'starting';
+      render();
+      engine.play().then(function (ok) {
+        if (phase !== 'starting') return;          // the system paused/ended it meanwhile: events already handled it
+        phase = ok ? 'playing' : 'blocked';
+        // Refused for want of a tap: keep listening. Unplayable file: stop asking on every tap;
+        // the icon can still retry.
+        if (ok || engine.broken()) disarm(); else arm();
         render();
       });
     }
-    function armFirstInteraction() {
-      var events = ['pointerdown', 'touchstart', 'keydown', 'scroll'];
-      function onFirst() {
-        events.forEach(function (e) { window.removeEventListener(e, onFirst, true); });
-        if (!started) tryStart(true);
-      }
-      events.forEach(function (e) { window.addEventListener(e, onFirst, { capture: true, passive: true, once: true }); });
+
+    // ── first-interaction listeners: kept until the music has actually started ──
+    var armed = false;
+    function onGesture(e) {
+      if (btn.contains(e.target)) return;          // the icon handles its own presses (see below)
+      if (e.type === 'keydown' && (e.key === 'Escape' || e.key === 'Tab' || e.ctrlKey || e.metaKey || e.altKey)) return;
+      if (phase === 'blocked' || phase === 'idle') start();
+    }
+    function arm() {
+      if (armed) return;
+      armed = true;
+      GESTURES.forEach(function (t) { window.addEventListener(t, onGesture, { capture: true, passive: true }); });
+    }
+    function disarm() {
+      if (!armed) return;
+      armed = false;
+      GESTURES.forEach(function (t) { window.removeEventListener(t, onGesture, { capture: true }); });
     }
 
-    engine.onReady(function () {
-      engine.start(true).then(function (ok) {
-        if (ok) { started = true; render(); }
-        else { armFirstInteraction(); render(); }
-      });
-    });
-
-    // The icon toggles mute only. The very first click also doubles as the
-    // interaction that starts blocked playback (still unmuted, never restarted).
+    // The icon: the first press starts the music if it has not started; after that each press
+    // toggles mute. One press, one effect.
     btn.addEventListener('click', function () {
-      if (!started) { tryStart(true); return; }
+      if (phase === 'idle' || phase === 'blocked') { engine.setMuted(false); start(); return; }
       engine.setMuted(!engine.isMuted());
       render();
     });
 
+    // Keep the icon true to the player when something outside our control changes it.
+    engine.onSystemChange(function (playing) {
+      if (playing) {
+        if (phase !== 'playing') { phase = 'playing'; disarm(); }
+      } else if (phase === 'playing') {
+        phase = 'blocked';                          // paused by the system: the next tap resumes
+        if (engine.broken()) disarm(); else arm();
+      }
+      render();
+    });
+
+    // Arm before trying, so a tap during the attempt is never lost; then try with sound.
+    arm();
+    engine.onReady(function () { if (phase === 'idle') start(); });
     render();
+
+    active = { btn: btn, engine: engine, phase: function () { return phase; } };
   }
 
   // ── Uploaded-audio engine ───────────────────────────────────────────────
   function audioEngine(src) {
     var audio = new Audio();
-    audio.src = src;
     audio.loop = true;
     audio.preload = 'auto';
     audio.muted = false;
-    var readyCbs = [];
-    // Audio is usable almost immediately; fire "ready" on next tick.
-    setTimeout(function () { readyCbs.forEach(function (cb) { cb(); }); }, 0);
+    audio.src = src;
+    var readyCbs = [], changeCbs = [];
+    var playPending = false;
+    // Whether sound is really playing, from the element's own events. audio.paused alone cannot
+    // say: after a failed load Chromium leaves it false although nothing plays.
+    var sounding = false;
+    function emit(playing) { changeCbs.forEach(function (cb) { cb(playing); }); }
+    // 'playing' confirms sound has begun; 'pause' or 'error' after that means it stopped.
+    audio.addEventListener('playing', function () { sounding = true; emit(true); });
+    audio.addEventListener('pause', function () { sounding = false; if (!playPending) emit(false); });
+    audio.addEventListener('error', function () {
+      sounding = false;
+      if (window.console) console.warn('Invitation music could not be loaded:', src);
+      if (!playPending) emit(false);
+    });
+    // The element can be asked to play at once; fire "ready" on the next tick.
+    setTimeout(function () { readyCbs.forEach(function (cb) { cb(); }); readyCbs = null; }, 0);
     return {
-      onReady: function (cb) { readyCbs.push(cb); },
-      start: function (unmuted) {
-        audio.muted = !unmuted;
-        var p = audio.play();
-        if (!p || !p.then) return Promise.resolve(true);
-        return p.then(function () { return true; }).catch(function () { return false; });
+      onReady: function (cb) { readyCbs ? readyCbs.push(cb) : cb(); },
+      onSystemChange: function (cb) { changeCbs.push(cb); },
+      // Resolves true once the browser accepts playback, false if it refuses (autoplay policy,
+      // unplayable file). Calls audio.play() synchronously, inside the caller's gesture.
+      play: function () {
+        if (sounding) return Promise.resolve(true);
+        if (audio.error) audio.load();            // a failed load is retried from the start, not trusted
+        playPending = true;
+        var p;
+        try { p = audio.play(); } catch (e) { playPending = false; return Promise.resolve(false); }
+        if (!p || !p.then) { playPending = false; return Promise.resolve(!audio.paused); }
+        return p.then(function () { playPending = false; return true; },
+                      function () { playPending = false; return false; });
       },
-      isMuted: function () { return audio.muted || audio.paused; },
-      setMuted: function (m) { audio.muted = m; if (!m && audio.paused) audio.play().catch(function () {}); }
+      isMuted: function () { return audio.muted; },
+      setMuted: function (m) { audio.muted = m; },
+      // The file itself cannot be played (missing, wrong format): waiting for a tap will not help.
+      broken: function () { return !!audio.error; }
     };
   }
 
   // ── YouTube-as-audio engine (hidden surface, no controls, looped) ────────
   function youTubeEngine(videoId) {
-    var yt = null, ready = false, readyCbs = [], pendingMuted = false;
+    var yt = null, ready = false, readyCbs = [], changeCbs = [];
+    var muted = false, playing = false, waiters = [];
+    var failed = 0;   // a YouTube error code: the video cannot be played here at all
 
     var holder = document.createElement('div');
-    holder.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
+    // YouTube's embedding rules ask for a player of at least 200x200px, so it gets that size; it
+    // stays invisible: off-screen, transparent and out of the way of clicks and assistive tech.
+    holder.style.cssText = 'position:fixed;width:200px;height:200px;left:-10000px;top:0;opacity:0;pointer-events:none;';
+    holder.setAttribute('aria-hidden', 'true');
     var target = document.createElement('div');
     holder.appendChild(target);
     document.body.appendChild(holder);
 
+    function settle(ok) { var w = waiters; waiters = []; w.forEach(function (fn) { fn(ok); }); }
+
     function boot() {
       yt = new YT.Player(target, {
+        width: 200, height: 200,
         videoId: videoId,
         playerVars: {
           autoplay: 0, controls: 0, disablekb: 1, fs: 0, modestbranding: 1,
           rel: 0, playsinline: 1, loop: 1, playlist: videoId
         },
         events: {
-          onReady: function () { ready = true; readyCbs.forEach(function (cb) { cb(); }); },
-          onStateChange: function (e) { if (e.data === YT.PlayerState.ENDED) yt.playVideo(); } // belt-and-braces loop
+          onReady: function () { ready = true; readyCbs.forEach(function (cb) { cb(); }); readyCbs = []; },
+          onStateChange: function (e) {
+            var S = YT.PlayerState;
+            if (e.data === S.PLAYING) {
+              settle(true);
+              if (!playing) { playing = true; changeCbs.forEach(function (cb) { cb(true); }); }
+            } else if (e.data === S.ENDED) {
+              yt.playVideo();                       // belt-and-braces loop
+            } else if (e.data === S.PAUSED && playing) {
+              playing = false; changeCbs.forEach(function (cb) { cb(false); });
+            }
+          },
+          // 2 bad id · 5 HTML5 error · 100 removed or private · 101/150 the owner does not allow
+          // embedding (common for official music videos). None of these can be fixed by a tap.
+          onError: function (e) {
+            failed = e.data || -1;
+            if (window.console) console.warn('Invitation music: this YouTube video cannot be played here (YouTube error ' + failed +
+              (failed === 101 || failed === 150 ? ': its owner does not allow it in other websites' : '') + '):', videoId);
+            settle(false);
+            if (playing) { playing = false; changeCbs.forEach(function (cb) { cb(false); }); }
+          }
         }
       });
     }
@@ -192,19 +301,34 @@
 
     return {
       onReady: function (cb) { ready ? cb() : readyCbs.push(cb); },
-      start: function (unmuted) {
-        if (!yt) return Promise.resolve(false);
-        try {
-          if (unmuted) { yt.unMute(); pendingMuted = false; } else { yt.mute(); pendingMuted = true; }
-          yt.playVideo();
-          // YT gives no reliable play promise; assume success when unmuted autoplay is user-driven.
-          return Promise.resolve(true);
-        } catch (e) { return Promise.resolve(false); }
+      onSystemChange: function (cb) { changeCbs.push(cb); },
+      // Resolves true only when the player reports PLAYING. YouTube offers no play() promise, so a
+      // browser that blocks the sound shows up as no PLAYING report within a few seconds.
+      play: function () {
+        if (!yt || !ready || failed) return Promise.resolve(false);
+        if (playing) return Promise.resolve(true);
+        try { muted ? yt.mute() : yt.unMute(); yt.playVideo(); } catch (e) { return Promise.resolve(false); }
+        return new Promise(function (resolve) {
+          var done = false;
+          function finish(ok) { if (!done) { done = true; resolve(ok); } }
+          waiters.push(finish);
+          setTimeout(function () {
+            if (done) return;
+            try { yt.pauseVideo(); } catch (e) {}      // never left half-started (it could begin later, out of sync with the icon)
+            finish(false);
+          }, 8000);
+        });
       },
-      isMuted: function () { try { return yt ? yt.isMuted() : pendingMuted; } catch (e) { return pendingMuted; } },
-      setMuted: function (m) { try { m ? yt.mute() : yt.unMute(); } catch (e) {} pendingMuted = m; }
+      isMuted: function () { return muted; },
+      setMuted: function (m) { muted = m; try { m ? yt.mute() : yt.unMute(); } catch (e) {} },
+      broken: function () { return !!failed; }
     };
   }
 
-  window.InvitationMusic = { init: init, _parseYouTubeId: parseYouTubeId };
+  window.InvitationMusic = {
+    init: init,
+    _parseYouTubeId: parseYouTubeId,
+    // Read-only view for testing and support: the current phase of this page's player.
+    _state: function () { return active ? { phase: active.phase(), muted: active.engine.isMuted() } : null; }
+  };
 })();
