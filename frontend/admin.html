@@ -894,8 +894,8 @@ function renderEditor() {
       { key: 'hostText', full: true,
         label: { default: 'Hosting families', '@birthday': 'Hosted by (optional)', '@baby-shower': 'Hosted by (optional)',
                  '@graduation': 'Degree and school (e.g. BSc Architecture · AUB)' } },
-      { key: 'greeting', label: 'Greeting prefix (e.g. "Dear")', only: ['elegant-noir', 'wedding-daily'] },
-      { key: 'sealImage', label: 'Wax-seal image', image: true, only: ['elegant-noir'] },
+      { key: 'greeting', label: 'Greeting prefix (e.g. "Dear")', only: ['elegant-noir', 'blush-lilac', 'wedding-daily'] },
+      { key: 'sealImage', label: { default: 'Wax-seal image', 'blush-lilac': 'Wax-seal photo (optional — leave empty for the couple\'s initials in wax)' }, image: true, only: ['elegant-noir', 'blush-lilac'] },
       { key: 'mastheadTitle', label: 'Newspaper masthead (e.g. "The Wedding Daily")', only: ['wedding-daily'] },
       { key: 'editionLabel', label: 'Edition label (e.g. "Special Edition")', only: ['wedding-daily'] },
       { key: 'headline', full: true, only: ['wedding-daily', 'marble-waltz', 'polaroid-heart', 'editorial-love-story', ...CELEBRATIONS],
@@ -921,6 +921,7 @@ function renderEditor() {
       { key: 'description', label: 'Description / venue line', full: true, type: 'textarea' },
       { key: 'image', full: true, image: true,
         label: { default: 'Background image', 'wedding-daily': 'Photograph of the couple (printed under their names)',
+                 'blush-lilac': 'Photo of the couple (fills the countdown, behind the numbers)',
                  'polaroid-heart': 'Second photo in the "&" spread',
                  'editorial-love-story': 'Photograph beside the date' } }
     ], 'The countdown runs to the <strong>Wedding date</strong> and <strong>time</strong>. The date is the same one as <strong>Event date</strong> in Public Link — edit either and the other follows. Leave the time blank for midnight. The time is read as the wedding\'s local time, so guests in other countries count down to the real moment of the ceremony.')}

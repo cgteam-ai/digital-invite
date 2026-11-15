@@ -35,6 +35,29 @@ public static class BuiltinTemplates
             }
             """),
 
+        // Elegant Noir's layout and features in a pastel lavender, blush and off-white palette,
+        // opened from a ribbon-tied envelope, with the couple's photo (countdown.image) behind
+        // the countdown. Shares Elegant Noir's default photos.
+        new TemplateSeed(
+            "Blush Lilac",
+            "Pastel lavender and blush scrolling invitation: a ribbon-tied envelope that opens, the couple's photo behind the countdown, gallery, timeline and music",
+            """
+            {
+              "title": "New Invitation",
+              "cover": { "enabled": true, "eventLabel": "Wedding", "names": "Name & Name", "tagline": "Are getting married", "greeting": "Dear", "hostText": "", "image": "/assets/elegant-noir/hero.jpg", "video": "/assets/elegant-noir/hero.mp4", "sealImage": "", "buttonText": "Tap to open" },
+              "countdown": { "enabled": true, "label": "Celebrating our love in", "date": "", "description": "Venue name, City", "image": "" },
+              "families": { "enabled": true, "label": "Together with their families", "title": "", "items": [] },
+              "gallery": { "enabled": true, "label": "Before forever", "title": "A glimpse of us", "items": [ { "url": "/assets/elegant-noir/gallery-1.jpg", "caption": "" }, { "url": "/assets/elegant-noir/gallery-2.jpg", "caption": "" }, { "url": "/assets/elegant-noir/gallery-3.jpg", "caption": "" }, { "url": "/assets/elegant-noir/gallery-4.jpg", "caption": "" } ] },
+              "locations": { "enabled": true, "label": "Join us", "title": "The Celebration", "image": "/assets/elegant-noir/venue.jpg", "items": [ { "label": "The Ceremony", "time": "", "name": "", "addr": "", "url": "", "img": "/assets/elegant-noir/church.jpg" }, { "label": "The Reception", "time": "", "name": "", "addr": "", "url": "", "img": "/assets/elegant-noir/reception.jpg" } ] },
+              "timeline": { "enabled": true, "label": "The day", "title": "Wedding Timeline", "items": [] },
+              "gifts": { "enabled": false, "label": "With love", "title": "Gift Registry", "description": "Your presence is the greatest gift. For those who wish, a wedding list is available:", "image": "/assets/elegant-noir/gifts.jpg", "items": [] },
+              "rsvp": { "enabled": true, "label": "Kindly reply by", "title": "Will you join us?", "deadline": "", "maxPeople": 10, "buttonText": "Send RSVP", "allowWishes": true, "image": "/assets/elegant-noir/rsvp.jpg" },
+              "memories": { "enabled": false, "title": "Share Your Memories", "description": "During or after the event, open the link below to share your photos with us", "url": "", "buttonText": "Share Memories" },
+              "music": { "enabled": false, "url": "", "autoplay": true },
+              "customSections": []
+            }
+            """),
+
         new TemplateSeed(
             "Serene Beige",
             "Light beige scrolling invitation with monogram hero, calendar card, split venue details, timeline, gallery and music",

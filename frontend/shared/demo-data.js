@@ -132,6 +132,35 @@
         { enabled: true, label: '1 Corinthians 13:4', title: '', body: 'Love is patient, love is kind.\nIt always protects, always trusts,\nalways hopes, always perseveres.' }
       ]
     },
+    // Blush Lilac is Elegant Noir in a pastel dress, so its demo is the same sample couple on the
+    // same photo set. The seal is left without a photo to show the wax monogram, and the
+    // countdown's image is the couple's photo that fills the countdown band.
+    'blush-lilac': {
+      title: 'Nadia & Karim',
+      cover: {
+        enabled: true, eventLabel: 'We Are Getting Married',
+        names: 'Nadia & Karim', tagline: 'Together with our families, we invite you to share our joy',
+        greeting: 'Dear', hostIntro: 'With hearts full of love,',
+        hostText: 'invite you to celebrate the marriage of their children',
+        hostOutro: '', image: '/assets/elegant-noir/hero.jpg', video: '/assets/elegant-noir/hero.mp4',
+        sealImage: '', buttonText: 'Tap to open'
+      },
+      countdown: { enabled: true, label: 'Celebrating our love in', date: EVENT_DATE, description: 'Beirut, Lebanon', image: '/assets/elegant-noir/gallery-3.jpg' },
+      families:  { enabled: true, label: 'Together with their families', title: '', items: FAMILIES },
+      gallery:   { enabled: true, label: 'Before forever', title: 'A Glimpse of Us', items: photos('elegant-noir', [
+        ['gallery-1.jpg', 'The rings'], ['gallery-2.jpg', 'Her bouquet'], ['gallery-3.jpg', 'Just us'], ['gallery-4.jpg', 'Forever begins']
+      ]) },
+      locations: { enabled: true, label: 'Join us', title: 'The Celebration', image: '/assets/elegant-noir/venue.jpg',
+                   items: withImgs(LOCATIONS, ['/assets/elegant-noir/church.jpg', '/assets/elegant-noir/reception.jpg']) },
+      timeline:  { enabled: true, label: 'The day', title: 'Wedding Timeline', items: TIMELINE },
+      gifts:     Object.assign({}, GIFTS, { image: '/assets/elegant-noir/gifts.jpg' }),
+      rsvp:      Object.assign({}, RSVP, { image: '/assets/elegant-noir/rsvp.jpg' }),
+      memories:  { enabled: false, title: 'Share Your Memories', description: 'During or after the celebration, upload your photos so we can relive the day through your eyes.', url: 'https://example.com/album', buttonText: 'Share Memories' },
+      music:     MUSIC,
+      customSections: [
+        { enabled: true, label: '1 Corinthians 13:4', title: '', body: 'Love is patient, love is kind.\nIt always protects, always trusts,\nalways hopes, always perseveres.' }
+      ]
+    },
 
     'serene-beige': {
       title: 'Layla & Elias',

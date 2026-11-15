@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fbf8f6">
+<title>Wedding Invitation</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<script src="../../../shared/config.js"></script>
+<script src="../../../shared/demo-data.js?v=2026111501"></script>
+<style>
+  /* Blush Lilac: Elegant Noir's layout and behaviour, re-dressed in the pastel palette of a
+     lavender-and-blush table setting (lilac taper candles, blush and peach roses, an off-white
+     cloth and a champagne-gold table number), opened from a ribbon-tied envelope, with the
+     couple's photo behind the countdown. */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fbf8f6;          /* off-white tablecloth */
+    --bg-2: #f7eff1;        /* blush wash */
+    --card: #ffffff;
+    --lilac: #c3afe3;       /* taper candles */
+    --lilac-soft: #e6dcf4;
+    --accent: #7a5ea8;      /* deep lavender: labels and links (4.9:1 on --bg) */
+    --rose: #e3a9b4;        /* blush roses */
+    --rose-deep: #b9788c;
+    --peach: #ebc2b3;
+    --gold: #c8a97a;        /* champagne gold of the table number */
+    --ink: #4b3b5c;         /* plum ink for names and headings */
+    --text: #5e5068;
+    --muted: #76687f;       /* 4.9:1 on --bg */
+    --line: rgba(195,175,227,.55);
+    --line-soft: rgba(195,175,227,.32);
+    --shadow: 0 14px 34px -18px rgba(122,94,168,.38);
+  }
+
+  /* manipulation: a double tap on the envelope must not zoom the page in. Pinch-zoom still works. */
+  html { scroll-behavior: smooth; touch-action: manipulation; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    overflow-x: hidden;
+  }
+  html, body { max-width: 100%; }
+  @supports (overflow: clip) { html, body { overflow-x: clip; } }
+
+  /* ── TYPOGRAPHY ── */
+  .script  { font-family: 'Great Vibes', cursive; font-weight: 400; color: var(--ink); }
+  .serif   { font-family: 'Cormorant Garamond', serif; }
+  .label {
+    font-size: .72rem; font-weight: 400;
+    letter-spacing: .45em; text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ── ENVELOPE / OPENING SCREEN ──
+     The whole screen is the back of an envelope seen from above: a deckle-edged flap folded down
+     to the middle, held by a lilac satin ribbon and a champagne wax seal. Tapping it unties the
+     ribbon, lifts the flap, raises the card from the pocket and fades into the invitation.
+     The flap and pocket shapes are drawn by drawEnvelope() to the screen's real size, so the
+     deckled edge never stretches. */
+  #envelope {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    cursor: pointer; overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .9s ease, transform .9s ease;
+  }
+  #envelope:focus-visible { outline: 2px solid var(--accent); outline-offset: -6px; }
+  #envelope.is-opening { cursor: default; pointer-events: none; }
+  #envelope.opened { opacity: 0; transform: scale(1.06); pointer-events: none; }
+  /* Guest-specific text stays invisible (but keeps its space) until the data has loaded. */
+  [data-pending] { visibility: hidden; }
+
+  .env-stage { position: absolute; inset: 0; perspective: 1700px; --tip: 46%; }
+  .env-lining {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.55), transparent 60%),
+      linear-gradient(180deg, #e9d3ad 0%, #f2dfc3 28%, #f4dade 62%, #ebdef4 100%);
+  }
+  .env-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+
+  /* The card waiting inside the pocket. Only the part above the pocket's V shows once the flap is up. */
+  .env-card {
+    position: absolute; left: 50%; top: calc(var(--tip) * .62);
+    width: min(78%, 440px); height: 70%;
+    transform: translate(-50%, 34%);
+    background: linear-gradient(180deg, #fff, #fdf9fa);
+    border-radius: 4px;
+    box-shadow: 0 -6px 26px -12px rgba(122,94,168,.35);
+    text-align: center; padding: clamp(1.1rem, 3.2vh, 2rem) 1rem 0;
+    transition: transform 1.05s cubic-bezier(.22,.8,.3,1) 1.45s;
+  }
+  .env-card::before {
+    content: ''; position: absolute; inset: 8px;
+    border: 1px solid var(--line); border-radius: 2px; pointer-events: none;
+  }
+  .env-card-names { font-size: clamp(1.7rem, 7vw, 2.8rem); line-height: 1.1; color: var(--ink); overflow-wrap: anywhere; }
+  .env-card-date {
+    margin-top: .7rem; font-size: .68rem; letter-spacing: .38em; text-transform: uppercase; color: var(--accent);
+  }
+
+  .env-pocket { filter: drop-shadow(0 -2px 3px rgba(90,70,110,.08)); }
+
+  .env-flap {
+    position: absolute; inset: 0; transform-origin: 50% 0;
+    transform-style: preserve-3d;
+    transition: transform 1.05s cubic-bezier(.55,.05,.35,1) .7s;
+    pointer-events: none;
+  }
+  .env-flap svg { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .env-flap .flap-front { filter: drop-shadow(0 7px 7px rgba(90,70,110,.13)); }
+  .env-flap .flap-back { transform: rotateX(180deg); }
+
+  /* Satin ribbon across the flap's point, in two halves that slide away when it is untied. */
+  .env-ribbon {
+    position: absolute; left: 0; right: 0; top: var(--tip);
+    height: clamp(15px, 3.4vmin, 24px); transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .rib {
+    position: absolute; top: 0; bottom: 0; width: 50.5%;
+    background: linear-gradient(180deg, #ece3f7 0%, #cfbbea 30%, #b89edd 58%, #d8c8ef 82%, #a98bd2 100%);
+    box-shadow: 0 3px 6px -2px rgba(90,70,110,.28);
+    transition: transform .85s cubic-bezier(.6,0,.8,.45) .18s, opacity .5s ease .5s;
+  }
+  .rib-l { left: 0; }
+  .rib-r { right: 0; }
+  .env-bow {
+    position: absolute; left: 50%; top: var(--tip);
+    width: clamp(230px, 66vmin, 400px); height: auto; aspect-ratio: 260 / 200;
+    transform: translate(-50%, -35%);
+    pointer-events: none;
+    filter: drop-shadow(0 6px 8px rgba(90,70,110,.22));
+    transition: transform .8s cubic-bezier(.5,0,.75,0) .12s, opacity .55s ease .3s;
+  }
+  .env-bow svg { position: static; width: 100%; height: 100%; }
+
+  .env-seal {
+    position: absolute; left: 50%; top: var(--tip);
+    width: clamp(70px, 19vmin, 108px); height: clamp(70px, 19vmin, 108px);
+    transform: translate(-50%, -50%);
+    border-radius: 47% 53% 50% 50% / 52% 48% 52% 48%;
+    background: radial-gradient(circle at 36% 30%, #f3e2b8 0%, #d9b97f 38%, #bb9658 70%, #94733f 100%);
+    box-shadow: 0 8px 18px rgba(90,70,40,.35), inset 0 2px 5px rgba(255,248,225,.6), inset 0 -3px 6px rgba(110,80,35,.35);
+    display: flex; align-items: center; justify-content: center;
+    background-size: cover; background-position: center;
+    transition: transform .55s cubic-bezier(.5,0,.6,1), opacity .45s ease .1s;
+  }
+  /* The raised ring pressed into the wax. */
+  .env-seal::before {
+    content: ''; position: absolute; inset: 13%;
+    border-radius: 50%; border: 1.5px solid rgba(120,90,40,.35);
+    box-shadow: 0 1px 0 rgba(255,245,215,.55), inset 0 1px 0 rgba(255,245,215,.4);
+  }
+  .env-mono {
+    font-family: 'Great Vibes', cursive; font-size: clamp(1.7rem, 5.6vmin, 2.6rem);
+    color: rgba(105,78,34,.82); line-height: 1; padding-top: .1em;
+    text-shadow: 0 1px 0 rgba(255,244,212,.75), 0 -1px 0 rgba(90,65,25,.25);
+  }
+  /* A photo in the seal (the "Wax-seal image" option) becomes a round portrait in a champagne rim. */
+  .env-seal.has-photo { border-radius: 50%; border: 3px solid var(--gold); box-shadow: 0 8px 18px rgba(90,70,110,.3), 0 0 0 6px rgba(200,169,122,.25); }
+  .env-seal.has-photo::before { display: none; }
+
+  .env-greeting {
+    position: absolute; left: 1.5rem; right: 1.5rem; top: calc(var(--tip) * .3);
+    font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 400;
+    font-size: clamp(1.45rem, 5.4vw, 2.1rem); color: var(--ink);
+    text-align: center; transition: opacity .4s ease;
+  }
+  .env-open {
+    position: absolute; left: 0; right: 0; top: calc(var(--tip) + (100% - var(--tip)) * .5);
+    text-align: center; transition: opacity .4s ease;
+  }
+  .env-open span {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: clamp(1.05rem, 4.2vw, 1.35rem); letter-spacing: .04em; color: var(--accent);
+    animation: openBreathe 2.6s ease-in-out infinite;
+  }
+  @keyframes openBreathe { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+  /* Opening sequence: seal lifts, ribbon slides apart, bow falls away, flap swings up, card rises. */
+  #envelope.is-opening .env-seal { transform: translate(-50%, -60%) scale(1.12); opacity: 0; }
+  #envelope.is-opening .rib-l { transform: translateX(-104%); opacity: 0; }
+  #envelope.is-opening .rib-r { transform: translateX(104%); opacity: 0; }
+  #envelope.is-opening .env-bow { transform: translate(-50%, 10%) rotate(-10deg) scale(.82); opacity: 0; }
+  #envelope.is-opening .env-greeting,
+  #envelope.is-opening .env-open { opacity: 0; }
+  #envelope.is-opening .env-flap { transform: rotateX(178deg); }
+  /* Risen so the names sit in the wide upper part of the open V. */
+  #envelope.is-opening .env-card { transform: translate(-50%, -33%); }
+
+  /* A phone on its side: smaller seal and bow so everything stays on one screen. */
+  @media (max-height: 460px) {
+    .env-bow { width: 150px; }
+    .env-seal { width: 62px; height: 62px; }
+    .env-card { padding-top: .9rem; }
+    .env-card-names { font-size: 1.8rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .env-open span { animation: none; }
+    .env-flap, .env-card, .rib, .env-bow, .env-seal { transition-duration: .01s; transition-delay: 0s; }
+  }
+
+  /* ── LAYOUT ── */
+  main { opacity: 0; transition: opacity 1.2s ease .2s; }
+  main.visible { opacity: 1; }
+  section {
+    width: 100%;
+    padding: 4.5rem max(1.8rem, calc((100% - 560px) / 2 + 1.8rem));
+    text-align: center;
+    position: relative;
+  }
+  .sec-title-script { font-size: clamp(2.6rem, 9vw, 3.6rem); line-height: 1.2; margin-top: .8rem; }
+  .sec-title-serif  { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(1.9rem, 7vw, 2.6rem); color: var(--ink); margin-top: .8rem; }
+
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .9s ease, transform .9s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 5rem;
+    background: radial-gradient(ellipse at 50% 18%, #fff 0%, var(--bg) 46%, var(--bg-2) 100%);
+  }
+  #hero.has-video { position: relative; overflow: hidden; }
+  .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  /* A light veil over the cover video keeps it as a soft, warm movement behind plum lettering. */
+  .hero-scrim { position: absolute; inset: 0; background: linear-gradient(rgba(251,248,246,.84), rgba(248,238,241,.9)); z-index: 1; }
+  #hero.has-video > *:not(.hero-video):not(.hero-scrim):not(.hero-ring) { position: relative; z-index: 2; }
+  #hero.has-video > .hero-ring { z-index: 2; }
+  .hero-ring {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-52%);
+    width: min(88vw, 460px); height: min(88vw, 460px);
+    border: 1px solid rgba(195,175,227,.45); border-radius: 50%;
+    box-shadow: 0 0 0 10px rgba(242,211,214,.18);
+    pointer-events: none;
+  }
+  .hero-amp { font-family: 'Great Vibes', cursive; font-size: 2.2rem; color: var(--rose-deep); }
+  .hero-names { font-size: clamp(3.4rem, 14vw, 5.4rem); line-height: 1.15; overflow-wrap: anywhere; }
+  .hero-date {
+    margin-top: 2.2rem; font-size: 1rem; letter-spacing: .35em;
+    text-transform: uppercase; color: var(--ink); font-weight: 400;
+  }
+  .hero-venue { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--muted); margin-top: .6rem; letter-spacing: .04em; }
+
+  .hero-host {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 1.05rem; color: var(--muted); margin: .5rem auto 0;
+    max-width: 34ch; line-height: 1.6;
+  }
+  .hero-families { margin: 1.1rem auto .4rem; display: flex; flex-direction: column; gap: .5rem; }
+  .hero-fam-label { font-size: .62rem; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
+  .hero-fam-names { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--ink); margin-top: .15rem; }
+  .hero-fam-and { display: block; font-family: 'Great Vibes', cursive; font-size: 1.3rem; color: var(--rose-deep); }
+
+  .scroll-hint {
+    margin-top: 3rem; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    animation: hintFloat 2.2s ease-in-out infinite;
+  }
+  .scroll-hint span { font-size: .62rem; letter-spacing: .45em; text-transform: uppercase; color: var(--muted); }
+  .scroll-hint .stem { width: 1px; height: 30px; background: linear-gradient(to bottom, var(--lilac), transparent); }
+  @keyframes hintFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+
+  /* ── COUNTDOWN ── The couple's photo fills the band; a plum veil, deeper at the bottom where the
+     numbers sit, keeps white lettering readable on any photo. */
+  #countdown {
+    min-height: min(78vh, 640px); min-height: min(78svh, 640px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; isolation: isolate; color: #fff;
+    background: linear-gradient(160deg, #7a5ea8 0%, #9c7bb8 48%, #c08ca0 100%);
+  }
+  .cd-photo {
+    position: absolute; inset: -2%; z-index: -2;
+    background-size: cover; background-repeat: no-repeat; background-position: center 32%;
+    animation: cdDrift 26s ease-in-out infinite alternate;
+  }
+  @keyframes cdDrift { from { transform: scale(1.02); } to { transform: scale(1.09); } }
+  .cd-veil {
+    position: absolute; inset: 0; z-index: -1;
+    background: linear-gradient(180deg, rgba(58,40,72,.42) 0%, rgba(58,40,72,.22) 38%, rgba(58,40,72,.32) 62%, rgba(46,30,60,.62) 100%);
+  }
+  .cd-title {
+    font-family: 'Great Vibes', cursive; font-size: clamp(2.5rem, 10vw, 3.9rem); line-height: 1.15;
+    color: #fff; text-shadow: 0 2px 16px rgba(30,18,40,.45);
+  }
+  .cd-sub {
+    margin-top: .9rem; font-size: .78rem; letter-spacing: .4em; text-transform: uppercase;
+    color: rgba(255,255,255,.92); text-shadow: 0 1px 8px rgba(30,18,40,.5);
+  }
+  .countdown {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(.4rem, 3vw, 1.6rem); width: 100%; max-width: 520px; margin-top: clamp(2rem, 6vh, 3rem);
+  }
+  .cd-box { display: flex; flex-direction: column; align-items: center; gap: .55rem; min-width: 0; }
+  .cd-num {
+    font-family: 'Cormorant Garamond', serif; font-weight: 600;
+    font-size: clamp(2.5rem, 12.5vw, 4.4rem); line-height: 1; color: #fff;
+    font-variant-numeric: lining-nums tabular-nums;
+    text-shadow: 0 3px 18px rgba(30,18,40,.5);
+  }
+  .cd-lbl {
+    font-family: 'Cormorant Garamond', serif; font-size: clamp(.95rem, 3.6vw, 1.2rem);
+    color: rgba(255,255,255,.95); text-shadow: 0 1px 8px rgba(30,18,40,.55);
+  }
+  @media (prefers-reduced-motion: reduce) { .cd-photo { animation: none; } }
+
+  /* ── VERSE / CUSTOM ── */
+  .verse-text { font-family: 'Great Vibes', cursive; font-size: clamp(1.9rem, 7vw, 2.6rem); color: var(--ink); line-height: 1.5; }
+  .verse-ref  { margin-top: 1rem; font-size: .8rem; letter-spacing: .25em; color: var(--accent); }
+  .spark { color: var(--rose-deep); font-size: 1rem; margin: 1.4rem 0; display: inline-block; }
+
+  /* ── FAMILIES ── */
+  .family-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem; }
+  @media (max-width: 460px) { .family-cards { grid-template-columns: 1fr; } }
+  .family-card {
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 1.5rem 1rem; background: rgba(255,255,255,.75); box-shadow: var(--shadow);
+  }
+  .family-label { font-size: .68rem; letter-spacing: .35em; text-transform: uppercase; color: var(--accent); margin-bottom: .6rem; }
+  .family-names { font-size: .95rem; color: var(--text); font-weight: 300; }
+  .family-outro { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.1rem; color: var(--muted); margin-top: 1.6rem; }
+
+  /* ── GALLERY ── */
+  .gallery { display: flex; flex-direction: column; gap: 2.6rem; margin-top: 2.5rem; }
+  .polaroid {
+    background: #fff; padding: 12px 12px 40px;
+    box-shadow: 0 18px 40px -14px rgba(122,94,168,.35), 0 2px 6px rgba(122,94,168,.08);
+    transform: rotate(-2deg);
+  }
+  .polaroid:nth-child(even) { transform: rotate(2deg); }
+  .polaroid img { width: 100%; display: block; filter: saturate(.92) brightness(1.03); }
+  .polaroid .cap {
+    margin-top: 12px; font-family: 'Cormorant Garamond', serif;
+    font-style: italic; color: var(--muted); font-size: .95rem;
+  }
+
+  /* ── LOCATIONS ── */
+  .loc-cards { display: flex; flex-direction: column; gap: 1.6rem; margin-top: 2.4rem; }
+  .loc-card {
+    border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden; background: rgba(255,255,255,.82); box-shadow: var(--shadow);
+    padding-bottom: 1.8rem;
+  }
+  .loc-card img { width: 100%; height: 190px; object-fit: cover; display: block; margin-bottom: 1.6rem; }
+  .loc-card .no-img { height: 1.8rem; }
+  .loc-label { font-size: .7rem; letter-spacing: .4em; text-transform: uppercase; color: var(--accent); }
+  .loc-time  { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--ink); margin-top: .7rem; }
+  .loc-name  { font-size: 1.05rem; font-weight: 500; color: var(--ink); margin-top: .5rem; }
+  .loc-addr  { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: var(--muted); margin-top: .2rem; }
+  .btn-map {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 1.2rem; padding: .6rem 1.4rem;
+    border: 1px solid rgba(122,94,168,.45); border-radius: 999px;
+    background: rgba(195,175,227,.16); color: var(--accent);
+    font-family: 'Jost', sans-serif; font-size: .78rem; letter-spacing: .08em;
+    text-decoration: none; transition: background .25s;
+  }
+  .btn-map:hover { background: rgba(195,175,227,.34); }
+  .btn-map-sm {
+    margin-top: .5rem; padding: .28rem .7rem; gap: 5px;
+    font-size: .66rem; letter-spacing: .06em;
+  }
+  .btn-map-sm svg { width: 11px; height: 11px; }
+
+  /* ── TIMELINE ── */
+  .timeline { margin-top: 2.6rem; text-align: left; position: relative; padding-left: 0; }
+  .tl-item { display: grid; grid-template-columns: 74px 44px 1fr; align-items: start; gap: 0 14px; position: relative; padding-bottom: 2.2rem; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item::before {
+    content: ''; position: absolute; left: calc(74px + 14px + 21px);
+    top: 44px; bottom: 0; width: 1px; background: var(--line);
+  }
+  .tl-item:last-child::before { display: none; }
+  .tl-time { font-size: .8rem; letter-spacing: .06em; color: var(--muted); padding-top: 12px; text-align: right; }
+  .tl-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 12px -6px rgba(122,94,168,.4);
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .tl-title { font-size: 1.05rem; font-weight: 500; color: var(--ink); padding-top: 8px; }
+  .tl-sub   { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--muted); font-size: .98rem; margin-top: .15rem; }
+
+  /* ── GIFTS ── */
+  .gift-desc { max-width: 420px; margin: 1.4rem auto 0; font-weight: 300; font-size: .9rem; line-height: 1.9; color: var(--text); }
+  .gift-card {
+    margin-top: 1.8rem; border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(255,255,255,.85); box-shadow: var(--shadow); padding: 1.5rem 1.4rem;
+    display: flex; flex-direction: column; gap: .9rem; text-align: left;
+  }
+  .gift-top { display: flex; align-items: center; gap: 12px; }
+  .gift-ic {
+    width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+    background: var(--lilac-soft); display: flex; align-items: center; justify-content: center;
+  }
+  .gift-bank { font-size: 1rem; font-weight: 500; color: var(--ink); }
+  .gift-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .gift-acc { font-family: 'Courier New', monospace; font-size: .88rem; color: var(--text); letter-spacing: .04em; word-break: break-all; }
+  .gift-copy {
+    padding: .45rem 1.2rem; border-radius: 999px; flex-shrink: 0;
+    border: 1px solid rgba(122,94,168,.45); background: transparent;
+    color: var(--accent); font-family: 'Jost', sans-serif; font-size: .74rem;
+    letter-spacing: .08em; cursor: pointer; transition: background .25s;
+  }
+  .gift-copy:hover { background: rgba(195,175,227,.22); }
+
+  /* ── RSVP ── */
+  .rsvp-form { margin-top: 2.4rem; display: flex; flex-direction: column; gap: 1rem; }
+  .rsvp-input, .rsvp-select, .rsvp-textarea {
+    width: 100%; padding: 1rem 1.2rem;
+    background: rgba(255,255,255,.92);
+    border: 1px solid var(--line); border-radius: 10px;
+    color: var(--ink); font-family: 'Jost', sans-serif; font-size: .92rem;
+    outline: none; appearance: none; transition: border-color .25s, box-shadow .25s;
+  }
+  .rsvp-input::placeholder, .rsvp-textarea::placeholder { color: var(--muted); }
+  .rsvp-input[readonly] { opacity: .85; cursor: default; border-style: dashed; }
+  .rsvp-input:focus, .rsvp-select:focus, .rsvp-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(195,175,227,.3); }
+  .rsvp-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a5ea8' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1.2rem center; }
+  .rsvp-select option { background: #fff; color: var(--ink); }
+  .rsvp-textarea { min-height: 96px; resize: vertical; }
+  .char-count { text-align: right; font-size: .7rem; color: var(--muted); margin-top: -0.5rem; }
+
+  .att-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  .att-btn {
+    padding: 1rem; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--line); background: rgba(255,255,255,.9);
+    color: var(--text); font-family: 'Jost', sans-serif; font-size: .85rem;
+    letter-spacing: .12em; transition: all .25s;
+  }
+  .att-btn.sel-yes { background: var(--lilac-soft); border-color: var(--accent); color: var(--ink); }
+  .att-btn.sel-no  { background: rgba(242,211,214,.6); border-color: var(--rose-deep); color: var(--ink); }
+
+  .btn-send {
+    margin-top: .4rem; padding: 1.1rem;
+    background: linear-gradient(135deg, #6f55a0, #93669f);
+    border: none; border-radius: 10px;
+    color: #fff; font-family: 'Jost', sans-serif; font-size: .82rem; font-weight: 500;
+    letter-spacing: .35em; text-transform: uppercase;
+    box-shadow: 0 12px 26px -14px rgba(111,85,160,.7);
+    cursor: pointer; transition: opacity .25s;
+  }
+  .btn-send:hover { opacity: .9; }
+  .btn-send:disabled { opacity: .5; cursor: default; }
+
+  .rsvp-done {
+    display: none; margin-top: 2.4rem;
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 1.5rem; color: var(--accent); line-height: 1.6;
+  }
+
+  /* ── MEMORIES ── */
+  .mem-icon { font-size: 1.8rem; }
+  .mem-desc { max-width: 400px; margin: 1.2rem auto 0; font-weight: 300; font-size: .9rem; line-height: 1.9; color: var(--text); }
+  .btn-mem {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-top: 1.8rem; padding: .85rem 2rem;
+    background: rgba(195,175,227,.2); border: 1px solid rgba(122,94,168,.4);
+    border-radius: 999px; color: var(--accent); text-decoration: none;
+    font-size: .85rem; letter-spacing: .06em; transition: background .25s;
+  }
+  .btn-mem:hover { background: rgba(195,175,227,.36); }
+
+  /* ── FOOTER ── */
+  footer { padding: 3rem 1.8rem 4rem; text-align: center; font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--muted); font-size: .95rem; background: var(--bg-2); }
+  footer .g { color: var(--rose-deep); font-style: normal; }
+
+  /* ── PETALS ── */
+  .petal {
+    position: fixed; top: -20px; z-index: 5; pointer-events: none;
+    font-size: 12px; opacity: .6;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* ── MOBILE ── Raise form controls to 16px so iOS Safari doesn't zoom-in on focus,
+     and keep inputs/buttons at a comfortable 44px+ touch target. */
+  @media (max-width: 640px) {
+    .rsvp-input, .rsvp-select, .rsvp-textarea { font-size: 16px; }
+    .rsvp-input, .rsvp-select { min-height: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Envelope opening screen. The flap and pocket are drawn by drawEnvelope(); greeting, seal and
+     card text are filled in by build() once the invitation has loaded. -->
+<div id="envelope" role="button" tabindex="0" aria-label="Open the invitation">
+  <div class="env-stage" id="envStage">
+    <div class="env-lining"></div>
+    <div class="env-card" aria-hidden="true">
+      <p class="script env-card-names" id="envCardNames"></p>
+      <p class="env-card-date" id="envCardDate"></p>
+    </div>
+    <svg class="env-pocket" id="envPocket" aria-hidden="true"></svg>
+    <div class="env-flap" aria-hidden="true">
+      <svg class="flap-front" id="envFlapFront"></svg>
+      <svg class="flap-back" id="envFlapBack"></svg>
+    </div>
+    <div class="env-ribbon" aria-hidden="true"><span class="rib rib-l"></span><span class="rib rib-r"></span></div>
+    <div class="env-bow" aria-hidden="true">
+      <svg viewBox="-130 -70 260 200">
+        <defs>
+          <linearGradient id="satin" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f1e9fa"/><stop offset=".3" stop-color="#d3c0ec"/>
+            <stop offset=".58" stop-color="#b397db"/><stop offset=".8" stop-color="#dccdf1"/><stop offset="1" stop-color="#a586d0"/>
+          </linearGradient>
+          <linearGradient id="satinR" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f1e9fa"/><stop offset=".3" stop-color="#d3c0ec"/>
+            <stop offset=".58" stop-color="#b397db"/><stop offset=".8" stop-color="#dccdf1"/><stop offset="1" stop-color="#a586d0"/>
+          </linearGradient>
+          <linearGradient id="satinDark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c8b2e8"/><stop offset=".55" stop-color="#ad92d8"/><stop offset="1" stop-color="#9478c4"/>
+          </linearGradient>
+        </defs>
+        <!-- tails, trailing down and out with a twist, cut in a swallowtail -->
+        <path d="M-8 8 C-22 34 -30 58 -56 82 C-74 98 -86 110 -96 126 L-82 121 L-78 133 C-66 114 -50 100 -36 86 C-12 62 -2 40 6 12 Z" fill="url(#satinDark)"/>
+        <path d="M8 8 C18 36 30 56 52 78 C70 96 84 108 98 122 L84 120 L82 132 C68 116 52 102 36 88 C14 66 4 42 -6 12 Z" fill="url(#satinR)"/>
+        <!-- loops, with their inner shadow fold -->
+        <path d="M-6 -4 C-34 -60 -126 -62 -120 -14 C-116 22 -54 20 -6 6 Z" fill="url(#satin)"/>
+        <path d="M-14 -2 C-40 -40 -100 -44 -100 -14 C-99 6 -54 6 -14 2 Z" fill="#9b7cc9" opacity=".3"/>
+        <path d="M6 -4 C34 -60 126 -62 120 -14 C116 22 54 20 6 6 Z" fill="url(#satinR)"/>
+        <path d="M14 -2 C40 -40 100 -44 100 -14 C99 6 54 6 14 2 Z" fill="#9b7cc9" opacity=".3"/>
+        <!-- knot -->
+        <ellipse cx="0" cy="1" rx="19" ry="16" fill="url(#satinDark)"/>
+      </svg>
+    </div>
+    <div class="env-seal" id="envSeal" data-pending><span class="env-mono" id="envMono">&amp;</span></div>
+    <!-- Left blank on purpose: the greeting is guest-specific, so showing a placeholder would flash
+         "Dear Guest" before the real name arrives. &nbsp; reserves the line. -->
+    <p class="env-greeting" id="envGreeting" data-pending>&nbsp;</p>
+    <div class="env-open"><span id="envButtonText">Tap to open</span></div>
+  </div>
+</div>
+
+<main id="main"></main>
+
+
+<script src="../../../shared/demo-data.js?v=2026111501"></script>
+<script src="../../../shared/invitation-music.js" defer></script>
+<script src="../../../shared/rsvp-guest-picker.js" defer></script>
+
+<script>
+// ── API CONFIG ─────────────────────────────────────────
+const API_BASE = (typeof window !== 'undefined' && window.API_BASE)
+  ? window.API_BASE.replace(/\/$/, '')
+  : '';
+
+let CURRENT_SLUG = null;
+// Set when the page was opened through a personal guest-list link (?g=<token>):
+// { token, name, maxAttendees, selectedAttendees, status }
+let CURRENT_GUEST = null;
+
+// ── DEFAULT DATA ───────────────────────────────────────
+const DEFAULT_DATA = {
+  template: 'blush-lilac',
+  title: 'Name 1 & Name 2',
+  cover: {
+    enabled: true,
+    eventLabel: 'Wedding',
+    names: 'Name 1 & Name 2',
+    tagline: 'Are getting married',
+    greeting: 'Dear',
+    image: '',
+    // No photo by default: the seal shows the couple's initials pressed into champagne wax.
+    sealImage: '',
+    buttonText: 'Tap to open'
+  },
+  countdown: {
+    enabled: true,
+    label: 'Save the date',
+    date: '',
+    description: '',
+    image: ''
+  },
+  families:  { enabled: true, label: 'Together with their families', title: '', items: [] },
+  gallery:   { enabled: true, label: 'Before forever', title: 'A glimpse of us', items: [] },
+  locations: { enabled: true, label: 'Join us', title: 'The Celebration', image: '', items: [] },
+  timeline:  { enabled: true, label: 'The day', title: 'Wedding Timeline', items: [] },
+  gifts:     { enabled: false, label: 'With love', title: 'Gift Registry', description: 'Your presence is the greatest gift. For those who wish, a wedding list is available:', items: [] },
+  rsvp:      { enabled: true, label: 'Kindly reply by', title: 'Will you join us?', deadline: '', maxPeople: 10, buttonText: 'Send RSVP', allowWishes: true },
+  memories:  { enabled: false, title: 'Share Your Memories', description: 'During or after the event, open the link below to share your photos with us', url: '', buttonText: 'Share Memories' },
+  music:     { enabled: false, url: '', autoplay: true },
+  customSections: []
+};
+
+// ── BASE64URL HELPERS (offline previews via ?d=) ───────
+function decodeData(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(s))));
+}
+
+function mergeDefaults(data) {
+  const out = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  for (const k of Object.keys(data || {})) {
+    if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k]) && out[k]) {
+      out[k] = Object.assign({}, out[k], data[k]);
+    } else {
+      out[k] = data[k];
+    }
+  }
+  return out;
+}
+
+// Tolerant query parser: treats stray "?" as "&"
+function parseQuery() {
+  const raw = window.location.search.replace(/^\?/, '').replace(/\?/g, '&');
+  return new URLSearchParams(raw);
+}
+
+async function loadData() {
+  const params = parseQuery();
+
+  // ?demo=<key> renders the built-in sample invitation (sales/preview mode, no API call).
+  if (window.getDemoData) {
+    const demo = window.getDemoData(window.location.search);
+    if (demo) return mergeDefaults(demo);
+  }
+
+  const enc = params.get('d');
+  if (enc) {
+    try { return mergeDefaults(decodeData(enc)); }
+    catch (e) { console.warn('Bad ?d payload:', e); }
+  }
+
+  // Personal guest-list link: one call returns invitation data + guest info
+  const token = params.get('g');
+  if (token) {
+    try {
+      const res = await fetch(`${API_BASE}/api/public/guest/${encodeURIComponent(token)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        CURRENT_SLUG  = body.slug;
+        CURRENT_GUEST = Object.assign({ token }, body.guest || {});
+        return mergeDefaults(body.data || {});
+      }
+      console.warn('Guest API returned', res.status);
+    } catch (e) {
+      console.warn('Guest API fetch failed:', e);
+    }
+  }
+
+  const id = params.get('id');
+  if (id) {
+    CURRENT_SLUG = id;
+    try {
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(id)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        return mergeDefaults(body.data || {});
+      }
+      console.warn('API returned', res.status);
+    } catch (e) {
+      console.warn('API fetch failed:', e);
+    }
+    try {
+      const all = JSON.parse(localStorage.getItem('ic_people') || '{}');
+      if (all[id]) return mergeDefaults(all[id].data);
+    } catch { /* ignore */ }
+  }
+
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+// ── URL PERSONALIZATION (?gn=Name&np=2) ────────────────
+function getGuestName() {
+  const v = parseQuery().get('gn');
+  return v ? v.trim() : null;
+}
+function getMaxPeopleOverride() {
+  const params = parseQuery();
+  let val = params.get('np');
+  if (!val) {
+    const m = window.location.search.replace(/^\?/, '').match(/^np(\d+)$/);
+    if (m) val = m[1];
+  }
+  return val ? parseInt(val) : null;
+}
+
+// ── HELPERS ────────────────────────────────────────────
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+// Resolve API-relative uploaded media (/api/public/media/<id>) against API_BASE.
+const mediaSrc = u => u && /^\/api\//.test(u) ? (API_BASE || '') + u : (u || '');
+// Format a yyyy-MM-dd deadline as a readable date; falls back to the raw string.
+function fmtDate(s) {
+  if (!s) return '';
+  const dt = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + 'T00:00:00' : s);
+  return isNaN(dt) ? s : dt.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
+// Section background image under a light off-white/blush veil so plum text stays legible.
+// Returns an inline style attribute (leading space) or '' when there is no image.
+function bgStyle(image) {
+  const u = mediaSrc(image);
+  return u
+    ? ` style="background-image:linear-gradient(rgba(251,248,246,.9),rgba(248,238,241,.94)),url('${esc(u)}');background-size:cover;background-position:center;"`
+    : '';
+}
+// CSS url() value for an uploaded or bundled image, safe inside a double-quoted style attribute.
+const cssUrl = u => `url('${esc(mediaSrc(u).replace(/["'()\\]/g, encodeURIComponent))}')`;
+const pinIcon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
+
+// ── RENDERERS ──────────────────────────────────────────
+function renderHero(data) {
+  const c   = data.cover || {};
+  const cd  = data.countdown || {};
+  const names = esc(c.names || data.title || '');
+  const namesHtml = names.includes('&amp;')
+    ? names.split('&amp;').map(n => n.trim()).join('<br><span class="hero-amp">&amp;</span><br>')
+    : names;
+
+  let dateStr = '';
+  if (cd.date) {
+    const dt = new Date(cd.date + 'T00:00:00');
+    dateStr = isNaN(dt) ? cd.date
+      : dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
+  }
+
+  // Families and the hosts' invitation message belong ABOVE the couple's names, matching the
+  // other wedding templates ("<parents> ... invite you to celebrate ... <names>").
+  const fams = (data.families && data.families.enabled !== false ? (data.families.items || []) : [])
+    .filter(f => f && (f.label || f.names));
+  const famHtml = fams.length ? `
+    <div class="hero-families reveal">
+      ${fams.map((f, i) => `
+        ${i > 0 ? '<span class="hero-fam-and">and</span>' : ''}
+        <div class="hero-fam">
+          ${f.label ? `<p class="hero-fam-label">${esc(f.label)}</p>` : ''}
+          ${f.names ? `<p class="hero-fam-names">${esc(f.names)}</p>` : ''}
+        </div>`).join('')}
+    </div>` : '';
+  // The hosts' message: hostIntro above the families, hostText/hostOutro just before the names.
+  // These were never rendered before, which is why the invitation message could go missing.
+  const introLine = c.hostIntro ? `<p class="hero-host reveal">${nl2br(c.hostIntro)}</p>` : '';
+  const outroLine = [c.hostText, c.hostOutro].filter(Boolean)
+    .map(s => `<p class="hero-host reveal">${nl2br(s)}</p>`).join('');
+
+  // A cover video takes precedence over the cover image; the image becomes its poster so the
+  // hero still looks right before the first frame decodes (and if autoplay is refused).
+  const coverImage = mediaSrc(c.image || '');
+  const coverVideo = mediaSrc(c.video || '');
+  return `
+  <section id="hero"${coverVideo ? ' class="has-video"' : bgStyle(c.image)}>
+    ${coverVideo ? `<video class="hero-video" data-bg-video autoplay loop muted playsinline preload="metadata"
+       ${coverImage ? `poster="${esc(coverImage)}"` : ''} src="${esc(coverVideo)}"></video>
+      <div class="hero-scrim"></div>` : ''}
+    <div class="hero-ring"></div>
+    ${c.eventLabel ? `<p class="label reveal">${esc(c.eventLabel)}</p>` : ''}
+    ${introLine}
+    ${famHtml}
+    ${outroLine}
+    <h1 class="script hero-names reveal">${namesHtml}</h1>
+    ${c.tagline ? `<p class="serif reveal" style="font-style:italic;font-size:1.15rem;color:var(--muted);margin-top:1rem;">${esc(c.tagline)}</p>` : ''}
+    ${dateStr ? `<p class="hero-date reveal">${esc(dateStr)}</p>` : ''}
+    ${cd.description ? `<p class="hero-venue reveal">${esc(cd.description)}</p>` : ''}
+    <div class="scroll-hint"><span>Scroll</span><div class="stem"></div></div>
+  </section>`;
+}
+
+// The countdown, right after the hero, on the couple's photo (the countdown's "Background image").
+// Without a photo it sits on a lavender-to-blush wash instead of any stock picture.
+function renderCountdown(data) {
+  const cd = data.countdown || {};
+  const dt = new Date(cd.date + 'T00:00:00');
+  const dateStr = isNaN(dt) ? '' : dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const photo = mediaSrc(cd.image || '');
+  return `
+  <section id="countdown" aria-label="Countdown to the wedding">
+    ${photo ? `<div class="cd-photo" role="img" aria-label="${esc((data.cover && data.cover.names) || data.title || 'The couple')}" style="background-image:${cssUrl(cd.image)}"></div>` : ''}
+    <div class="cd-veil"></div>
+    <h2 class="cd-title reveal">${esc(cd.label || 'Save the date')}</h2>
+    ${dateStr ? `<p class="cd-sub reveal">${esc(dateStr)}</p>` : ''}
+    <div class="countdown reveal" data-countdown="${esc(cd.date)}">
+      <div class="cd-box"><span class="cd-num" data-cd="d">00</span><span class="cd-lbl">Days</span></div>
+      <div class="cd-box"><span class="cd-num" data-cd="h">00</span><span class="cd-lbl">Hours</span></div>
+      <div class="cd-box"><span class="cd-num" data-cd="m">00</span><span class="cd-lbl">Minutes</span></div>
+      <div class="cd-box"><span class="cd-num" data-cd="s">00</span><span class="cd-lbl">Seconds</span></div>
+    </div>
+  </section>`;
+}
+
+function renderCustom(c) {
+  // Custom sections render as centered "verse" blocks:
+  // body in script type, label as the small gold reference line below.
+  return `
+  <section>
+    ${c.title ? `<h2 class="sec-title-serif reveal">${esc(c.title)}</h2>` : ''}
+    ${c.body ? `<p class="verse-text reveal" style="margin-top:1.4rem;">${nl2br(c.body)}</p>` : ''}
+    ${c.label ? `<p class="verse-ref reveal">— ${esc(c.label)}</p>` : ''}
+  </section>`;
+}
+
+// NOTE: the families are rendered inside the hero (above the couple's names) by renderHero,
+// so there is no separate families section any more.
+
+function renderGallery(g) {
+  // Skip entries whose image was removed — rendering src="" shows a broken-image placeholder.
+  const shots = (g.items || []).filter(img => img && img.url).map(img => `
+    <div class="polaroid reveal">
+      <img src="${esc(mediaSrc(img.url))}" alt="${esc(img.caption || 'Photo')}" loading="lazy">
+      ${img.caption ? `<p class="cap">${esc(img.caption)}</p>` : '<p class="cap">&nbsp;</p>'}
+    </div>`).join('');
+  return `
+  <section>
+    ${g.label ? `<p class="label reveal">${esc(g.label)}</p>` : ''}
+    ${g.title ? `<h2 class="script sec-title-script reveal">${esc(g.title)}</h2>` : ''}
+    <div class="gallery">${shots}</div>
+  </section>`;
+}
+
+function renderLocations(l) {
+  const cards = (l.items || []).map(loc => `
+    <div class="loc-card reveal">
+      ${loc.img ? `<img src="${esc(loc.img)}" alt="${esc(loc.name || '')}" loading="lazy">` : '<div class="no-img"></div>'}
+      ${loc.label ? `<p class="loc-label">${esc(loc.label)}</p>` : ''}
+      ${loc.time ? `<p class="loc-time serif">${esc(loc.time)}</p>` : ''}
+      ${loc.name ? `<p class="loc-name">${esc(loc.name)}</p>` : ''}
+      ${loc.addr ? `<p class="loc-addr">${esc(loc.addr)}</p>` : ''}
+      ${loc.url ? `<a class="btn-map" href="${esc(loc.url)}" target="_blank" rel="noopener">${pinIcon} Open in Google Maps</a>` : ''}
+    </div>`).join('');
+  return `
+  <section${bgStyle(l.image)}>
+    ${l.label ? `<p class="label reveal">${esc(l.label)}</p>` : ''}
+    ${l.title ? `<h2 class="script sec-title-script reveal">${esc(l.title)}</h2>` : ''}
+    <div class="loc-cards">${cards}</div>
+  </section>`;
+}
+
+function renderTimeline(t) {
+  const rows = (t.items || []).map(x => `
+    <div class="tl-item reveal">
+      <p class="tl-time">${esc(x.time || '')}</p>
+      <div class="tl-icon">${esc(x.icon || '✦')}</div>
+      <div>
+        <p class="tl-title">${esc(x.title || '')}</p>
+        ${x.subtitle ? `<p class="tl-sub">${esc(x.subtitle)}</p>` : ''}
+        ${x.url ? `<a class="btn-map btn-map-sm" href="${esc(x.url)}" target="_blank" rel="noopener">${pinIcon} Location</a>` : ''}
+      </div>
+    </div>`).join('');
+  return `
+  <section>
+    ${t.label ? `<p class="label reveal">${esc(t.label)}</p>` : ''}
+    ${t.title ? `<h2 class="sec-title-serif reveal">${esc(t.title)}</h2>` : ''}
+    <div class="timeline">${rows}</div>
+  </section>`;
+}
+
+function renderGifts(g) {
+  const cards = (g.items || []).map(x => `
+    <div class="gift-card reveal">
+      <div class="gift-top">
+        <div class="gift-ic">💳</div>
+        ${x.bank ? `<p class="gift-bank">${esc(x.bank)}</p>` : ''}
+      </div>
+      <div class="gift-row">
+        <span class="gift-acc">${esc(x.account || '')}</span>
+        <button class="gift-copy" data-copy="${esc(x.account || '')}">Copy</button>
+      </div>
+    </div>`).join('');
+  return `
+  <section${bgStyle(g.image)}>
+    ${g.label ? `<p class="label reveal">${esc(g.label)}</p>` : ''}
+    ${g.title ? `<h2 class="script sec-title-script reveal">${esc(g.title)}</h2>` : ''}
+    ${g.description ? `<p class="gift-desc reveal">${nl2br(g.description)}</p>` : ''}
+    ${cards}
+  </section>`;
+}
+
+function renderRsvp(r, maxPeople, npValue, guestName) {
+  const opts = [];
+  for (let i = 1; i <= maxPeople; i++) {
+    opts.push(`<option value="${i}"${i === npValue ? ' selected' : ''}>${i} ${i === 1 ? 'person' : 'persons'}</option>`);
+  }
+  const deadlineLine = [r.label, r.deadline ? fmtDate(r.deadline) : ''].filter(Boolean).map(esc).join(' ');
+  return `
+  <section id="rsvpSection"${bgStyle(r.image)}>
+    ${deadlineLine ? `<p class="label reveal">${deadlineLine}</p>` : ''}
+    ${r.title ? `<h2 class="script sec-title-script reveal">${esc(r.title)}</h2>` : ''}
+    <div class="rsvp-form" data-rsvp>
+      <!-- On a personal link the name is fixed: shown for confirmation but not editable.
+           (The server also ignores any submitted name for a known guest.) -->
+      <input class="rsvp-input reveal" data-guest-name type="text"
+             placeholder="Your name(s)" value="${esc(guestName || '')}" style="text-align:center;"
+             ${guestName ? 'readonly aria-readonly="true" tabindex="-1"' : ''}>
+      <select class="rsvp-select reveal" data-party-size>
+        ${npValue ? '' : '<option value="">How many of you?</option>'}
+        ${opts.join('')}
+      </select>
+      <div class="att-toggle reveal">
+        <button type="button" class="att-btn" data-att="yes">✓&nbsp; Attending</button>
+        <button type="button" class="att-btn" data-att="no">✕&nbsp; Decline</button>
+      </div>
+      ${r.allowWishes !== false ? `
+        <textarea class="rsvp-textarea reveal" data-wishes maxlength="200" placeholder="Share your wishes... (optional)"></textarea>
+        <p class="char-count"><span data-wish-count>0</span>/200</p>` : ''}
+      <button class="btn-send reveal" data-submit-rsvp>${esc(r.buttonText || 'Send RSVP')}</button>
+    </div>
+    <div class="rsvp-done" data-rsvp-done
+         data-accept="${esc(r.acceptMessage || 'Thank you for your reply!\nWe can\'t wait to celebrate with you.')}"
+         data-decline="${esc(r.declineMessage || 'Thank you for letting us know.\nYou will be missed.')}">
+      Thank you for your reply!<br>
+      <span style="color:var(--gold)">✦</span>
+    </div>
+  </section>`;
+}
+
+function renderMemories(m) {
+  return `
+  <section>
+    <p class="mem-icon reveal">📷</p>
+    ${m.title ? `<h2 class="sec-title-serif reveal">${esc(m.title)}</h2>` : ''}
+    ${m.description ? `<p class="mem-desc reveal">${nl2br(m.description)}</p>` : ''}
+    ${m.url ? `<a class="btn-mem reveal" href="${esc(m.url)}" target="_blank" rel="noopener">📷&nbsp; ${esc(m.buttonText || 'Share Memories')}</a>` : ''}
+  </section>`;
+}
+
+// ── BUILD PAGE ─────────────────────────────────────────
+function build(data) {
+  const main = document.getElementById('main');
+  // Guest-list link wins over manual ?gn=/&np= parameters
+  const guestName  = (CURRENT_GUEST && CURRENT_GUEST.name) || getGuestName();
+  const npOverride = CURRENT_GUEST ? null : getMaxPeopleOverride();
+  const maxPeople  = (CURRENT_GUEST && CURRENT_GUEST.maxAttendees)
+    || npOverride || (data.rsvp && data.rsvp.maxPeople) || 10;
+
+  // Envelope screen
+  const c = data.cover || {};
+  const greetEl = document.getElementById('envGreeting');
+  greetEl.textContent = guestName
+    ? `${c.greeting || 'Dear'} ${guestName}`
+    : (c.names || data.title || 'Welcome');
+  greetEl.removeAttribute('data-pending');   // reveal only now that the real name is known
+  if (c.buttonText) document.getElementById('envButtonText').textContent = c.buttonText;
+  const coupleNames = c.names || data.title || '';
+  const seal = document.getElementById('envSeal');
+  if (c.sealImage) {
+    seal.style.backgroundImage = `url("${mediaSrc(c.sealImage).replace(/"/g, '%22')}")`;
+    seal.textContent = '';
+    seal.classList.add('has-photo');
+    seal.setAttribute('role', 'img');
+    seal.setAttribute('aria-label', coupleNames || 'The couple');
+  } else {
+    // Wax monogram: the first letter of each name ("Nadia & Karim" → "NK").
+    const initials = coupleNames.split(/\s*(?:&|\+| and )\s*/i)
+      .map(n => (n.trim().match(/\p{L}/u) || [''])[0].toUpperCase()).filter(Boolean).slice(0, 2).join('');
+    document.getElementById('envMono').textContent = initials || '&';
+  }
+  seal.removeAttribute('data-pending');   // shown once it is known whether it holds a photo
+  // The card that rises out of the envelope.
+  document.getElementById('envCardNames').textContent = coupleNames;
+  const cdd = data.countdown && data.countdown.date ? new Date(data.countdown.date + 'T00:00:00') : null;
+  document.getElementById('envCardDate').textContent = cdd && !isNaN(cdd)
+    ? cdd.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : (c.tagline || '');
+
+  const parts = [];
+  parts.push(renderHero(data));
+  const cdc = data.countdown || {};
+  if (cdc.enabled !== false && cdc.date) parts.push(renderCountdown(data));
+  (data.customSections || []).forEach(s => { if (s.enabled !== false) parts.push(renderCustom(s)); });
+  if (data.gallery   && data.gallery.enabled   !== false && (data.gallery.items  || []).some(x => x && x.url)) parts.push(renderGallery(data.gallery));
+  if (data.locations && data.locations.enabled !== false && (data.locations.items || []).length) parts.push(renderLocations(data.locations));
+  if (data.timeline  && data.timeline.enabled  !== false && (data.timeline.items || []).length)  parts.push(renderTimeline(data.timeline));
+  if (data.gifts     && data.gifts.enabled     !== false && (data.gifts.items    || []).length)  parts.push(renderGifts(data.gifts));
+  if (data.rsvp      && data.rsvp.enabled      !== false) parts.push(renderRsvp(data.rsvp, maxPeople, npOverride || 0, guestName));
+  if (data.memories  && data.memories.enabled  !== false && data.memories.url)   parts.push(renderMemories(data.memories));
+  parts.push('<footer>Made with <span class="g">✦</span></footer>');
+
+  main.innerHTML = parts.join('');
+  document.title = (data.title || (data.cover && data.cover.names) || 'Invitation') + ' — Invitation';
+
+  setupReveal();
+  startCountdown();
+  startBackgroundVideos();
+  if (window.InvitationMusic) InvitationMusic.init(data.music, API_BASE);
+}
+
+// ── BACKGROUND VIDEO ───────────────────────────────────
+// A <video> injected via innerHTML doesn't always pick up the muted PROPERTY from its attribute,
+// and browsers refuse autoplay for anything not muted. Set it explicitly, then start playback —
+// a rejection (e.g. iOS Low Power Mode) is fine: the poster image remains visible.
+function startBackgroundVideos() {
+  document.querySelectorAll('[data-bg-video]').forEach(v => {
+    v.muted = true;
+    v.defaultMuted = true;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+  });
+}
+
+// ── SCROLL REVEAL ──────────────────────────────────────
+function setupReveal() {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+}
+
+// ── COUNTDOWN ──────────────────────────────────────────
+let countdownTimer = null;
+function startCountdown() {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  const node = document.querySelector('[data-countdown]');
+  if (!node) return;
+  const target = new Date(node.dataset.countdown + 'T00:00:00');
+  if (isNaN(target)) return;
+  const tick = () => {
+    const diff = target - new Date();
+    const els = node.querySelectorAll('[data-cd]');
+    if (diff <= 0) { els.forEach(e => e.textContent = '00'); return; }
+    const map = {
+      d: Math.floor(diff / 86400000),
+      h: Math.floor((diff % 86400000) / 3600000),
+      m: Math.floor((diff % 3600000) / 60000),
+      s: Math.floor((diff % 60000) / 1000)
+    };
+    // Two digits at least, as on a clock face ("07"); days can run to three or four.
+    els.forEach(e => e.textContent = String(map[e.dataset.cd]).padStart(2, '0'));
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+// ── MUSIC ──────────────────────────────────────────────
+// Background music is handled by the shared invitation-music.js module
+// (fixed bottom-left icon, mute-only toggle, autoplay-on-interaction, YouTube support).
+
+// ── PETALS ─────────────────────────────────────────────
+const PETALS = ['✿', '❀', '✦'];
+function spawnPetal() {
+  if (document.hidden) return;
+  const p = document.createElement('span');
+  p.className = 'petal';
+  p.textContent = PETALS[Math.floor(Math.random() * PETALS.length)];
+  p.style.left = (2 + Math.random() * 90) + 'vw';   // clear of the right edge, so no petal widens the page
+  p.style.color = Math.random() < .5 ? 'rgba(170,140,215,.75)' : 'rgba(227,160,175,.75)';
+  p.style.fontSize = (9 + Math.random() * 8) + 'px';
+  p.style.animationDuration = (9 + Math.random() * 8) + 's';
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), 18000);
+}
+
+// ── ENVELOPE DRAWING ───────────────────────────────────
+// The pocket (front of the envelope, with a V cut where the flap folds down) and the flap are
+// drawn in real pixels for the current screen, so the torn deckle edge keeps the same fine tooth
+// on a phone and on a wide monitor. A fixed seed keeps the edge identical on every redraw.
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function deckle(x1, y1, x2, y2, rnd) {
+  const len = Math.hypot(x2 - x1, y2 - y1), n = Math.max(2, Math.round(len / 5));
+  const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;          // unit normal to the edge
+  const pts = [];
+  for (let i = 1; i < n; i++) {
+    const t = i / n, j = (rnd() - .5) * 3.2 + (rnd() < .12 ? (rnd() - .5) * 4 : 0);
+    pts.push(`${(x1 + (x2 - x1) * t + nx * j).toFixed(1)},${(y1 + (y2 - y1) * t + ny * j).toFixed(1)}`);
+  }
+  return pts.join(' L');
+}
+function drawEnvelope() {
+  const stage = document.getElementById('envStage');
+  if (!stage) return;
+  const W = stage.clientWidth, H = stage.clientHeight;
+  if (!W || !H) return;
+  // Flap point a little below the middle on a phone, at the middle on a wide screen.
+  const tipRatio = H > W ? .46 : .5, T = Math.round(H * tipRatio);
+  stage.style.setProperty('--tip', (tipRatio * 100) + '%');
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  const vb = `0 0 ${W} ${H}`;
+  const pocket = document.getElementById('envPocket');
+  pocket.setAttribute('viewBox', vb);
+  pocket.setAttribute('preserveAspectRatio', 'none');
+  // Bottom fold: a soft curve rising to just under the flap point, with faint side creases.
+  const foldY = T + (H - T) * .3;
+  pocket.innerHTML = `
+    <defs>
+      <linearGradient id="pk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f0ec"/><stop offset="1" stop-color="#faf6f3"/></linearGradient>
+      <linearGradient id="fold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdfaf8"/><stop offset="1" stop-color="#f8f2ee"/></linearGradient>
+    </defs>
+    <path d="M0,0 L${W / 2},${T} L${W},0 L${W},${H} L0,${H} Z" fill="url(#pk)"/>
+    <path d="M0,${H * .985} C${W * .2},${foldY + (H - foldY) * .55} ${W * .36},${foldY} ${W / 2},${foldY} C${W * .64},${foldY} ${W * .8},${foldY + (H - foldY) * .55} ${W},${H * .985} L${W},${H} L0,${H} Z"
+          fill="url(#fold)" stroke="rgba(150,120,140,.16)" stroke-width="1"/>
+`;
+
+  // The flap: straight top edge, torn diagonals down to the point (drawn 6px past the V so it covers it).
+  const P = T + 6;
+  const d = `M0,0 L${W},0 L${deckle(W, 0, W / 2, P, rnd)} L${W / 2},${P} L${deckle(W / 2, P, 0, 0, rnd)} Z`;
+  const front = document.getElementById('envFlapFront'), back = document.getElementById('envFlapBack');
+  [front, back].forEach(s => { s.setAttribute('viewBox', vb); s.setAttribute('preserveAspectRatio', 'none'); });
+  front.innerHTML = `
+    <defs><linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf8f5"/><stop offset="1" stop-color="#f4eeea"/></linearGradient></defs>
+    <path d="${d}" fill="url(#fl)"/>`;
+  back.innerHTML = `
+    <defs><linearGradient id="flb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ead6b4"/><stop offset="1" stop-color="#f3dfe1"/></linearGradient></defs>
+    <path d="${d}" fill="url(#flb)"/>`;
+}
+
+// ── ENVELOPE OPEN ──────────────────────────────────────
+// One tap runs the whole sequence once: the ribbon is untied and the seal lifted, the flap swings
+// up, the card rises, then the scene fades into the invitation. Further taps are ignored.
+let envelopeOpening = false;
+function openEnvelope() {
+  const env = document.getElementById('envelope');
+  if (!env || envelopeOpening) return;
+  envelopeOpening = true;
+  env.classList.add('is-opening');
+  env.setAttribute('aria-disabled', 'true');
+  const quick = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(() => {
+    env.classList.add('opened');
+    document.getElementById('main').classList.add('visible');
+    setInterval(spawnPetal, 1600);
+    for (let i = 0; i < 5; i++) setTimeout(spawnPetal, i * 350);
+  }, quick ? 150 : 2700);
+  setTimeout(() => env.remove(), quick ? 1100 : 3650);
+}
+
+// ── EVENTS ─────────────────────────────────────────────
+drawEnvelope();
+window.addEventListener('resize', () => { if (!envelopeOpening) drawEnvelope(); });
+document.getElementById('envelope').addEventListener('click', openEnvelope);
+document.getElementById('envelope').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEnvelope(); }
+});
+
+document.addEventListener('click', e => {
+  const copy = e.target.closest('[data-copy]');
+  if (copy) {
+    navigator.clipboard?.writeText(copy.dataset.copy).then(() => {
+      const orig = copy.textContent;
+      copy.textContent = 'Copied ✓';
+      setTimeout(() => copy.textContent = orig, 1500);
+    });
+    return;
+  }
+  const att = e.target.closest('[data-att]');
+  if (att) {
+    att.closest('.att-toggle').querySelectorAll('.att-btn').forEach(b => b.classList.remove('sel-yes', 'sel-no'));
+    att.classList.add(att.dataset.att === 'yes' ? 'sel-yes' : 'sel-no');
+    return;
+  }
+  if (e.target.closest('[data-submit-rsvp]')) submitRSVP(e.target.closest('[data-submit-rsvp]'));
+});
+
+document.addEventListener('input', e => {
+  if (e.target.matches('[data-wishes]')) {
+    const counter = e.target.closest('[data-rsvp]').querySelector('[data-wish-count]');
+    if (counter) counter.textContent = e.target.value.length;
+  }
+});
+
+// ── RSVP SUBMIT ────────────────────────────────────────
+async function submitRSVP(btn) {
+  const form = btn.closest('[data-rsvp]');
+  const name   = form.querySelector('[data-guest-name]').value.trim();
+  const sizeEl = form.querySelector('[data-party-size]');
+  const size   = parseInt(sizeEl.value) || 0;
+  const attBtn = form.querySelector('.att-btn.sel-yes, .att-btn.sel-no');
+  const wishes = form.querySelector('[data-wishes]');
+
+  if (!attBtn) return alert('Please choose Attending or Decline.');
+  const attending = attBtn.dataset.att === 'yes';
+  if (!name) return alert('Please enter your name.');
+  if (attending && !size) return alert('Please select how many of you are coming.');
+
+  if (CURRENT_SLUG) {
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Sending…';
+    try {
+      // Split "A & B" / "A, B" into individual guest rows for the dashboard
+      const guestNames = attending
+        ? name.split(/\s*(?:&|,| and )\s*/i).map(s => s.trim()).filter(Boolean)
+        : [];
+      const res = await fetch(`${API_BASE}/api/public/invitations/${encodeURIComponent(CURRENT_SLUG)}/rsvp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          response: attending ? 'yes' : 'no',
+          partySize: attending ? size : 0,
+          contactName: name,
+          message: wishes ? (wishes.value.trim() || null) : null,
+          guests: guestNames.map(n => ({ fullName: n })),
+          guestToken: CURRENT_GUEST ? CURRENT_GUEST.token : null
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        btn.disabled = false;
+        btn.textContent = original;
+        return alert(err.error || `Submission failed (${res.status}). Please try again.`);
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = original;
+      return alert('Network error. Please check your connection and try again.');
+    }
+  }
+
+  form.style.display = 'none';
+  const done = form.parentElement.querySelector('[data-rsvp-done]');
+  // Show the accept or decline message the admin configured.
+  done.innerHTML = nl2br(attending ? done.dataset.accept : done.dataset.decline);
+  done.style.display = 'block';
+}
+
+// ── INIT ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    build(await loadData());
+  } catch (e) {
+    console.error('Failed to load invitation data:', e);
+    build(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  }
+});
+</script>
+</body>
+</html>
