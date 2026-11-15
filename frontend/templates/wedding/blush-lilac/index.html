@@ -56,7 +56,7 @@
 
   /* ── ENVELOPE / OPENING SCREEN ──
      The whole screen is the back of an envelope seen from above: a deckle-edged flap folded down
-     to the middle, held by a lilac satin ribbon and a champagne wax seal. Tapping it unties the
+     to the middle, held by a champagne-gold satin ribbon and wax seal. Tapping it unties the
      ribbon, lifts the flap, raises the card from the pocket and fades into the invitation.
      The flap and pocket shapes are drawn by drawEnvelope() to the screen's real size, so the
      deckled edge never stretches. */
@@ -114,29 +114,38 @@
   .env-flap .flap-front { filter: drop-shadow(0 7px 7px rgba(90,70,110,.13)); }
   .env-flap .flap-back { transform: rotateX(180deg); }
 
-  /* Satin ribbon across the flap's point, in two halves that slide away when it is untied. */
+  /* Champagne-gold satin ribbon across the flap's point, in two halves that slide away when it
+     is untied. The ribbon and bow are rendered by drawRibbon() as a lit 3D satin strip (see the
+     script); the gradient here is only what shows before that first draw. */
   .env-ribbon {
     position: absolute; left: 0; right: 0; top: var(--tip);
-    height: clamp(15px, 3.4vmin, 24px); transform: translateY(-50%);
+    height: clamp(17px, 4.6vmin, 30px); transform: translateY(-50%);
     pointer-events: none;
   }
   .rib {
-    position: absolute; top: 0; bottom: 0; width: 50.5%;
-    background: linear-gradient(180deg, #ece3f7 0%, #cfbbea 30%, #b89edd 58%, #d8c8ef 82%, #a98bd2 100%);
-    box-shadow: 0 3px 6px -2px rgba(90,70,110,.28);
-    transition: transform .85s cubic-bezier(.6,0,.8,.45) .18s, opacity .5s ease .5s;
+    position: absolute; top: 0; bottom: 0; width: 50.5%; overflow: hidden;
+    background: linear-gradient(180deg, #c9b086 0%, #e6d4b2 30%, #efe2c7 52%, #dcc59c 80%, #c2a77a 100%);
+    box-shadow: 0 1px 1px rgba(80,58,28,.2), 0 4px 7px -3px rgba(80,58,28,.28), 0 10px 16px -10px rgba(80,58,28,.2);
+    transition: transform .85s cubic-bezier(.45,0,.6,1) .15s, opacity .3s ease .72s;
   }
+  .rib canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .rib-l { left: 0; }
   .rib-r { right: 0; }
   .env-bow {
     position: absolute; left: 50%; top: var(--tip);
-    width: clamp(230px, 66vmin, 400px); height: auto; aspect-ratio: 260 / 200;
-    transform: translate(-50%, -35%);
+    width: clamp(240px, 70vmin, 420px); height: auto; aspect-ratio: 300 / 320;
+    transform: translate(-50%, -26.5625%);   /* the knot (85 of the 320 units down) on the band */
     pointer-events: none;
-    filter: drop-shadow(0 6px 8px rgba(90,70,110,.22));
-    transition: transform .8s cubic-bezier(.5,0,.75,0) .12s, opacity .55s ease .3s;
+    filter: drop-shadow(0 2px 1.5px rgba(80,58,28,.24)) drop-shadow(0 9px 10px rgba(80,58,28,.2));
+    transition: opacity .25s ease .95s;
   }
-  .env-bow svg { position: static; width: 100%; height: 100%; }
+  /* Each part of the bow is its own layer, pivoting on the knot, so it can move on its own when the
+     ribbon is untied. */
+  .env-bow canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+    transform-origin: 50% 26.5625%;
+    transition: transform .8s cubic-bezier(.4,0,.6,1) .12s, opacity .35s ease .6s;
+  }
 
   .env-seal {
     position: absolute; left: 50%; top: var(--tip);
@@ -183,9 +192,16 @@
 
   /* Opening sequence: seal lifts, ribbon slides apart, bow falls away, flap swings up, card rises. */
   #envelope.is-opening .env-seal { transform: translate(-50%, -60%) scale(1.12); opacity: 0; }
+  /* Untying: the loops are drawn out through the knot and away with the band, the tails slip
+     loose and slide off, and the band halves are pulled out to each side. */
   #envelope.is-opening .rib-l { transform: translateX(-104%); opacity: 0; }
   #envelope.is-opening .rib-r { transform: translateX(104%); opacity: 0; }
-  #envelope.is-opening .env-bow { transform: translate(-50%, 10%) rotate(-10deg) scale(.82); opacity: 0; }
+  #envelope.is-opening .env-bow { opacity: 0; }
+  #envelope.is-opening .loop-l { transform: translate(-30%, 1%) rotate(-10deg) scale(.5, .3); opacity: 0; }
+  #envelope.is-opening .loop-r { transform: translate(30%, 1%) rotate(10deg) scale(.5, .3); opacity: 0; }
+  #envelope.is-opening .tail-l { transform: translate(-16%, -4%) rotate(26deg) scale(.85, .55); opacity: 0; }
+  #envelope.is-opening .tail-r { transform: translate(16%, -4%) rotate(-26deg) scale(.85, .55); opacity: 0; }
+  #envelope.is-opening .knot   { transform: scale(.3); opacity: 0; }
   #envelope.is-opening .env-greeting,
   #envelope.is-opening .env-open { opacity: 0; }
   #envelope.is-opening .env-flap { transform: rotateX(178deg); }
@@ -194,14 +210,16 @@
 
   /* A phone on its side: smaller seal and bow so everything stays on one screen. */
   @media (max-height: 460px) {
-    .env-bow { width: 150px; }
+    .env-bow { width: 160px; }
+    .env-ribbon { height: 12px; }           /* the same ribbon as the smaller bow's */
+    .env-open { top: calc(var(--tip) + (100% - var(--tip)) * .8); }   /* below the tails */
     .env-seal { width: 62px; height: 62px; }
     .env-card { padding-top: .9rem; }
     .env-card-names { font-size: 1.8rem; }
   }
   @media (prefers-reduced-motion: reduce) {
     .env-open span { animation: none; }
-    .env-flap, .env-card, .rib, .env-bow, .env-seal { transition-duration: .01s; transition-delay: 0s; }
+    .env-flap, .env-card, .rib, .env-bow, .env-bow canvas, .env-seal { transition-duration: .01s; transition-delay: 0s; }
   }
 
   /* ── LAYOUT ── */
@@ -502,33 +520,17 @@
       <svg class="flap-front" id="envFlapFront"></svg>
       <svg class="flap-back" id="envFlapBack"></svg>
     </div>
-    <div class="env-ribbon" aria-hidden="true"><span class="rib rib-l"></span><span class="rib rib-r"></span></div>
-    <div class="env-bow" aria-hidden="true">
-      <svg viewBox="-130 -70 260 200">
-        <defs>
-          <linearGradient id="satin" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#f1e9fa"/><stop offset=".3" stop-color="#d3c0ec"/>
-            <stop offset=".58" stop-color="#b397db"/><stop offset=".8" stop-color="#dccdf1"/><stop offset="1" stop-color="#a586d0"/>
-          </linearGradient>
-          <linearGradient id="satinR" x1="1" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#f1e9fa"/><stop offset=".3" stop-color="#d3c0ec"/>
-            <stop offset=".58" stop-color="#b397db"/><stop offset=".8" stop-color="#dccdf1"/><stop offset="1" stop-color="#a586d0"/>
-          </linearGradient>
-          <linearGradient id="satinDark" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#c8b2e8"/><stop offset=".55" stop-color="#ad92d8"/><stop offset="1" stop-color="#9478c4"/>
-          </linearGradient>
-        </defs>
-        <!-- tails, trailing down and out with a twist, cut in a swallowtail -->
-        <path d="M-8 8 C-22 34 -30 58 -56 82 C-74 98 -86 110 -96 126 L-82 121 L-78 133 C-66 114 -50 100 -36 86 C-12 62 -2 40 6 12 Z" fill="url(#satinDark)"/>
-        <path d="M8 8 C18 36 30 56 52 78 C70 96 84 108 98 122 L84 120 L82 132 C68 116 52 102 36 88 C14 66 4 42 -6 12 Z" fill="url(#satinR)"/>
-        <!-- loops, with their inner shadow fold -->
-        <path d="M-6 -4 C-34 -60 -126 -62 -120 -14 C-116 22 -54 20 -6 6 Z" fill="url(#satin)"/>
-        <path d="M-14 -2 C-40 -40 -100 -44 -100 -14 C-99 6 -54 6 -14 2 Z" fill="#9b7cc9" opacity=".3"/>
-        <path d="M6 -4 C34 -60 126 -62 120 -14 C116 22 54 20 6 6 Z" fill="url(#satinR)"/>
-        <path d="M14 -2 C40 -40 100 -44 100 -14 C99 6 54 6 14 2 Z" fill="#9b7cc9" opacity=".3"/>
-        <!-- knot -->
-        <ellipse cx="0" cy="1" rx="19" ry="16" fill="url(#satinDark)"/>
-      </svg>
+    <div class="env-ribbon" aria-hidden="true">
+      <span class="rib rib-l"><canvas id="ribL"></canvas></span><span class="rib rib-r"><canvas id="ribR"></canvas></span>
+    </div>
+    <!-- The bow, one canvas per part (tails under loops, the knot on top) so each can move on its
+         own when the ribbon is untied. Drawn by drawRibbon(). -->
+    <div class="env-bow" aria-hidden="true" id="envBow">
+      <canvas class="tail-l" data-part="tailL"></canvas>
+      <canvas class="tail-r" data-part="tailR"></canvas>
+      <canvas class="loop-l" data-part="loopL"></canvas>
+      <canvas class="loop-r" data-part="loopR"></canvas>
+      <canvas class="knot" data-part="knot"></canvas>
     </div>
     <div class="env-seal" id="envSeal" data-pending><span class="env-mono" id="envMono">&amp;</span></div>
     <!-- Left blank on purpose: the greeting is guest-specific, so showing a placeholder would flash
@@ -1106,6 +1108,182 @@ function drawEnvelope() {
     <path d="${d}" fill="url(#flb)"/>`;
 }
 
+// ── SATIN RIBBON ───────────────────────────────────────
+// The ribbon is rendered as a real strip of satin in 3D rather than painted shapes. Each run of
+// ribbon is a centre line in space (x right, y down, z towards the viewer) plus a twist along its
+// length. At every step the strip's facing is worked out from the curve and the twist: turned
+// edge-on it narrows (the fold at a loop's tip, the turns in the tails), facing up it shows full
+// width. It is lit the way satin really shines: satin's floats run along the ribbon, so its
+// highlight is a streak along the length that slides as the ribbon bends (an anisotropic,
+// thread-aligned sheen), on a soft diffuse base. The face is glossy; the back, seen inside the loops
+// and where a tail turns over, is duller and darker. Coordinates are bow units: x −150…150,
+// y −85…235, the knot at 0,0.
+const SATIN = {
+  base: [218, 197, 160],          // champagne
+  back: [208, 188, 152],          // the reverse: the same champagne, without the gloss
+  shine: [255, 246, 226],         // a warm, golden sheen
+  light: (() => { const v = [-0.42, -0.62, 0.66], l = Math.hypot(...v); return v.map(c => c / l); })()
+};
+const v3 = {
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+  mul: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  norm: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+};
+// A smooth curve through the control points (Catmull-Rom), sampled finely.
+function satinCurve(pts, steps) {
+  const out = [], n = pts.length;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, n - 1)];
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1, 2].map(k => .5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3)));
+    }
+  }
+  out.push(pts[n - 1].slice());
+  return out;
+}
+// Twist (degrees) at a fraction of the way along, from [fraction, degrees] keys.
+function satinTwist(keys, f) {
+  for (let i = 1; i < keys.length; i++) if (f <= keys[i][0]) {
+    const [f0, d0] = keys[i - 1], [f1, d1] = keys[i], u = (f - f0) / ((f1 - f0) || 1);
+    const e = u * u * (3 - 2 * u);
+    return (d0 + (d1 - d0) * e) * Math.PI / 180;
+  }
+  return keys[keys.length - 1][1] * Math.PI / 180;
+}
+// Draws one run of ribbon. `map` turns bow units into canvas pixels; w is the ribbon's width.
+// opts: reverse (paint from the far end, so the start lies on top), cut (bias-cut end),
+// shadeNear (darken near a point, where the ribbon passes under the knot).
+function satinRun(ctx, pts, keys, w, map, opts = {}) {
+  const S = satinCurve(pts, 20), n = S.length, L = SATIN.light, H = v3.norm(v3.add(L, [0, 0, 1]));
+  const frames = S.map((p, i) => {
+    const T = v3.norm(v3.sub(S[Math.min(i + 1, n - 1)], S[Math.max(i - 1, 0)]));
+    let B = v3.norm(v3.cross([0, 0, 1], T));
+    let N0 = v3.norm(v3.cross(T, B)); if (N0[2] < 0) N0 = v3.mul(N0, -1);
+    const th = satinTwist(keys, i / (n - 1)), c = Math.cos(th), s = Math.sin(th);
+    const N = v3.add(v3.mul(N0, c), v3.mul(B, s));       // the ribbon's face
+    const E = v3.sub(v3.mul(B, c), v3.mul(N0, s));       // across the ribbon, edge to edge
+    const P = map(p);
+    return { P, T, N, E: [E[0] * map.k, E[1] * map.k] };
+  });
+  const order = [...Array(n - 1).keys()];
+  if (opts.reverse) order.reverse();
+  const half = w / 2;
+  const rgb = (c, f, g) => `rgb(${c.map((v, j) => Math.min(255, Math.round(v * f + SATIN.shine[j] * g))).join(',')})`;
+  for (const i of order) {
+    const a = frames[i], b = frames[i + 1];
+    let Nf = a.N, back = false;
+    if (Nf[2] < 0) { Nf = v3.mul(Nf, -1); back = true; }
+    const diff = Math.max(v3.dot(Nf, L), 0);
+    const tH = v3.dot(a.T, H), aniso = Math.sqrt(Math.max(0, 1 - tH * tH));
+    let spec = Math.pow(aniso, 60) * .58 + Math.pow(aniso, 8) * .16;
+    if (back) spec *= .3;
+    let shade = (back ? .74 : .66) + .42 * diff;
+    if (opts.shadeNear) {
+      const d = Math.hypot(S[i][0] - opts.shadeNear[0], S[i][1] - opts.shadeNear[1]);
+      shade *= .76 + .24 * Math.min(1, d / 34);
+    }
+    const base = back ? SATIN.back : SATIN.base;
+    // overlap each step a little along the ribbon so no hairline seams show between them
+    const sl = Math.hypot(b.P[0] - a.P[0], b.P[1] - a.P[1]) || 1, ov = Math.max(.9, sl * .12) / sl;
+    const dx = (b.P[0] - a.P[0]) * ov, dy = (b.P[1] - a.P[1]) * ov;
+    const e0 = [a.P[0] - a.E[0] * half, a.P[1] - a.E[1] * half], e1 = [a.P[0] + a.E[0] * half, a.P[1] + a.E[1] * half];
+    // Across the width, one smooth gradient: the woven edges a shade darker, the sheen fullest
+    // across the middle.
+    const gr = (Math.hypot(e1[0] - e0[0], e1[1] - e0[1]) > .5) ? ctx.createLinearGradient(e0[0], e0[1], e1[0], e1[1]) : null;
+    if (gr) {
+      gr.addColorStop(0, rgb(base, shade * .84, spec * .55));
+      gr.addColorStop(.18, rgb(base, shade * .97, spec * .9));
+      gr.addColorStop(.5, rgb(base, shade, spec));
+      gr.addColorStop(.82, rgb(base, shade * .98, spec * .9));
+      gr.addColorStop(1, rgb(base, shade * .87, spec * .55));
+      ctx.fillStyle = gr;
+    } else ctx.fillStyle = rgb(base, shade * .9, spec * .7);   // edge-on: just the edge
+    ctx.beginPath();
+    ctx.moveTo(a.P[0] - a.E[0] * half - dx, a.P[1] - a.E[1] * half - dy);
+    ctx.lineTo(b.P[0] - b.E[0] * half + dx, b.P[1] - b.E[1] * half + dy);
+    ctx.lineTo(b.P[0] + b.E[0] * half + dx, b.P[1] + b.E[1] * half + dy);
+    ctx.lineTo(a.P[0] + a.E[0] * half - dx, a.P[1] + a.E[1] * half - dy);
+    ctx.closePath(); ctx.fill();
+  }
+  // the woven selvedges: a fine darker line along each edge
+  ctx.lineWidth = Math.max(.6, map.k * .5);
+  ctx.strokeStyle = 'rgba(122,97,62,.38)';
+  for (const sgn of [-1, 1]) {
+    ctx.beginPath();
+    frames.forEach((f, i) => { const x = f.P[0] + f.E[0] * half * sgn, y = f.P[1] + f.E[1] * half * sgn; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+  // a bias-cut end: trim a triangle off the last stretch
+  if (opts.cut) {
+    const f = frames[n - 1], p = frames[n - 4], tx = f.P[0] - p.P[0], ty = f.P[1] - p.P[1], tl = Math.hypot(tx, ty) || 1;
+    const ux = tx / tl, uy = ty / tl, len = w * map.k * .55;
+    ctx.save(); ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.moveTo(f.P[0] + f.E[0] * half * 1.4 + ux * 2, f.P[1] + f.E[1] * half * 1.4 + uy * 2);
+    ctx.lineTo(f.P[0] - f.E[0] * half * 1.4 - ux * len, f.P[1] - f.E[1] * half * 1.4 - uy * len);
+    ctx.lineTo(f.P[0] - f.E[0] * half * 1.4 + ux * 20, f.P[1] - f.E[1] * half * 1.4 + uy * 20);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+}
+// The bow's parts and the band. Each part: control points [x, y, z], twist keys, and options.
+const BOW_PARTS = {
+  // Loops rise towards the viewer over the crown; the face tilts towards the light going out,
+  // turns edge-on at the tip, and comes back showing its duller reverse.
+  loopL: { pts: [[-3, -3, 3], [-26, -46, 14], [-76, -68, 22], [-122, -56, 18], [-142, -30, 10], [-128, -6, 6], [-82, 6, 4], [-34, 7, 3], [-4, 4, 2]],
+           keys: [[0, 18], [.2, 26], [.42, 34], [.52, 78], [.58, 118], [.72, 150], [1, 162]], opts: { reverse: true, shadeNear: [0, 0] } },
+  loopR: { pts: [[3, -3, 3], [28, -44, 14], [78, -66, 22], [121, -53, 17], [139, -27, 10], [126, -4, 6], [80, 7, 4], [33, 7, 3], [4, 4, 2]],
+           keys: [[0, -16], [.2, -24], [.42, -30], [.52, -76], [.58, -116], [.72, -148], [1, -160]], opts: { reverse: true, shadeNear: [0, 0] } },
+  // Tails fall away and turn over twice on the way down, ending in a bias cut.
+  tailL: { pts: [[-4, 6, 3], [-22, 36, 4], [-58, 66, 3], [-84, 104, 2], [-86, 146, 2], [-64, 180, 1], [-68, 226, 0]],
+           keys: [[0, 22], [.22, 36], [.36, 96], [.5, 158], [.62, 126], [.76, 58], [.9, 30], [1, 26]], opts: { cut: true, shadeNear: [0, 0] } },
+  tailR: { pts: [[4, 6, 3], [26, 38, 4], [66, 62, 3], [90, 100, 2], [92, 144, 2], [68, 178, 1], [78, 230, 0]],
+           keys: [[0, -20], [.2, -40], [.34, -104], [.48, -160], [.6, -128], [.74, -62], [.88, -34], [1, -28]], opts: { cut: true, shadeNear: [0, 0] } },
+  // The knot: a short wrap of ribbon, gathered round the middle (mostly under the seal).
+  knot:  { pts: [[-15, 1, 2], [-8, 0, 7], [0, -.5, 9], [8, 0, 7], [15, 1, 2]], keys: [[0, 0], [1, 0]], opts: {}, w: 26 }
+};
+function drawRibbon() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);   // 2x is sharp at this size and keeps memory low on phones
+  const bow = document.getElementById('envBow');
+  if (bow && bow.clientWidth) {
+    const cssW = bow.clientWidth, cssH = bow.clientHeight, k = cssW / 300 * dpr;
+    const map = p => [(p[0] + 150) * k, (p[1] + 85) * k];
+    map.k = k;
+    bow.querySelectorAll('canvas').forEach(cv => {
+      const part = BOW_PARTS[cv.dataset.part];
+      cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
+      const ctx = cv.getContext('2d');
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      satinRun(ctx, part.pts, part.keys, (part.w || 21) * k, map, part.opts);
+    });
+  }
+  // The band: the same satin, nearly flat, with the faint ripple a real ribbon has, rolling away
+  // into shade where it wraps round the edges of the envelope.
+  [['ribL', -1], ['ribR', 1]].forEach(([id, dir]) => {
+    const cv = document.getElementById(id);
+    if (!cv || !cv.clientWidth) return;
+    const cssW = cv.clientWidth, cssH = cv.clientHeight;
+    cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
+    const ctx = cv.getContext('2d'), W = cv.width, Hh = cv.height;
+    ctx.clearRect(0, 0, W, Hh);
+    const pts = [];
+    const steps = Math.max(8, Math.round(cssW / 40));
+    for (let i = 0; i <= steps; i++) {
+      const f = i / steps;                                   // 0 at the knot … 1 at the screen's edge
+      const x = dir < 0 ? (1 - f) * W : f * W;
+      const wrap = Math.max(0, (f - .9) / .1);
+      const z = (Math.sin(f * 9.4 + (dir < 0 ? .7 : 2.1)) * .9 + Math.sin(f * 23 + 1.3) * .35) * Hh * .22 - wrap * wrap * Hh * 1.6;
+      pts.push([x, Hh / 2, z]);
+    }
+    const id1 = p => [p[0], p[1]]; id1.k = 1;
+    // the band runs from the knot outwards, so its twist keys run the same way on both sides
+    satinRun(ctx, pts, [[0, dir * 4], [.5, dir * -3], [1, dir * 2]], Hh * .94, id1, {});
+  });
+}
+
 // ── ENVELOPE OPEN ──────────────────────────────────────
 // One tap runs the whole sequence once: the ribbon is untied and the seal lifted, the flap swings
 // up, the card rises, then the scene fades into the invitation. Further taps are ignored.
@@ -1128,7 +1306,8 @@ function openEnvelope() {
 
 // ── EVENTS ─────────────────────────────────────────────
 drawEnvelope();
-window.addEventListener('resize', () => { if (!envelopeOpening) drawEnvelope(); });
+drawRibbon();
+window.addEventListener('resize', () => { if (!envelopeOpening) { drawEnvelope(); drawRibbon(); } });
 document.getElementById('envelope').addEventListener('click', openEnvelope);
 document.getElementById('envelope').addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEnvelope(); }
