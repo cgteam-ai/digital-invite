@@ -117,7 +117,9 @@
 
     function render() {
       var started = phase === 'starting' || phase === 'playing';
-      var audible = started && !engine.isMuted();
+      // While starting, show what the guest asked for (with the loading pulse); once settled, what
+      // the player really does: a video YouTube silenced is never shown as playing.
+      var audible = phase === 'playing' ? !engine.isMuted() : phase === 'starting' && !engine.userMuted();
       var icon = audible ? 'on' : 'off';
       if (icon !== lastIcon) { iconWrap.innerHTML = audible ? ICON_ON : ICON_OFF; lastIcon = icon; }
       btn.classList.toggle('is-muted', !audible);
@@ -150,6 +152,9 @@
       if (btn.contains(e.target)) return;          // the icon handles its own presses (see below)
       if (e.type === 'keydown' && (e.key === 'Escape' || e.key === 'Tab' || e.ctrlKey || e.metaKey || e.altKey)) return;
       if (phase === 'blocked' || phase === 'idle') start();
+      // A tap while a start is still pending is not wasted: the engine repeats its play-with-sound
+      // command inside this tap, where the browser allows it.
+      else if (phase === 'starting' && engine.nudge && !engine.userMuted()) engine.nudge();
     }
     function arm() {
       if (armed) return;
@@ -166,7 +171,7 @@
     // toggles mute. One press, one effect.
     btn.addEventListener('click', function () {
       if (phase === 'idle' || phase === 'blocked') { engine.setMuted(false); start(); return; }
-      engine.setMuted(!engine.isMuted());
+      engine.setMuted(!(phase === 'starting' ? engine.userMuted() : engine.isMuted()));
       render();
     });
 
@@ -174,8 +179,10 @@
     engine.onSystemChange(function (playing) {
       if (playing) {
         if (phase !== 'playing') { phase = 'playing'; disarm(); }
-      } else if (phase === 'playing') {
-        phase = 'blocked';                          // paused by the system: the next tap resumes
+      } else if (phase === 'playing' && !engine.userMuted()) {
+        // Paused by the system, or silenced by YouTube: the next tap brings the sound back.
+        // (Silence the guest chose with the icon is not this: it stays playing, muted.)
+        phase = 'blocked';
         if (engine.broken()) disarm(); else arm();
       }
       render();
@@ -228,6 +235,7 @@
                       function () { playPending = false; return false; });
       },
       isMuted: function () { return audio.muted; },
+      userMuted: function () { return audio.muted; },
       setMuted: function (m) { audio.muted = m; },
       // The file itself cannot be played (missing, wrong format): waiting for a tap will not help.
       broken: function () { return !!audio.error; }
@@ -235,10 +243,43 @@
   }
 
   // ── YouTube-as-audio engine (hidden surface, no controls, looped) ────────
+  //
+  // The trap this engine is built around: when a browser will not let a video play WITH sound
+  // (iPhone Safari before a tap, Chrome on a first visit), YouTube's player does not stay stopped. It
+  // mutes itself and plays silently, still reporting PLAYING. Trusting that report showed the
+  // speaker as on while the guest heard nothing, and only a mute-then-unmute brought the sound.
+  //
+  // So "sounding" here means PLAYING and not muted by YouTube, confirmed by asking the player. A
+  // video YouTube has silenced is left running muted ("primed"): it is then fully loaded, and the
+  // guest's first tap only has to unmute it (from the beginning of the song), which every browser
+  // allows inside a tap, instead of starting a cold video that may take too long to stay within it.
   function youTubeEngine(videoId) {
     var yt = null, ready = false, readyCbs = [], changeCbs = [];
-    var muted = false, playing = false, waiters = [];
+    var muted = false;        // the guest's choice
+    var playing = false;      // YouTube reports PLAYING (sound or not)
+    var audible = false;      // last state reported to the controller: playing with sound
+    var waiters = [];
     var failed = 0;   // a YouTube error code: the video cannot be played here at all
+
+    function ytMuted() { try { return !!yt.isMuted(); } catch (e) { return false; } }
+    // Tell the controller only about real changes in whether sound is playing.
+    function report() {
+      var now = playing && !muted && !ytMuted();
+      if (now === audible) return;
+      audible = now;
+      changeCbs.forEach(function (cb) { cb(now); });
+    }
+    // YouTube answers isMuted() from state it posts back a moment after a command, so confirm over
+    // a short window: true as soon as the sound is on, false if it is still muted at the end.
+    function confirmSound(resolve) {
+      var tries = 0;
+      (function check() {
+        if (failed) return resolve(false);
+        if (playing && !ytMuted()) return resolve(true);
+        if (++tries > 6) return resolve(false);
+        setTimeout(check, 150);
+      })();
+    }
 
     var holder = document.createElement('div');
     // YouTube's embedding rules ask for a player of at least 200x200px, so it gets that size; it
@@ -264,12 +305,16 @@
           onStateChange: function (e) {
             var S = YT.PlayerState;
             if (e.data === S.PLAYING) {
+              playing = true;
               settle(true);
-              if (!playing) { playing = true; changeCbs.forEach(function (cb) { cb(true); }); }
+              // isMuted() catches up a moment after PLAYING; reporting at once could call a
+              // silenced start "sound on". The watcher below confirms it.
+              setTimeout(report, 600);
             } else if (e.data === S.ENDED) {
               yt.playVideo();                       // belt-and-braces loop
             } else if (e.data === S.PAUSED && playing) {
-              playing = false; changeCbs.forEach(function (cb) { cb(false); });
+              playing = false;
+              report();
             }
           },
           // 2 bad id · 5 HTML5 error · 100 removed or private · 101/150 the owner does not allow
@@ -279,11 +324,16 @@
             if (window.console) console.warn('Invitation music: this YouTube video cannot be played here (YouTube error ' + failed +
               (failed === 101 || failed === 150 ? ': its owner does not allow it in other websites' : '') + '):', videoId);
             settle(false);
-            if (playing) { playing = false; changeCbs.forEach(function (cb) { cb(false); }); }
+            playing = false;
+            report();
           }
         }
       });
     }
+
+    // YouTube can mute or unmute itself without an event; check once a second while it plays so
+    // the icon never claims sound that is not there.
+    setInterval(function () { if (playing) report(); }, 1000);
 
     // Load the IFrame API once.
     if (window.YT && window.YT.Player) {
@@ -302,25 +352,61 @@
     return {
       onReady: function (cb) { ready ? cb() : readyCbs.push(cb); },
       onSystemChange: function (cb) { changeCbs.push(cb); },
-      // Resolves true only when the player reports PLAYING. YouTube offers no play() promise, so a
-      // browser that blocks the sound shows up as no PLAYING report within a few seconds.
+      // Resolves true only once the music is really heard (or would be, if the guest muted it):
+      // PLAYING and not silenced by YouTube. The YouTube commands are sent synchronously, inside
+      // the caller's tap.
       play: function () {
         if (!yt || !ready || failed) return Promise.resolve(false);
-        if (playing) return Promise.resolve(true);
-        try { muted ? yt.mute() : yt.unMute(); yt.playVideo(); } catch (e) { return Promise.resolve(false); }
+        var done = function (ok) { report(); return ok; };
+        // The guest chose silence: playing at all is success.
+        if (muted) {
+          try { yt.mute(); if (!playing) yt.playVideo(); } catch (e) { return Promise.resolve(false); }
+          if (playing) return Promise.resolve(true);
+        } else if (playing) {
+          if (!ytMuted()) return Promise.resolve(true);
+          // Primed: running silently. Unmute it, from the start of the song.
+          try { yt.seekTo(0, true); yt.unMute(); yt.setVolume(100); } catch (e) { return Promise.resolve(false); }
+          return new Promise(confirmSound).then(done);
+        } else {
+          try { yt.unMute(); yt.setVolume(100); yt.playVideo(); } catch (e) { return Promise.resolve(false); }
+        }
         return new Promise(function (resolve) {
-          var done = false;
-          function finish(ok) { if (!done) { done = true; resolve(ok); } }
-          waiters.push(finish);
+          var finished = false;
+          function finish(ok) { if (!finished) { finished = true; resolve(ok); } }
+          waiters.push(function (started) {
+            if (!started) return finish(false);
+            if (muted) return finish(true);
+            // It started. With sound, or did YouTube mute it? If muted, it keeps running silently
+            // (primed) so the next tap can simply unmute it.
+            confirmSound(finish);
+          });
           setTimeout(function () {
-            if (done) return;
-            try { yt.pauseVideo(); } catch (e) {}      // never left half-started (it could begin later, out of sync with the icon)
+            if (finished) return;
+            // Nothing began. Warm it up muted instead, which browsers allow without a tap, so the
+            // next tap only has to unmute it. If it begins later it is silent, so it can never be
+            // heard out of step with the icon.
+            try { yt.mute(); yt.playVideo(); } catch (e) {}
             finish(false);
-          }, 8000);
-        });
+          }, 6000);
+        }).then(done);
       },
-      isMuted: function () { return muted; },
-      setMuted: function (m) { muted = m; try { m ? yt.mute() : yt.unMute(); } catch (e) {} },
+      isMuted: function () { return muted || (playing && ytMuted()); },
+      userMuted: function () { return muted; },
+      // For support and tests: what YouTube itself reports.
+      debug: function () {
+        var st = null; try { st = yt.getPlayerState(); } catch (e) {}
+        return { ready: ready, state: st, ytMuted: ready ? ytMuted() : null, failed: failed };
+      },
+      nudge: function () {
+        if (!yt || !ready || failed || muted) return;
+        try { yt.unMute(); yt.setVolume(100); if (!playing) yt.playVideo(); } catch (e) {}
+      },
+      setMuted: function (m) {
+        muted = m;
+        try { m ? yt.mute() : (yt.unMute(), yt.setVolume(100)); } catch (e) {}
+        // Unmuting is only real once YouTube confirms it; until then the icon stays as it was.
+        if (!m) setTimeout(report, 450); else report();
+      },
       broken: function () { return !!failed; }
     };
   }
@@ -329,6 +415,11 @@
     init: init,
     _parseYouTubeId: parseYouTubeId,
     // Read-only view for testing and support: the current phase of this page's player.
-    _state: function () { return active ? { phase: active.phase(), muted: active.engine.isMuted() } : null; }
+    _state: function () {
+      if (!active) return null;
+      var s = { phase: active.phase(), muted: active.engine.isMuted() };
+      if (active.engine.debug) s.player = active.engine.debug();
+      return s;
+    }
   };
 })();
