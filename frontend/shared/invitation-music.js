@@ -11,7 +11,8 @@
  *   • The icon always shows the real state: off until music is actually requested, on (with a
  *     pulse) while it plays. If the system pauses the music (a phone call, another app's audio),
  *     the icon turns off and the next tap resumes it.
- *   • Loops continuously. One player per page, whatever calls init().
+ *   • Pauses while the page is in the background and resumes on return only if it was playing.
+ *   • Loops continuously. One player per page, whatever calls init(). No music, no listeners.
  *
  * Why this shape (the bugs it replaces): the earlier version listened for scroll, touchstart and
  * pointerdown, which browsers never accept as permission to play sound on a phone, and removed its
@@ -77,11 +78,15 @@
 
   // Events a browser accepts as permission to start sound. pointerdown/touchstart (on a touch
   // screen) and scroll are NOT among them, so they are deliberately absent.
-  //   click    – mouse, trackpad and taps on links/buttons (every browser)
-  //   touchend – a tap anywhere on a phone, including on plain text or pictures, where iOS Safari
-  //              sends no click event to the page
-  //   keydown  – keyboard users
-  var GESTURES = ['click', 'touchend', 'keydown'];
+  //   click     – mouse, trackpad and taps on links/buttons (every browser)
+  //   pointerup – the end of a touch or pen tap (Chromium counts it; it arrives before touchend)
+  //   touchend  – a tap anywhere on a phone, including on plain text or pictures, where iOS Safari
+  //               sends no click event to the page
+  //   keydown   – keyboard users
+  // One tap fires several of these. The first that the browser accepts starts the music; the
+  // others find it starting and only repeat the play command (see nudge), so a browser that does
+  // not count pointerup still gets its touchend.
+  var GESTURES = ['click', 'pointerup', 'touchend', 'keydown'];
 
   var active = null;   // the one player on this page
 
@@ -112,6 +117,7 @@
     // blocked   the browser refused sound until the guest interacts; gesture listeners are armed
     // starting  play() requested, waiting for the browser to confirm
     // playing   sound is (or would be, if unmuted) playing
+    // away      paused by us because the page went to the background; resumes when it returns
     var phase = 'idle';
     var lastIcon = null;
 
@@ -154,7 +160,7 @@
       if (phase === 'blocked' || phase === 'idle') start();
       // A tap while a start is still pending is not wasted: the engine repeats its play-with-sound
       // command inside this tap, where the browser allows it.
-      else if (phase === 'starting' && engine.nudge && !engine.userMuted()) engine.nudge();
+      else if (phase === 'starting' && !engine.userMuted()) engine.nudge();
     }
     function arm() {
       if (armed) return;
@@ -179,11 +185,35 @@
     engine.onSystemChange(function (playing) {
       if (playing) {
         if (phase !== 'playing') { phase = 'playing'; disarm(); }
+        // A start that only came through after the page was hidden: hold it until the guest is back.
+        if (document.hidden) { phase = 'away'; engine.pause(); }
+      } else if (phase === 'away') {
+        // our own background pause
+      } else if (phase === 'playing' && document.hidden) {
+        // The phone paused it on its way to the background, before visibilitychange reached us.
+        phase = 'away';
       } else if (phase === 'playing' && !engine.userMuted()) {
         // Paused by the system, or silenced by YouTube: the next tap brings the sound back.
         // (Silence the guest chose with the icon is not this: it stays playing, muted.)
         phase = 'blocked';
         if (engine.broken()) disarm(); else arm();
+      }
+      render();
+    });
+    // Muted or unmuted from outside the icon (the element's volumechange): redraw from the player.
+    engine.onMuteChange(render);
+
+    // Background: pause while the page is hidden (another app, a locked phone, a switched tab) and
+    // resume on return only if it was playing. The element was already started by a tap, so the
+    // browser lets it resume without another; if it does not, the next tap does, as on first load.
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        if (phase !== 'playing') return;
+        phase = 'away';
+        engine.pause();
+      } else if (phase === 'away') {
+        phase = 'idle';
+        start();
       }
       render();
     });
@@ -203,7 +233,7 @@
     audio.preload = 'auto';
     audio.muted = false;
     audio.src = src;
-    var readyCbs = [], changeCbs = [];
+    var readyCbs = [], changeCbs = [], muteCbs = [];
     var playPending = false;
     // Whether sound is really playing, from the element's own events. audio.paused alone cannot
     // say: after a failed load Chromium leaves it false although nothing plays.
@@ -217,6 +247,7 @@
       if (window.console) console.warn('Invitation music could not be loaded:', src);
       if (!playPending) emit(false);
     });
+    audio.addEventListener('volumechange', function () { muteCbs.forEach(function (cb) { cb(); }); });
     // The element can be asked to play at once; fire "ready" on the next tick.
     setTimeout(function () { readyCbs.forEach(function (cb) { cb(); }); readyCbs = null; }, 0);
     return {
@@ -234,6 +265,14 @@
         return p.then(function () { playPending = false; return true; },
                       function () { playPending = false; return false; });
       },
+      // Repeat the play command inside a later event of the same tap. The earlier attempt may have
+      // come from an event this browser does not count (pointerup on iOS); this one may be counted.
+      nudge: function () {
+        if (sounding) return;
+        try { var p = audio.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      },
+      pause: function () { audio.pause(); },
+      onMuteChange: function (cb) { muteCbs.push(cb); },
       isMuted: function () { return audio.muted; },
       userMuted: function () { return audio.muted; },
       setMuted: function (m) { audio.muted = m; },
@@ -401,6 +440,9 @@
         if (!yt || !ready || failed || muted) return;
         try { yt.unMute(); yt.setVolume(100); if (!playing) yt.playVideo(); } catch (e) {}
       },
+      pause: function () { try { yt.pauseVideo(); } catch (e) {} },
+      // YouTube posts no mute event; the once-a-second check (report) already redraws the icon.
+      onMuteChange: function () {},
       setMuted: function (m) {
         muted = m;
         try { m ? yt.mute() : (yt.unMute(), yt.setVolume(100)); } catch (e) {}
