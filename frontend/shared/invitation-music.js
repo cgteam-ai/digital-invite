@@ -5,9 +5,11 @@
  *   • A small elegant icon is fixed in the bottom-left corner and stays visible while scrolling.
  *   • Music tries to start, with sound, as soon as the invitation has loaded.
  *   • Most browsers block sound until the guest interacts with the page. Then the music starts on
- *     the guest's first tap, click or key press anywhere (or on the icon itself) — once, with no
- *     restart. Scrolling alone never counts: browsers do not allow sound from a scroll.
- *   • Once the music is playing, the icon only toggles mute / unmute. It never pauses or restarts.
+ *     the guest's first tap, click or key press anywhere, "tap to open" included — once, with no
+ *     restart. Scrolling and swiping a natively scrolling area never count: browsers do not allow
+ *     sound from a scroll.
+ *   • The icon is a mute switch. Pressed first, before the music has started, it keeps the music
+ *     muted; after that it only toggles mute / unmute. It never pauses or restarts.
  *   • The icon always shows the real state: off until music is actually requested, on (with a
  *     pulse) while it plays. If the system pauses the music (a phone call, another app's audio),
  *     the icon turns off and the next tap resumes it.
@@ -114,8 +116,9 @@
     var engine = ytId ? youTubeEngine(ytId) : audioEngine(resolveUrl(music.url, apiBase));
 
     // idle      not tried yet
+    // trying    the no-tap autoplay attempt is under way; a tap meanwhile is a full start of its own
     // blocked   the browser refused sound until the guest interacts; gesture listeners are armed
-    // starting  play() requested, waiting for the browser to confirm
+    // starting  play() requested from a tap, waiting for the browser to confirm
     // playing   sound is (or would be, if unmuted) playing
     // away      paused by us because the page went to the background; resumes when it returns
     var phase = 'idle';
@@ -142,7 +145,7 @@
       if (phase === 'starting' || phase === 'playing') return;
       phase = 'starting';
       render();
-      engine.play().then(function (ok) {
+      engine.play(false).then(function (ok) {
         if (phase !== 'starting') return;          // the system paused/ended it meanwhile: events already handled it
         phase = ok ? 'playing' : 'blocked';
         // Refused for want of a tap: keep listening. Unplayable file: stop asking on every tap;
@@ -152,12 +155,27 @@
       });
     }
 
+    // The attempt made without a tap, as soon as the player is ready. It must not hold the player in
+    // 'starting': a YouTube attempt can take seconds to fail, and a "tap to open" made meanwhile
+    // used to be spent on a mere repeat of the command instead of a real start, so it never played.
+    function tryAutoplay() {
+      if (phase !== 'idle' && phase !== 'blocked') return;
+      phase = 'trying';
+      render();
+      engine.play(true).then(function (ok) {
+        if (phase !== 'trying') return;            // a tap or the player's own events took over
+        phase = ok ? 'playing' : 'blocked';
+        if (ok || engine.broken()) disarm();
+        render();
+      });
+    }
+
     // ── first-interaction listeners: kept until the music has actually started ──
     var armed = false;
     function onGesture(e) {
       if (btn.contains(e.target)) return;          // the icon handles its own presses (see below)
       if (e.type === 'keydown' && (e.key === 'Escape' || e.key === 'Tab' || e.ctrlKey || e.metaKey || e.altKey)) return;
-      if (phase === 'blocked' || phase === 'idle') start();
+      if (phase === 'blocked' || phase === 'idle' || phase === 'trying') start();
       // A tap while a start is still pending is not wasted: the engine repeats its play-with-sound
       // command inside this tap, where the browser allows it.
       else if (phase === 'starting' && !engine.userMuted()) engine.nudge();
@@ -173,10 +191,11 @@
       GESTURES.forEach(function (t) { window.removeEventListener(t, onGesture, { capture: true }); });
     }
 
-    // The icon: the first press starts the music if it has not started; after that each press
-    // toggles mute. One press, one effect.
+    // The icon is a mute switch. A first press before the music has started means "keep it quiet":
+    // the music starts muted (inside this tap, so a later unmute needs nothing more) and the icon
+    // stays off. After that each press toggles mute. One press, one effect.
     btn.addEventListener('click', function () {
-      if (phase === 'idle' || phase === 'blocked') { engine.setMuted(false); start(); return; }
+      if (phase === 'idle' || phase === 'blocked' || phase === 'trying') { engine.setMuted(true); start(); render(); return; }
       engine.setMuted(!(phase === 'starting' ? engine.userMuted() : engine.isMuted()));
       render();
     });
@@ -218,9 +237,11 @@
       render();
     });
 
-    // Arm before trying, so a tap during the attempt is never lost; then try with sound.
+    // Arm before trying, so a tap during the attempt is never lost; then try with sound. A tap made
+    // before a YouTube player was ready could not reach it, but it still counts: on Android and
+    // desktop the page now has permission, so this attempt plays with sound.
     arm();
-    engine.onReady(function () { if (phase === 'idle') start(); });
+    engine.onReady(function () { if (!engine.userMuted()) tryAutoplay(); });
     render();
 
     active = { btn: btn, engine: engine, phase: function () { return phase; } };
@@ -299,6 +320,7 @@
     var audible = false;      // last state reported to the controller: playing with sound
     var waiters = [];
     var failed = 0;   // a YouTube error code: the video cannot be played here at all
+    var attempts = 0; // play() calls so far; only the newest may fall back to a muted warm-up
 
     function ytMuted() { try { return !!yt.isMuted(); } catch (e) { return false; } }
     // Tell the controller only about real changes in whether sound is playing.
@@ -394,8 +416,11 @@
       // Resolves true only once the music is really heard (or would be, if the guest muted it):
       // PLAYING and not silenced by YouTube. The YouTube commands are sent synchronously, inside
       // the caller's tap.
-      play: function () {
+      // auto: the attempt made without a tap. It gives up (and warms up muted) after 1.5s rather
+      // than 6s, so the player is primed by the time a guest taps "tap to open".
+      play: function (auto) {
         if (!yt || !ready || failed) return Promise.resolve(false);
+        var attempt = ++attempts;
         var done = function (ok) { report(); return ok; };
         // The guest chose silence: playing at all is success.
         if (muted) {
@@ -423,10 +448,11 @@
             if (finished) return;
             // Nothing began. Warm it up muted instead, which browsers allow without a tap, so the
             // next tap only has to unmute it. If it begins later it is silent, so it can never be
-            // heard out of step with the icon.
-            try { yt.mute(); yt.playVideo(); } catch (e) {}
+            // heard out of step with the icon. Not if a newer start (a tap) has been made since:
+            // muting now would silence it.
+            if (attempt === attempts) { try { yt.mute(); yt.playVideo(); } catch (e) {} }
             finish(false);
-          }, 6000);
+          }, auto ? 1500 : 6000);
         }).then(done);
       },
       isMuted: function () { return muted || (playing && ytMuted()); },
