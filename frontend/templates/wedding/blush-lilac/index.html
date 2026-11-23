@@ -9,6 +9,7 @@
 <link rel="preload" as="image" href="../../../assets/blush-lilac/rib-base.webp">
 <link rel="preload" as="image" href="../../../assets/blush-lilac/rib-loop-l.webp">
 <link rel="preload" as="image" href="../../../assets/blush-lilac/rib-loop-r.webp">
+<link rel="preload" as="image" href="../../../assets/blush-lilac/rib-patch.webp">
 <script src="../../../shared/config.js"></script>
 <script src="../../../shared/demo-data.js?v=2026111501"></script>
 <style>
@@ -94,7 +95,7 @@
     border-radius: 4px;
     box-shadow: 0 -6px 26px -12px rgba(122,94,168,.35);
     text-align: center; padding: clamp(1.1rem, 3.2vh, 2rem) 1rem 0;
-    transition: transform 1.05s cubic-bezier(.22,.8,.3,1) 1.62s;
+    transition: transform 1.05s cubic-bezier(.22,.8,.3,1) 1.95s;
   }
   .env-card::before {
     content: ''; position: absolute; inset: 8px;
@@ -110,26 +111,31 @@
   .env-flap {
     position: absolute; inset: 0; transform-origin: 50% 0;
     transform-style: preserve-3d;
-    transition: transform 1.05s cubic-bezier(.55,.05,.35,1) 1s;     /* once the ribbon is released */
+    transition: transform 1.05s cubic-bezier(.55,.05,.35,1) 1.4s;   /* once the ribbon has slipped away */
     pointer-events: none;
   }
   .env-flap svg { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .env-flap .flap-front { filter: drop-shadow(0 7px 7px rgba(90,70,110,.13)); }
   .env-flap .flap-back { transform: rotateX(180deg); }
-  /* The ribbon is the client's Canva ribbon design itself (assets/blush-lilac/rib-*.webp), with its
-     Canva paper normalised to pure white: laid over the envelope with `multiply`, white leaves our
-     paper untouched, so only the satin and its own soft shadows show, every highlight and edge as
-     designed. It is cut into layers so it can be untied rather than cut:
+  /* The ribbon is the client's Canva ribbon design itself (assets/blush-lilac/rib-*.webp): its Canva
+     paper is taken out, leaving only the satin and its own soft shadows, every highlight and edge as
+     designed. The layers are plain transparent images, computed so that on our paper they look
+     exactly as if multiplied onto it. No blend modes: those flicker and stutter on phones while
+     things move. It is cut into layers so it can be untied rather than cut:
        base   the band and tails;  loop-l / loop-r  the two loops;  patch  the band under the loops;
        ext    the band continued past the image on screens wider than it.
      drawEnvelope() sizes and places them (--rib-*): the Canva seal's centre sits on the flap's point,
-     where our seal sits. The fall group is blended as one, so its layers never show a white box. */
+     where our seal sits. */
   .env-ribbon { position: absolute; inset: 0; pointer-events: none; }
   .rib-img, .rib-ext { position: absolute; display: block; user-select: none; -webkit-user-drag: none; }
   .rib-img { left: var(--rib-x, 0px); top: var(--rib-y, 0px); width: var(--rib-w, 100%); height: auto; }
-  .rib-fall { position: absolute; inset: 0; mix-blend-mode: multiply; transform-origin: 50% var(--tip); }
-  .rib-patch { mix-blend-mode: multiply; opacity: 0; }
-  .rib-loop { mix-blend-mode: multiply; transform-origin: var(--rib-kx, 50%) var(--rib-ky, 27%); }
+  .rib-fall { position: absolute; inset: 0; transform-origin: 50% var(--tip); }
+  .rib-patch { opacity: 0; }
+  .rib-loop { transform-origin: var(--rib-kx, 50%) var(--rib-ky, 27%); }
+  /* The small moving pieces (the loops and the seal) get their own GPU layer from the start, so a
+     phone never has to build one mid-animation. Not the full-screen ribbon layer: holding that many
+     screen-sized layers left parts of the envelope undrawn for a moment. */
+  .rib-loop, .env-seal { will-change: transform, opacity; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .rib-ext {
     top: var(--rib-band-y, 0px); height: var(--rib-band-h, 0px);
     background-repeat: repeat-x; background-size: auto 100%;
@@ -187,11 +193,11 @@
      it until they slip out of sight, the band beneath them showing again. Then the released ribbon,
      seal, band and tails together, slips down off the envelope and fades. Nothing splits, nothing is
      cut, and the knot under the seal is never exposed. */
-  #envelope.is-opening .rib-loop-l { animation: ribUntieL 1s cubic-bezier(.45,.05,.55,.95) .08s forwards; }
-  #envelope.is-opening .rib-loop-r { animation: ribUntieR 1s cubic-bezier(.45,.05,.55,.95) .12s forwards; }
-  #envelope.is-opening .rib-patch  { animation: ribPatchIn .5s ease .4s forwards; }
-  #envelope.is-opening .rib-fall   { animation: ribRelease .85s cubic-bezier(.5,0,.75,.6) .82s forwards; }
-  #envelope.is-opening .env-seal   { animation: ribSealRelease .85s cubic-bezier(.5,0,.75,.6) .82s forwards; }
+  #envelope.is-opening .rib-loop-l { animation: ribUntieL .92s cubic-bezier(.45,.05,.55,.95) .08s forwards; }
+  #envelope.is-opening .rib-loop-r { animation: ribUntieR .92s cubic-bezier(.45,.05,.55,.95) .11s forwards; }
+  #envelope.is-opening .rib-patch  { animation: ribPatchIn .45s ease .36s forwards; }
+  #envelope.is-opening .rib-fall   { animation: ribRelease .7s cubic-bezier(.45,0,.7,.55) .8s forwards; }
+  #envelope.is-opening .env-seal   { animation: ribSealRelease .7s cubic-bezier(.45,0,.7,.55) .8s forwards; }
   @keyframes ribSealRelease {
     0%   { transform: translate(-50%, -50%); opacity: 1; }
     35%  { transform: translate(-50%, calc(-50% + 1vh)); opacity: .96; }
@@ -234,7 +240,11 @@
   }
 
   /* ── LAYOUT ── */
-  main { opacity: 0; transition: opacity 1.2s ease .2s; }
+  /* The invitation is drawn underneath the envelope from the start, at 1% (a browser skips drawing
+     anything at 0), so when the envelope fades away a phone has nothing new to paint: drawing the
+     whole page for the first time at that moment was the one dropped frame of the opening. Kept at
+     1% rather than fully shown, so it can never show through the envelope while that is drawn. */
+  main { opacity: .01; transition: opacity 1.2s ease .2s; }
   main.visible { opacity: 1; }
   section {
     width: 100%;
@@ -1158,8 +1168,8 @@ function openEnvelope() {
     document.getElementById('main').classList.add('visible');
     setInterval(spawnPetal, 1600);
     for (let i = 0; i < 5; i++) setTimeout(spawnPetal, i * 350);
-  }, quick ? 150 : 2700);
-  setTimeout(() => env.remove(), quick ? 1100 : 3650);
+  }, quick ? 150 : 3000);
+  setTimeout(() => env.remove(), quick ? 1100 : 3950);
 }
 
 // ── EVENTS ─────────────────────────────────────────────
