@@ -5,9 +5,10 @@
  *   • A small elegant icon is fixed in the bottom-left corner and stays visible while scrolling.
  *   • Music tries to start, with sound, as soon as the invitation has loaded.
  *   • Most browsers block sound until the guest interacts with the page. Then the music starts on
- *     the guest's first tap, click or key press anywhere, "tap to open" included — once, with no
- *     restart. Scrolling and swiping a natively scrolling area never count: browsers do not allow
- *     sound from a scroll.
+ *     the guest's first tap, swipe, click or key press anywhere, "tap to open" included — once,
+ *     with no restart. Browsers never allow sound from a scroll, so until the music plays the
+ *     first swipe is scrolled by this script instead of the browser, which makes it count as a
+ *     tap (see firstSwipe). A mouse wheel or trackpad scroll still cannot start it.
  *   • The icon is a mute switch. Pressed first, before the music has started, it keeps the music
  *     muted; after that it only toggles mute / unmute. It never pauses or restarts.
  *   • The icon always shows the real state: off until music is actually requested, on (with a
@@ -184,12 +185,25 @@
       if (armed) return;
       armed = true;
       GESTURES.forEach(function (t) { window.addEventListener(t, onGesture, { capture: true, passive: true }); });
+      swipe.attach();
     }
     function disarm() {
       if (!armed) return;
       armed = false;
       GESTURES.forEach(function (t) { window.removeEventListener(t, onGesture, { capture: true }); });
+      swipe.detach();
     }
+
+    // The first swipe also starts the music. A swipe the browser scrolls never counts as permission
+    // to play sound, so while the music is still waiting for permission the swipe is not left to the
+    // browser: its scrolling is cancelled and the page is moved by hand, following the finger, with
+    // a glide on release. To the browser it is then a tap, whose end (pointerup / touchend) does
+    // count, and onGesture starts the music there. Once the music plays this is all removed and every
+    // later swipe is the browser's own.
+    var swipe = firstSwipe(btn, function () {
+      return armed && (phase === 'idle' || phase === 'trying' || phase === 'blocked' ||
+                       (phase === 'starting' && !engine.userMuted()));
+    }, function () { return armed; });
 
     // The icon is a mute switch. A first press before the music has started means "keep it quiet":
     // the music starts muted (inside this tap, so a later unmute needs nothing more) and the icon
@@ -245,6 +259,140 @@
     render();
 
     active = { btn: btn, engine: engine, phase: function () { return phase; } };
+  }
+
+  // ── First swipe, scrolled by hand so that it counts as a tap ─────────────
+  //
+  // wanted(): should this new touch be taken over (the music is still waiting for permission)?
+  // keep():   should the listeners stay once the current touch has ended?
+  var NO_SWIPE = 'input, textarea, select, [contenteditable], iframe, video, [data-no-swipe]';
+  function firstSwipe(btn, wanted, keep) {
+    var attached = false;
+    var g = null;   // the touch in progress: { x, y, axis, el, samples, snap, behavior }
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function css(el) { return window.getComputedStyle(el); }
+    var root = document.scrollingElement || document.documentElement;
+    // Can el scroll along axis in the direction of delta (finger delta: positive moves content back)?
+    function canScroll(el, axis, delta) {
+      var max, pos;
+      if (el === root) {
+        // A locked page (overflow hidden on html or body, as behind an unopened envelope) must not
+        // be scrolled by script, although the browser would let it.
+        var ov = axis === 'y' ? 'overflowY' : 'overflowX';
+        var h = css(document.documentElement)[ov], b = document.body ? css(document.body)[ov] : '';
+        if (/hidden|clip/.test(h) || /hidden|clip/.test(b)) return false;
+      } else {
+        var o = css(el)[axis === 'y' ? 'overflowY' : 'overflowX'];
+        if (!/auto|scroll|overlay/.test(o)) return false;
+      }
+      if (axis === 'y') { max = el.scrollHeight - el.clientHeight; pos = el.scrollTop; }
+      else { max = el.scrollWidth - el.clientWidth; pos = el.scrollLeft; }
+      if (max <= 1) return false;
+      return delta < 0 ? pos < max - 1 : pos > 1;
+    }
+    // The element this swipe would scroll natively: the nearest one that can move that way.
+    function scrollerFor(target, axis, delta) {
+      for (var el = target; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+        if (el.nodeType === 1 && canScroll(el, axis, delta)) return el;
+      }
+      return canScroll(root, axis, delta) ? root : null;
+    }
+    // An element that handles touches itself (touch-action other than auto) is left alone.
+    function ownsTouch(target) {
+      for (var el = target; el && el.nodeType === 1; el = el.parentElement) {
+        var ta = css(el).touchAction;
+        if (ta && ta !== 'auto' && ta !== 'manipulation') return true;
+      }
+      return false;
+    }
+
+    function release(glide) {
+      var d = g; g = null;
+      if (!d) return;
+      if (d.el) {
+        var el = d.el, axis = d.axis;
+        var pos = axis === 'y' ? el.scrollTop : el.scrollLeft;
+        // Velocity over the last ~100ms, in px/ms; projected as a natural glide.
+        var s = d.samples, last = s[s.length - 1], first = last;
+        for (var i = s.length - 1; i >= 0 && last.t - s[i].t <= 100; i--) first = s[i];
+        var dt = last.t - first.t;
+        var v = dt > 0 ? (last.p - first.p) / dt : 0;
+        if (performance.now() - last.t > 80) v = 0;          // the finger stopped before lifting
+        var size = axis === 'y' ? el.clientHeight : el.clientWidth;
+        var travel = Math.max(-1.5 * size, Math.min(1.5 * size, -v * 320));
+        el.style.scrollSnapType = d.snap;
+        el.style.scrollBehavior = d.behavior;
+        var end = pos + (glide ? travel : 0);
+        // A snapping deck turns one slide per swipe, as it does natively (scroll-snap-stop).
+        if (d.snapping) end = Math.max(d.start - size, Math.min(d.start + size, end));
+        var opts = { behavior: reduced && reduced.matches ? 'auto' : 'smooth' };
+        opts[axis === 'y' ? 'top' : 'left'] = end;
+        // An absolute target, so a snapping deck settles on the slide nearest where the glide ends.
+        try { el.scrollTo(opts); } catch (e) {}
+      }
+      if (!keep()) detach();
+    }
+
+    function onStart(e) {
+      if (g) return;
+      if (e.touches.length !== 1 || !wanted()) return;
+      var t = e.target;
+      if (t && t.nodeType !== 1) t = t.parentElement;
+      if (!t || btn.contains(t) || (t.closest && t.closest(NO_SWIPE)) || ownsTouch(t)) return;
+      var p = e.touches[0];
+      g = { x: p.clientX, y: p.clientY, target: t, axis: null, el: null, samples: [] };
+    }
+    function onMove(e) {
+      if (!g) return;
+      if (e.touches.length !== 1) { release(false); return; }   // a pinch: let the browser zoom
+      var p = e.touches[0], dx = p.clientX - g.x, dy = p.clientY - g.y;
+      if (!g.axis) {
+        if (Math.abs(dx) < 4 && Math.abs(dy) < 4) { if (e.cancelable) e.preventDefault(); return; }
+        // The browser has already begun its own scroll: nothing more to do for this touch.
+        if (!e.cancelable) { g = null; if (!keep()) detach(); return; }
+        g.axis = Math.abs(dy) >= Math.abs(dx) ? 'y' : 'x';
+        var el = scrollerFor(g.target, g.axis, g.axis === 'y' ? dy : dx);
+        if (el) {
+          g.el = el;
+          g.start = g.axis === 'y' ? el.scrollTop : el.scrollLeft;
+          g.origin = g.axis === 'y' ? g.y : g.x;            // follow the finger from where it went down
+          // Snapping off while the finger moves the page, or it would jump back on every move.
+          g.snap = el.style.scrollSnapType; g.behavior = el.style.scrollBehavior;
+          g.snapping = !/^none/.test(css(el).scrollSnapType || 'none');
+          el.style.scrollSnapType = 'none'; el.style.scrollBehavior = 'auto';
+        }
+      }
+      if (e.cancelable) e.preventDefault();
+      if (!g.el) return;                                   // nothing to scroll that way (an edge)
+      var at = g.axis === 'y' ? p.clientY : p.clientX;
+      if (g.axis === 'y') g.el.scrollTop = g.start - (at - g.origin);
+      else g.el.scrollLeft = g.start - (at - g.origin);
+      g.samples.push({ t: performance.now(), p: at });
+      if (g.samples.length > 20) g.samples.shift();
+    }
+    function onEnd() { if (g) release(true); }
+
+    function attach() {
+      if (attached || !('ontouchstart' in window)) return;
+      attached = true;
+      window.addEventListener('touchstart', onStart, { capture: true, passive: true });
+      // Must be non-passive: cancelling it is what keeps the browser from scrolling.
+      window.addEventListener('touchmove', onMove, { capture: true, passive: false });
+      // Registered after the gesture listeners, so the music has started when the glide begins.
+      window.addEventListener('touchend', onEnd, { capture: true, passive: true });
+      window.addEventListener('touchcancel', onEnd, { capture: true, passive: true });
+    }
+    // Called once the music plays. A touch in progress finishes first (release calls it again).
+    function detach() {
+      if (!attached || g) return;
+      attached = false;
+      window.removeEventListener('touchstart', onStart, { capture: true });
+      window.removeEventListener('touchmove', onMove, { capture: true });
+      window.removeEventListener('touchend', onEnd, { capture: true });
+      window.removeEventListener('touchcancel', onEnd, { capture: true });
+    }
+    return { attach: attach, detach: detach };
   }
 
   // ── Uploaded-audio engine ───────────────────────────────────────────────
